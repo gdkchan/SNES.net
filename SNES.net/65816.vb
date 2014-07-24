@@ -84,7 +84,8 @@
                         Add_With_Carry_16()
                     End If
                     Cycles += 2
-                Case Else : Debug.Print("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode))
+                    'Case Else : Debug.Print("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
+                Case Else : Cycles += 1 'Impede que entre em loop infinito por enquanto, já que faltam vários opcodes
             End Select
         End While
         Cycles -= Target_Cycles
@@ -107,11 +108,7 @@
         If Value And &H8000 Then Set_Flag(Negative_Flag) Else Clear_Flag(Negative_Flag)
     End Sub
     Private Sub Test_Flag(Condition As Boolean, Value As Byte)
-        If Condition Then
-            Set_Flag(Value)
-        Else
-            Clear_Flag(Value)
-        End If
+        If Condition Then Set_Flag(Value) Else Clear_Flag(Value)
     End Sub
 #End Region
 
@@ -148,8 +145,13 @@
 #Region "Main Loop"
     Public Sub Main_Loop()
         While SNES_On
-            For Scanline = 0 To 223 'Nota para Gabriel: lembrar de ver quantas scanlines são
-                Execute_65816(312)
+            For Scanline As Integer = 0 To 261
+                Execute_65816(256)
+                If Scanline < 224 Then
+                    'Renderização PPU?
+                Else
+                    'VBlank
+                End If
             Next
 
             Application.DoEvents()
