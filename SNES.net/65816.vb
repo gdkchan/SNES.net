@@ -1,4 +1,10 @@
 ﻿Module _65816
+    Const NMI_Vector = &HFFFA
+    Const Reset_Vector = &HFFFC
+    Const IRQ_Vector = &HFFFE
+
+    Const Target_Cycles = 312
+
     Const Negative_Flag = &H80
     Const Overflow_Flag = &H40
     Const Accumulator_8_Bits_Flag = &H20
@@ -23,10 +29,32 @@
     Public Function Read_Memory(Address As Integer) As Byte
 
     End Function
+    Public Function Read_Memory_16(Address As Integer) As Integer
+        Return Read_Memory(Address) + (Read_Memory(Address + 1) * &H100)
+    End Function
     Public Function Write_Memory(Address As Integer, Value As Byte)
 
     End Function
+    Public Sub Reset_65816()
+        Registers.Accumulator = 0
+        Registers.X = 0
+        Registers.Y = 0
+        Registers.Stack_Pointer = 0
+        Registers.DBR = 0
+        Registers.DB = 0
+        Registers.D = 0
+        Registers.DP = 0
+        Registers.PB = 0
+        Registers.PBR = 0
+        Registers.P = &H20
+        Registers.Program_Counter = Read_Memory_16(Reset_Vector)
+    End Sub
     Public Sub Execute_65816()
+        While Cycles < Target_Cycles
+            Dim Opcode As Byte = Read_Memory(Registers.Program_Counter)
+            Registers.Program_Counter += 1
 
+        End While
+        Cycles -= Target_Cycles
     End Sub
 End Module
