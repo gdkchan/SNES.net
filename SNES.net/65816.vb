@@ -104,7 +104,7 @@
     End Sub
     Private Sub Set_Zero_Negative_Flag_16(Value As Byte)
         If Value Then Clear_Flag(Zero_Flag) Else Set_Flag(Zero_Flag)
-        If Value And &H80 Then Set_Flag(Negative_Flag) Else Clear_Flag(Negative_Flag)
+        If Value And &H8000 Then Set_Flag(Negative_Flag) Else Clear_Flag(Negative_Flag)
     End Sub
     Private Sub Test_Flag(Condition As Boolean, Value As Byte)
         If Condition Then
