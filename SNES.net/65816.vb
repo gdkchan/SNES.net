@@ -99,17 +99,12 @@
         Registers.P = Registers.P And Not Value
     End Sub
     Private Sub Set_Zero_Negative_Flag(Value As Byte)
-        If Value Then
-            Clear_Flag(Zero_Flag)
-        Else
-            Set_Flag(Zero_Flag)
-        End If
-
-        If Value And Negative_Flag Then
-            Set_Flag(Negative_Flag)
-        Else
-            Clear_Flag(Negative_Flag)
-        End If
+        If Value Then Clear_Flag(Zero_Flag) Else Set_Flag(Zero_Flag)
+        If Value And &H80 Then Set_Flag(Negative_Flag) Else Clear_Flag(Negative_Flag)
+    End Sub
+    Private Sub Set_Zero_Negative_Flag_16(Value As Byte)
+        If Value Then Clear_Flag(Zero_Flag) Else Set_Flag(Zero_Flag)
+        If Value And &H80 Then Set_Flag(Negative_Flag) Else Clear_Flag(Negative_Flag)
     End Sub
     Private Sub Test_Flag(Condition As Boolean, Value As Byte)
         If Condition Then
@@ -146,7 +141,7 @@
         Test_Flag(Temp > &HFFFF, Carry_Flag)
         Test_Flag(((Not (Registers.A Xor Data)) And (Registers.A Xor Temp) And &H8000), Overflow_Flag)
         Registers.A = Temp And &HFFFF
-        Set_Zero_Negative_Flag(Registers.A)
+        Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
 #End Region
 
