@@ -22,7 +22,11 @@
         Dim Program_Counter As Integer 'Posição para leitura de instruções
     End Structure
     Dim Registers As CPURegs
+
     Dim Effective_Address As Integer
+    Dim Opcode_Value As Integer
+
+    Dim Page_Crossed As Boolean
 
     Public Memory(&H1FFF) '8kb
 
@@ -31,7 +35,7 @@
     Dim Cycles As Double
 
 #Region "Memory Read/Write"
-    Public Function Read_Memory(Bank As Integer, Address As Integer) As Byte
+    Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
         Select Case Address
             Case 0 To &H1FFF : Return Memory(Address)
             Case &H2000 To &H2FFF 'PPU
@@ -41,7 +45,13 @@
         Return Nothing 'Nunca deve acontecer
     End Function
     Public Function Read_Memory_16(Bank As Integer, Address As Integer) As Integer
-        Return Read_Memory(Bank, Address) + (Read_Memory(Bank, Address + 1) * &H100)
+        Return Read_Memory(Bank, Address) + _
+            (Read_Memory(Bank, Address + 1) * &H100)
+    End Function
+    Public Function Read_Memory_24(Bank As Integer, Address As Integer) As Integer
+        Return Read_Memory(Bank, Address) + _
+            (Read_Memory(Bank, Address + 1) * &H100) + _
+            (Read_Memory(Bank, Address + 2) * &H10000)
     End Function
     Private Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
         Select Case Address
@@ -74,8 +84,34 @@
             Dim Opcode As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter)
             Registers.Program_Counter += 1
 
+            Page_Crossed = False
+
             Select Case Opcode
-                Case &H69
+                '+=====+
+                '| ADC |
+                '+=====+
+                Case &H61 'ADC (_dp_,X)
+                    DP_Indexed_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Add_With_Carry()
+                    Else
+                        Add_With_Carry_16()
+                        Cycles += 1
+                    End If
+                    Cycles += 6
+                Case &H63 'ADC sr,S
+                    Stack_Relative()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 4
+                Case &H65 'ADC dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 3
+                Case &H67 'ADC dp
+                    DP_Indirect_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 6
+                Case &H69 'ADC #const
                     If (Registers.P And Accumulator_8_Bits_Flag) Then
                         Immediate()
                         Add_With_Carry()
@@ -84,8 +120,47 @@
                         Add_With_Carry_16()
                     End If
                     Cycles += 2
-                    'Case Else : Debug.Print("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
-                Case Else : Cycles += 1 'Impede que entre em loop infinito por enquanto, já que faltam vários opcodes
+                Case &H6D 'ADC addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 4
+                Case &H6F 'ADC long
+                    Absolute_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 5
+                Case &H71 'ADC ( dp),Y
+                    DP_Indirect_Indexed()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    If Page_Crossed Then Cycles += 6 Else Cycles += 5
+                Case &H72 'ADC (_dp_)
+                    DP_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 5
+                Case &H73 'ADC (_sr_,S),Y
+                    Stack_Relative_Indirect_Indexed()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 7
+                Case &H75 'ADC dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 4
+                Case &H77 'ADC dp,Y
+                    DP_Indirect_Indexed_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 6
+                Case &H79 'ADC addr,Y
+                    Absolute_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 4
+                Case &H7D 'ADC addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 4
+                Case &H7F 'ADC long,X
+                    Absolute_Long_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
+                    Cycles += 5
+                Case Else : Debug.Print("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
             End Select
         End While
         Cycles -= Target_Cycles
@@ -114,29 +189,134 @@
 
 #Region "Addressing Modes"
     Private Sub Immediate() '8 bits
-        Effective_Address = Registers.Program_Counter
+        Opcode_Value = Read_Memory(Registers.PBR, Registers.Program_Counter)
         Registers.Program_Counter += 1
     End Sub
     Private Sub Immediate_16() '16 bits
-        Effective_Address = Registers.Program_Counter
+        Opcode_Value = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
         Registers.Program_Counter += 2
+    End Sub
+    Private Sub Zero_Page()
+        Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Zero_Page_X()
+        Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.X
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Zero_Page_Y()
+        Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.Y
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Stack_Relative()
+        Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.Stack_Pointer
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Absolute()
+        Effective_Address = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + (Registers.DBR * &H10000)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub Absolute_X()
+        Effective_Address = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + (Registers.DBR * &H10000) + Registers.X
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub Absolute_Y() '!!! Verificar depois
+        Effective_Address = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + (Registers.DBR * &H10000) + Registers.Y
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub Absolute_Long() '!!! Verificar depois
+        Effective_Address = Read_Memory_24(Registers.PBR, Registers.Program_Counter)
+        Opcode_Value = Read_Memory(Registers.PBR + ((Effective_Address And &HFF0000) / &H10000), Effective_Address And &HFFFF)
+        Registers.Program_Counter += 3
+    End Sub
+    Private Sub Absolute_Long_X() '!!! Verificar depois
+        Effective_Address = Read_Memory_24(Registers.PBR, Registers.Program_Counter) + Registers.X
+        Opcode_Value = Read_Memory(Registers.PBR + ((Effective_Address And &HFF0000) / &H10000), Effective_Address And &HFFFF)
+        Registers.Program_Counter += 3
+    End Sub
+    Private Sub Direct() '???
+        Dim Addr As Integer = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
+        Effective_Address = Read_Memory_16(Registers.PBR, Addr)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub DP_Indexed_X()
+        Dim Addr As Integer = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.X
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub DP_Indexed_Y()
+        Dim Addr As Integer = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.Y
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub DP_Indirect()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub DP_Indexed_Indirect()
+        Dim Addr As Integer = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + Registers.X
+        Effective_Address = Read_Memory_16(Registers.PBR, Addr)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub DP_Indirect_Indexed()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
+        If (Effective_Address And &HFF00) <> ((Effective_Address + Registers.Y) And &HFF00) Then Page_Crossed = True
+        Effective_Address += Registers.Y
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Stack_Relative_Indirect_Indexed()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.Stack_Pointer
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000) + Registers.Y
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub DP_Indirect_Long()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
+        Effective_Address = Read_Memory_24(0, Addr)
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub DP_Absolute_Indirect_Long()
+        Dim Addr As Byte = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
+        Effective_Address = Read_Memory_24(0, Addr) + Registers.Y
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub DP_Indirect_Indexed_Long()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
+        Effective_Address = Read_Memory_24(0, Addr) + Registers.Y
+        Opcode_Value = Read_Memory(Registers.PBR, Effective_Address)
+        Registers.Program_Counter += 1
     End Sub
 #End Region
 
 #Region "Instructions"
     Private Sub Add_With_Carry() 'ADC (8 bits)
-        Dim Data As Byte = Read_Memory(Registers.PBR, Effective_Address)
-        Dim Temp As Integer = Registers.A + Data + (Registers.P And Carry_Flag)
+        Dim Temp As Integer = Registers.A + Opcode_Value + (Registers.P And Carry_Flag)
         Test_Flag(Temp > &HFF, Carry_Flag)
-        Test_Flag(((Not (Registers.A Xor Data)) And (Registers.A Xor Temp) And &H80), Overflow_Flag)
+        Test_Flag(((Not (Registers.A Xor Opcode_Value)) And (Registers.A Xor Temp) And &H80), Overflow_Flag)
         Registers.A = Temp And &HFF
         Set_Zero_Negative_Flag(Registers.A)
     End Sub
     Private Sub Add_With_Carry_16() 'ADC (16 bits) 'Nota para Gabriel: Isso está certo?
-        Dim Data As Integer = Read_Memory_16(Registers.PBR, Effective_Address)
-        Dim Temp As Integer = Registers.A + Data + (Registers.P And Carry_Flag)
+        Dim Temp As Integer = Registers.A + Opcode_Value + (Registers.P And Carry_Flag)
         Test_Flag(Temp > &HFFFF, Carry_Flag)
-        Test_Flag(((Not (Registers.A Xor Data)) And (Registers.A Xor Temp) And &H8000), Overflow_Flag)
+        Test_Flag(((Not (Registers.A Xor Opcode_Value)) And (Registers.A Xor Temp) And &H8000), Overflow_Flag)
         Registers.A = Temp And &HFFFF
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
