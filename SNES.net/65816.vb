@@ -8,7 +8,7 @@
     Const Accumulator_8_Bits_Flag = &H20
     Const Index_8_Bits_Flag = &H10
     Const Decimal_Flag = &H8
-    Const IRQ_Flag = &H4
+    Const Interrupt_Flag = &H4
     Const Zero_Flag = &H2
     Const Carry_Flag = &H1
     Private Structure CPURegs
@@ -72,7 +72,7 @@
         Registers.A = 0
         Registers.X = 0
         Registers.Y = 0
-        Registers.Stack_Pointer = 0
+        Registers.Stack_Pointer = &HFF
         Registers.DBR = 0
         Registers.DB = 0
         Registers.D = 0
@@ -298,6 +298,238 @@
                 Case &H82 : Branch_Long_Always() : Cycles += 4 'BRL label
                 Case &H50 : Branch_On_Overflow_Clear() : Cycles += 2 'BVC nearlabel
                 Case &H70 : Branch_On_Overflow_Set() : Cycles += 2 'BVS nearlabel
+
+                Case &H18 : Clear_Carry() : Cycles += 2 'CLC
+                Case &HD8 : Clear_Decimal() : Cycles += 2 'CLD
+                Case &H58 : Clear_Interrupt_Disable() : Cycles += 2 'CLI
+                Case &HB8 : Clear_Overflow() : Cycles += 2 'CLV
+
+                Case &HC1 'CMP (_dp_,X)
+                    DP_Indexed_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 6
+                Case &HC3 'CMP sr,S
+                    Stack_Relative()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 4
+                Case &HC5 'CMP dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 3
+                Case &HC7 'CMP dp
+                    DP_Indirect_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 6
+                Case &HC9 'CMP #const
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Immediate()
+                        Compare()
+                    Else
+                        Immediate_16()
+                        Compare_16()
+                    End If
+                    Cycles += 2
+                Case &HCD 'CMP addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 4
+                Case &HCF 'CMP long
+                    Absolute_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 5
+                Case &HD1 'CMP ( dp),Y
+                    DP_Indirect_Indexed()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    If Page_Crossed Then Cycles += 1
+                    Cycles += 5
+                Case &HD2 'CMP (_dp_)
+                    DP_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 5
+                Case &HD3 'CMP (_sr_,S),Y
+                    Stack_Relative_Indirect_Indexed()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 7
+                Case &HD5 'CMP dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 4
+                Case &HD7 'CMP dp,Y
+                    DP_Indirect_Indexed_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 6
+                Case &HD9 'CMP addr,Y
+                    Absolute_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 4
+                Case &HDD 'CMP addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 4
+                Case &HDF 'CMP long,X
+                    Absolute_Long_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
+                    Cycles += 5
+
+                Case &H2 : CoP_Enable() : Cycles += 7 'COP const
+
+                Case &HE0 'CPX #const
+                    If (Registers.P And Index_8_Bits_Flag) Then
+                        Immediate()
+                        Compare_With_X()
+                    Else
+                        Immediate_16()
+                        Compare_With_X_16()
+                    End If
+                    Cycles += 2
+                Case &HE4 'CPX dp
+                    Direct()
+                    If (Registers.P And Index_8_Bits_Flag) Then Compare_With_X() Else Compare_With_X_16()
+                    Cycles += 3
+                Case &HEC 'CPX addr
+                    Absolute()
+                    If (Registers.P And Index_8_Bits_Flag) Then Compare_With_X() Else Compare_With_X_16()
+                    Cycles += 4
+
+                Case &HC0 'CPY #const
+                    If (Registers.P And Index_8_Bits_Flag) Then
+                        Immediate()
+                        Compare_With_Y()
+                    Else
+                        Immediate_16()
+                        Compare_With_Y_16()
+                    End If
+                    Cycles += 2
+                Case &HC4 'CPY dp
+                    Direct()
+                    If (Registers.P And Index_8_Bits_Flag) Then Compare_With_Y() Else Compare_With_Y_16()
+                    Cycles += 3
+                Case &HCC 'CPY addr
+                    Absolute()
+                    If (Registers.P And Index_8_Bits_Flag) Then Compare_With_Y() Else Compare_With_Y_16()
+                    Cycles += 4
+
+                Case &H3A 'DEC A
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement_A() Else Decrement_A_16()
+                    Cycles += 2
+                Case &HC6 'DEC dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
+                    Cycles += 5
+                Case &HCE 'DEC addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
+                    Cycles += 6
+                Case &HD6 'DEC dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
+                    Cycles += 6
+                Case &HDE 'DEC addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
+                    Cycles += 7
+
+                Case &HCA 'DEX
+                    If (Registers.P And Index_8_Bits_Flag) Then Decrement_X() Else Decrement_X_16()
+                    Cycles += 2
+
+                Case &H88 'DEY
+                    If (Registers.P And Index_8_Bits_Flag) Then Decrement_Y() Else Decrement_Y_16()
+                    Cycles += 2
+
+                Case &H41 'EOR (_dp_,X)
+                    DP_Indexed_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 6
+                Case &H43 'EOR sr,S
+                    Stack_Relative()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 4
+                Case &H45 'EOR dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 3
+                Case &H47 'EOR dp
+                    DP_Indirect_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 6
+                Case &H49 'EOR #const
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Immediate()
+                        Exclusive_Or()
+                    Else
+                        Immediate_16()
+                        Exclusive_Or_16()
+                    End If
+                    Cycles += 2
+                Case &H4D 'EOR addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 4
+                Case &H4F 'EOR long
+                    Absolute_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 5
+                Case &H51 'EOR ( dp),Y
+                    DP_Indirect_Indexed()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 5
+                Case &H52 'EOR (_dp_)
+                    DP_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 5
+                Case &H53 'EOR (_sr_,S),Y
+                    Stack_Relative_Indirect_Indexed()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 7
+                Case &H55 'EOR dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 4
+                Case &H57 'EOR dp,Y
+                    DP_Indirect_Indexed_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 6
+                Case &H59 'EOR addr,Y
+                    Absolute_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 4
+                Case &H5D 'EOR addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 4
+                Case &H5F 'EOR long,X
+                    Absolute_Long_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
+                    Cycles += 5
+
+                Case &H1A 'INC A
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Increment_A() Else Increment_A_16()
+                    Cycles += 2
+                Case &HE6 'INC dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
+                    Cycles += 5
+                Case &HEE 'INC addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
+                    Cycles += 6
+                Case &HF6 'INC dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
+                    Cycles += 6
+                Case &HFE 'INC addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
+                    Cycles += 7
+
+                Case &HE8 'INX
+                    If (Registers.P And Index_8_Bits_Flag) Then Increment_X() Else Increment_X_16()
+                    Cycles += 2
+
+                Case &HC8 'INY
+                    If (Registers.P And Index_8_Bits_Flag) Then Increment_Y() Else Increment_Y_16()
+                    Cycles += 2
 
                 Case Else : MsgBox("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
             End Select
@@ -538,9 +770,9 @@
     End Sub
     Private Sub Break() 'BRK
         Write_Memory_24(0, Registers.Stack_Pointer, Registers.Program_Counter + (Registers.PBR * &H10000))
-        Registers.Stack_Pointer -= 3
+        Registers.Stack_Pointer = (Registers.Stack_Pointer - 3) And &HFF
         Write_Memory(0, Registers.Stack_Pointer, Registers.P)
-        Registers.Stack_Pointer -= 1
+        Registers.Stack_Pointer = (Registers.Stack_Pointer - 1) And &HFF
         Registers.PBR = 0
         Registers.Program_Counter = Read_Memory_16(0, &HFFE6)
     End Sub
@@ -562,6 +794,140 @@
             Registers.Program_Counter += 1
             Registers.Program_Counter += Effective_Address
         End If
+    End Sub
+    Private Sub Clear_Carry() 'CLC
+        Clear_Flag(Carry_Flag)
+    End Sub
+    Private Sub Clear_Decimal() 'CLD
+        Clear_Flag(Decimal_Flag)
+    End Sub
+    Private Sub Clear_Interrupt_Disable() 'CLI
+        Clear_Flag(Interrupt_Flag)
+    End Sub
+    Private Sub Clear_Overflow() 'CLV
+        Clear_Flag(Overflow_Flag)
+    End Sub
+    Private Sub Compare() 'CMP (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Temp As Byte = Registers.A - Value
+        Test_Flag(Registers.A >= Value, Carry_Flag)
+        Set_Zero_Negative_Flag(Temp)
+    End Sub
+    Private Sub Compare_16() 'CMP (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Temp As Integer = Registers.A - Value
+        Test_Flag(Registers.A >= Value, Carry_Flag)
+        Set_Zero_Negative_Flag_16(Temp)
+    End Sub
+    Private Sub CoP_Enable()
+        'Causa uma interrupção para ligar algum Co-Processador...
+        'Preciso ver isso depois!
+    End Sub
+    Private Sub Compare_With_X() 'CPX (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Temp As Byte = Registers.X - Value
+        Test_Flag(Registers.X >= Value, Carry_Flag)
+        Set_Zero_Negative_Flag(Temp)
+    End Sub
+    Private Sub Compare_With_X_16() 'CPX (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Temp As Integer = Registers.X - Value
+        Test_Flag(Registers.X >= Value, Carry_Flag)
+        Set_Zero_Negative_Flag_16(Temp)
+    End Sub
+    Private Sub Compare_With_Y() 'CPY (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Temp As Byte = Registers.Y - Value
+        Test_Flag(Registers.Y >= Value, Carry_Flag)
+        Set_Zero_Negative_Flag(Temp)
+    End Sub
+    Private Sub Compare_With_Y_16() 'CPY (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Temp As Integer = Registers.Y - Value
+        Test_Flag(Registers.Y >= Value, Carry_Flag)
+        Set_Zero_Negative_Flag_16(Temp)
+    End Sub
+    Private Sub Decrement() 'DEC (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF) - 1
+        Set_Zero_Negative_Flag(Value)
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Decrement_A() 'DEC (8 bits)
+        Dim Value As Byte = Registers.A - 1
+        Set_Zero_Negative_Flag(Value)
+        Registers.A = Value
+    End Sub
+    Private Sub Decrement_16() 'DEC (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF) - 1
+        Set_Zero_Negative_Flag_16(Value)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Decrement_A_16() 'DEC (16 bits)
+        Dim Value As Integer = Registers.A - 1
+        Set_Zero_Negative_Flag_16(Value)
+        Registers.A = Value
+    End Sub
+    Private Sub Decrement_X() 'DEX (8 bits)
+        Registers.X = (Registers.X - 1) And &HFF
+        Set_Zero_Negative_Flag(Registers.X)
+    End Sub
+    Private Sub Decrement_X_16() 'DEX (16 bits)
+        Registers.X = (Registers.X - 1) And &HFF
+        Set_Zero_Negative_Flag_16(Registers.X)
+    End Sub
+    Private Sub Decrement_Y() 'DEY (8 bits)
+        Registers.Y = (Registers.Y - 1) And &HFF
+        Set_Zero_Negative_Flag(Registers.Y)
+    End Sub
+    Private Sub Decrement_Y_16() 'DEY (16 bits)
+        Registers.Y = (Registers.Y - 1) And &HFF
+        Set_Zero_Negative_Flag_16(Registers.Y)
+    End Sub
+    Private Sub Exclusive_Or() 'EOR (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Registers.A = Registers.A Xor Value
+        Set_Zero_Negative_Flag(Registers.A)
+    End Sub
+    Private Sub Exclusive_Or_16() 'EOR (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF) - 1
+        Registers.A = Registers.A Xor Value
+        Set_Zero_Negative_Flag_16(Registers.A)
+    End Sub
+    Private Sub Increment() 'INC (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF) + 1
+        Set_Zero_Negative_Flag(Value)
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Increment_A() 'INC (8 bits)
+        Dim Value As Byte = Registers.A + 1
+        Set_Zero_Negative_Flag(Value)
+        Registers.A = Value
+    End Sub
+    Private Sub Increment_16() 'INC (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF) + 1
+        Set_Zero_Negative_Flag_16(Value)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Increment_A_16() 'INC (16 bits)
+        Dim Value As Integer = Registers.A + 1
+        Set_Zero_Negative_Flag_16(Value)
+        Registers.A = Value
+    End Sub
+    Private Sub Increment_X() 'INX (8 bits)
+        Registers.X = (Registers.X + 1) And &HFF
+        Set_Zero_Negative_Flag(Registers.X)
+    End Sub
+    Private Sub Increment_X_16() 'INX (16 bits)
+        Registers.X = (Registers.X + 1) And &HFF
+        Set_Zero_Negative_Flag_16(Registers.X)
+    End Sub
+    Private Sub Increment_Y() 'INY (8 bits)
+        Registers.Y = (Registers.Y + 1) And &HFF
+        Set_Zero_Negative_Flag(Registers.Y)
+    End Sub
+    Private Sub Increment_Y_16() 'INY (16 bits)
+        Registers.Y = (Registers.Y + 1) And &HFF
+        Set_Zero_Negative_Flag_16(Registers.Y)
     End Sub
 #End Region
 
