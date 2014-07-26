@@ -56,6 +56,10 @@
             Case 0 To &H1FFF : Memory(Address) = Value
         End Select
     End Sub
+    Private Sub Write_Memory_16(Bank As Integer, Address As Integer, Value As Integer)
+        Write_Memory(Bank, Address, Value And &HFF)
+        Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
+    End Sub
 #End Region
 
 #Region "CPU Reset/Execute"
@@ -408,10 +412,10 @@
         Set_Zero_Negative_Flag(Registers.A)
     End Sub
     Private Sub Arithmetic_Shift_Left_16() 'ASL (16 bits)
-        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
         Test_Flag(Value And &H8000, Carry_Flag)
         Value <<= 1
-        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag_16(Value)
     End Sub
     Private Sub Arithmetic_Shift_Left_A_16() 'ASL_A (16 bits)
