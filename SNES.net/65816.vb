@@ -60,6 +60,11 @@
         Write_Memory(Bank, Address, Value And &HFF)
         Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
     End Sub
+    Private Sub Write_Memory_24(Bank As Integer, Address As Integer, Value As Integer)
+        Write_Memory(Bank, Address, Value And &HFF)
+        Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
+        Write_Memory(Bank, Address + 2, (Value And &HFF0000) / &H10000)
+    End Sub
 #End Region
 
 #Region "CPU Reset/Execute"
@@ -91,8 +96,14 @@
             Select Case Opcode
                 Case &H61 'ADC (_dp_,X)
                     DP_Indexed_Indirect()
-                    If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
-                    If Registers.DP And &HFF <> 0 Then Cycles += 7 Else Cycles += 6
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Add_With_Carry()
+                    Else
+                        Add_With_Carry_16()
+                        Cycles += 1
+                    End If
+                    If Registers.DP And &HFF <> 0 Then Cycles += 1
+                    Cycles += 6
                 Case &H63 'ADC sr,S
                     Stack_Relative()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
@@ -125,7 +136,8 @@
                 Case &H71 'ADC ( dp),Y
                     DP_Indirect_Indexed()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
-                    If Page_Crossed Then Cycles += 6 Else Cycles += 5
+                    If Page_Crossed Then Cycles += 1
+                    Cycles += 5
                 Case &H72 'ADC (_dp_)
                     DP_Indirect()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
@@ -246,7 +258,48 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left() Else Arithmetic_Shift_Left_16()
                     Cycles += 7
 
-                Case Else : Debug.Print("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
+                Case &H90 : Branch_On_Carry_Clear() : Cycles += 2 'BCC nearlabel
+                Case &HB0 : Branch_On_Carry_Set() : Cycles += 2 'BCS nearlabel
+                Case &HF0 : Branch_On_Equal() : Cycles += 2 'BEQ nearlabel
+
+                Case &H24 'BIT dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
+                    Cycles += 3
+                Case &H2C 'BIT addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
+                    Cycles += 4
+                Case &H34 'BIT dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
+                    Cycles += 4
+                Case &H3C 'BIT addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
+                    Cycles += 4
+                Case &H89 'BIT #const
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Immediate()
+                        Test_Bits()
+                    Else
+                        Immediate_16()
+                        Test_Bits_16()
+                    End If
+                    Cycles += 2
+
+                Case &H30 : Branch_On_Minus() : Cycles += 2 'BMI nearlabel
+                Case &HD0 : Branch_On_Not_Equal() : Cycles += 2 'BNE nearlabel
+                Case &H10 : Branch_On_Plus() : Cycles += 2 'BPL nearlabel
+                Case &H80 : Branch_Always() : Cycles += 3 'BRA nearlabel
+
+                Case &H0 : Break() : Cycles += 8 'BRK
+
+                Case &H82 : Branch_Long_Always() : Cycles += 4 'BRL label
+                Case &H50 : Branch_On_Overflow_Clear() : Cycles += 2 'BVC nearlabel
+                Case &H70 : Branch_On_Overflow_Set() : Cycles += 2 'BVS nearlabel
+
+                Case Else : MsgBox("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
             End Select
         End While
         Cycles -= Target_Cycles
@@ -423,6 +476,97 @@
         Registers.A <<= 1
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
+    Private Sub Branch_On_Carry_Clear() 'BCC
+        If (Registers.P And Carry_Flag) = 0 Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+            Cycles += 1
+        End If
+    End Sub
+    Private Sub Branch_On_Carry_Set() 'BCS
+        If (Registers.P And Carry_Flag) Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+    Private Sub Branch_On_Equal() 'BEQ
+        If (Registers.P And Zero_Flag) Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+    Private Sub Test_Bits() 'BIT (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag((Value And Registers.A) = 0, Zero_Flag)
+        Test_Flag(Value And &H80, Negative_Flag)
+        Test_Flag(Value And &H40, Overflow_Flag)
+    End Sub
+    Private Sub Test_Bits_16() 'BIT (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag((Value And Registers.A) = 0, Zero_Flag)
+        Test_Flag(Value And &H8000, Negative_Flag)
+        Test_Flag(Value And &H4000, Overflow_Flag)
+    End Sub
+    Private Sub Branch_On_Minus() 'BMI
+        If (Registers.P And Negative_Flag) Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+    Private Sub Branch_On_Not_Equal() 'BNE
+        If (Registers.P And Zero_Flag) = 0 Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+    Private Sub Branch_On_Plus() 'BPL
+        If (Registers.P And Negative_Flag) = 0 Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+    Private Sub Branch_Always() 'BRA
+        Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+        Registers.Program_Counter += 1
+        Registers.Program_Counter += Effective_Address
+    End Sub
+    Private Sub Break() 'BRK
+        Write_Memory_24(0, Registers.Stack_Pointer, Registers.Program_Counter + (Registers.PBR * &H10000))
+        Registers.Stack_Pointer -= 3
+        Write_Memory(0, Registers.Stack_Pointer, Registers.P)
+        Registers.Stack_Pointer -= 1
+        Registers.PBR = 0
+        Registers.Program_Counter = Read_Memory_16(0, &HFFE6)
+    End Sub
+    Private Sub Branch_Long_Always() 'BRL
+        Effective_Address = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
+        Registers.Program_Counter += 2
+        Registers.Program_Counter += Effective_Address
+    End Sub
+    Private Sub Branch_On_Overflow_Clear() 'BVC
+        If (Registers.P And Overflow_Flag) = 0 Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+    Private Sub Branch_On_Overflow_Set() 'BVS
+        If (Registers.P And Overflow_Flag) Then
+            Effective_Address = Read_Memory(Registers.PBR, Registers.Program_Counter)
+            Registers.Program_Counter += 1
+            Registers.Program_Counter += Effective_Address
+        End If
+    End Sub
+#End Region
+
+#Region "Interrupts"
+
 #End Region
 
 #Region "Main Loop"
