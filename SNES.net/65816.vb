@@ -154,7 +154,7 @@
                 Case &H21 'AND (_dp_,X)
                     DP_Indexed_Indirect()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
-                    If Registers.DP And &HFF <> 0 Then Cycles += 7 Else Cycles += 6
+                    Cycles += 6
                 Case &H23 'AND sr,S
                     Stack_Relative()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
@@ -187,7 +187,7 @@
                 Case &H31 'AND ( dp),Y
                     DP_Indirect_Indexed()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
-                    If Page_Crossed Then Cycles += 6 Else Cycles += 5
+                    Cycles += 5
                 Case &H32 'AND (_dp_)
                     DP_Indirect()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
@@ -216,6 +216,31 @@
                     Absolute_Long_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 5
+
+                Case &H6 'ASL dp
+                    Direct()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Arithmetic_Shift_Left()
+                    Else
+                        Arithmetic_Shift_Left_16()
+                        Cycles += 2
+                    End If
+                    Cycles += 5
+                Case &HA 'ASL A
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left_A() Else Arithmetic_Shift_Left_A_16()
+                    Cycles += 2
+                Case &HE 'ASL addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left() Else Arithmetic_Shift_Left_16()
+                    Cycles += 6
+                Case &H16 'ASL dp,X
+                    DP_Indexed_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left() Else Arithmetic_Shift_Left_16()
+                    Cycles += 6
+                Case &H1E 'ASL addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left() Else Arithmetic_Shift_Left_16()
+                    Cycles += 7
 
                 Case Else : Debug.Print("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
             End Select
@@ -368,6 +393,30 @@
     Private Sub And_With_Accumulator_16() 'AND (16 bits)
         Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
         Registers.A = Registers.A And Value
+        Set_Zero_Negative_Flag_16(Registers.A)
+    End Sub
+    Private Sub Arithmetic_Shift_Left() 'ASL (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag(Value And &H80, Carry_Flag)
+        Value <<= 1
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Set_Zero_Negative_Flag(Value)
+    End Sub
+    Private Sub Arithmetic_Shift_Left_A() 'ASL_A (8 bits)
+        Test_Flag(Registers.A And &H80, Carry_Flag)
+        Registers.A <<= 1
+        Set_Zero_Negative_Flag(Registers.A)
+    End Sub
+    Private Sub Arithmetic_Shift_Left_16() 'ASL (16 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag(Value And &H8000, Carry_Flag)
+        Value <<= 1
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Set_Zero_Negative_Flag_16(Value)
+    End Sub
+    Private Sub Arithmetic_Shift_Left_A_16() 'ASL_A (16 bits)
+        Test_Flag(Registers.A And &H8000, Carry_Flag)
+        Registers.A <<= 1
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
 #End Region
