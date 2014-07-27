@@ -66,6 +66,10 @@
         Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
         Write_Memory(Bank, Address + 2, (Value And &HFF0000) / &H10000)
     End Sub
+    Private Function Signed_Byte(Byte_To_Convert As Byte) As SByte
+        If (Byte_To_Convert < 128) Then Return Byte_To_Convert
+        Return Byte_To_Convert - 256
+    End Function
 #End Region
 
 #Region "CPU Reset/Execute"
@@ -89,7 +93,7 @@
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
             Registers.Program_Counter += 1
 
-            MsgBox("PC: " & Hex(Registers.Program_Counter - 1) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " --OP: " & Hex(Opcode), "*** DEBUG ***")
+            MsgBox("PC: " & Hex(Registers.Program_Counter - 1) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " --OP: " & Hex(Opcode), vbInformation, "*** DEBUG ***")
 
             Page_Crossed = False
 
@@ -1252,24 +1256,24 @@
     End Sub
     Private Sub Branch_On_Carry_Clear() 'BCC
         If (Registers.P And Carry_Flag) = 0 Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
             Cycles += 1
         End If
     End Sub
     Private Sub Branch_On_Carry_Set() 'BCS
         If (Registers.P And Carry_Flag) Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Branch_On_Equal() 'BEQ
         If (Registers.P And Zero_Flag) Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Test_Bits() 'BIT (8 bits)
@@ -1286,29 +1290,29 @@
     End Sub
     Private Sub Branch_On_Minus() 'BMI
         If (Registers.P And Negative_Flag) Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Branch_On_Not_Equal() 'BNE
         If (Registers.P And Zero_Flag) = 0 Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Branch_On_Plus() 'BPL
         If (Registers.P And Negative_Flag) = 0 Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Branch_Always() 'BRA
-        Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+        Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
         Registers.Program_Counter += 1
-        Registers.Program_Counter += Effective_Address
+        Registers.Program_Counter += Offset
     End Sub
     Private Sub Break() 'BRK
         Write_Memory_24(0, Registers.Stack_Pointer, Registers.Program_Counter + (Registers.Program_Bank * &H10000))
@@ -1319,22 +1323,22 @@
         Registers.Program_Counter = Read_Memory_16(0, &HFFE6)
     End Sub
     Private Sub Branch_Long_Always() 'BRL
-        Effective_Address = Read_Memory_16(Registers.Program_Bank, Registers.Program_Counter)
+        Dim Offset As Integer = Read_Memory_16(Registers.Program_Bank, Registers.Program_Counter)
         Registers.Program_Counter += 2
-        Registers.Program_Counter += Effective_Address
+        Registers.Program_Counter += Offset
     End Sub
     Private Sub Branch_On_Overflow_Clear() 'BVC
         If (Registers.P And Overflow_Flag) = 0 Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Branch_On_Overflow_Set() 'BVS
         If (Registers.P And Overflow_Flag) Then
-            Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            Dim Offset As SByte = Signed_Byte(Read_Memory(Registers.Program_Bank, Registers.Program_Counter))
             Registers.Program_Counter += 1
-            Registers.Program_Counter += Effective_Address
+            Registers.Program_Counter += Offset
         End If
     End Sub
     Private Sub Clear_Carry() 'CLC
