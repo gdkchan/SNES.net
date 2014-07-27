@@ -896,7 +896,7 @@
         Registers.Program_Counter += 1
     End Sub
     Private Sub Indirect_Long_Jump()
-        Dim Addr As Byte = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
+        Dim Addr As Integer = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
         Effective_Address = Read_Memory_24(0, Addr)
         Registers.Program_Counter += 2
     End Sub
@@ -906,7 +906,7 @@
         Registers.Program_Counter += 1
     End Sub
     Private Sub Indirect_X()
-        Dim Addr As Byte = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + Registers.X
+        Dim Addr As Integer = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + Registers.X
         Effective_Address = Read_Memory_16(Registers.PBR, Addr)
         Registers.Program_Counter += 2
     End Sub
@@ -1276,7 +1276,7 @@
         Set_Zero_Negative_Flag(Registers.A)
     End Sub
     Private Sub Or_With_Accumulator_16() 'ORA (16 bits)
-        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF) - 1
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
         Registers.A = Registers.A Or Value
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
