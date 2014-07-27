@@ -95,7 +95,7 @@
 
             Select Case Opcode
                 Case &H61 'ADC (_dp_,X)
-                    DP_Indexed_Indirect()
+                    DP_Indirect_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then
                         Add_With_Carry()
                     Else
@@ -109,11 +109,11 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 4
                 Case &H65 'ADC dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 3
                 Case &H67 'ADC dp
-                    DP_Indirect_Long()
+                    Indirect_Long()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 6
                 Case &H69 'ADC #const
@@ -134,7 +134,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 5
                 Case &H71 'ADC ( dp),Y
-                    DP_Indirect_Indexed()
+                    Indirect_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     If Page_Crossed Then Cycles += 1
                     Cycles += 5
@@ -143,15 +143,15 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 5
                 Case &H73 'ADC (_sr_,S),Y
-                    Stack_Relative_Indirect_Indexed()
+                    Indirect_Stack_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 7
                 Case &H75 'ADC dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 4
                 Case &H77 'ADC dp,Y
-                    DP_Indirect_Indexed_Long()
+                    Indirect_Long_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Add_With_Carry() Else Add_With_Carry_16()
                     Cycles += 6
                 Case &H79 'ADC addr,Y
@@ -168,7 +168,7 @@
                     Cycles += 5
 
                 Case &H21 'AND (_dp_,X)
-                    DP_Indexed_Indirect()
+                    DP_Indirect_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 6
                 Case &H23 'AND sr,S
@@ -176,11 +176,11 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 4
                 Case &H25 'AND dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 3
                 Case &H27 'AND dp
-                    DP_Indirect_Long()
+                    Indirect_Long()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 6
                 Case &H29 'AND #const
@@ -201,7 +201,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 5
                 Case &H31 'AND ( dp),Y
-                    DP_Indirect_Indexed()
+                    Indirect_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 5
                 Case &H32 'AND (_dp_)
@@ -209,15 +209,15 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 5
                 Case &H33 'AND (_sr_,S),Y
-                    Stack_Relative_Indirect_Indexed()
+                    Indirect_Stack_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 7
                 Case &H35 'AND dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 4
                 Case &H37 'AND dp,Y
-                    DP_Indirect_Indexed_Long()
+                    Indirect_Long_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then And_With_Accumulator() Else And_With_Accumulator_16()
                     Cycles += 6
                 Case &H39 'AND addr,Y
@@ -234,7 +234,7 @@
                     Cycles += 5
 
                 Case &H6 'ASL dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then
                         Arithmetic_Shift_Left()
                     Else
@@ -250,7 +250,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left() Else Arithmetic_Shift_Left_16()
                     Cycles += 6
                 Case &H16 'ASL dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Arithmetic_Shift_Left() Else Arithmetic_Shift_Left_16()
                     Cycles += 6
                 Case &H1E 'ASL addr,X
@@ -263,7 +263,7 @@
                 Case &HF0 : Branch_On_Equal() : Cycles += 2 'BEQ nearlabel
 
                 Case &H24 'BIT dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
                     Cycles += 3
                 Case &H2C 'BIT addr
@@ -271,7 +271,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
                     Cycles += 4
                 Case &H34 'BIT dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Test_Bits() Else Test_Bits_16()
                     Cycles += 4
                 Case &H3C 'BIT addr,X
@@ -305,7 +305,7 @@
                 Case &HB8 : Clear_Overflow() : Cycles += 2 'CLV
 
                 Case &HC1 'CMP (_dp_,X)
-                    DP_Indexed_Indirect()
+                    DP_Indirect_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 6
                 Case &HC3 'CMP sr,S
@@ -313,11 +313,11 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 4
                 Case &HC5 'CMP dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 3
                 Case &HC7 'CMP dp
-                    DP_Indirect_Long()
+                    Indirect_Long()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 6
                 Case &HC9 'CMP #const
@@ -338,7 +338,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 5
                 Case &HD1 'CMP ( dp),Y
-                    DP_Indirect_Indexed()
+                    Indirect_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     If Page_Crossed Then Cycles += 1
                     Cycles += 5
@@ -347,15 +347,15 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 5
                 Case &HD3 'CMP (_sr_,S),Y
-                    Stack_Relative_Indirect_Indexed()
+                    Indirect_Stack_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 7
                 Case &HD5 'CMP dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 4
                 Case &HD7 'CMP dp,Y
-                    DP_Indirect_Indexed_Long()
+                    Indirect_Long_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
                     Cycles += 6
                 Case &HD9 'CMP addr,Y
@@ -383,7 +383,7 @@
                     End If
                     Cycles += 2
                 Case &HE4 'CPX dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Index_8_Bits_Flag) Then Compare_With_X() Else Compare_With_X_16()
                     Cycles += 3
                 Case &HEC 'CPX addr
@@ -401,7 +401,7 @@
                     End If
                     Cycles += 2
                 Case &HC4 'CPY dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Index_8_Bits_Flag) Then Compare_With_Y() Else Compare_With_Y_16()
                     Cycles += 3
                 Case &HCC 'CPY addr
@@ -413,7 +413,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement_A() Else Decrement_A_16()
                     Cycles += 2
                 Case &HC6 'DEC dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
                     Cycles += 5
                 Case &HCE 'DEC addr
@@ -421,7 +421,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
                     Cycles += 6
                 Case &HD6 'DEC dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Decrement() Else Decrement_16()
                     Cycles += 6
                 Case &HDE 'DEC addr,X
@@ -438,7 +438,7 @@
                     Cycles += 2
 
                 Case &H41 'EOR (_dp_,X)
-                    DP_Indexed_Indirect()
+                    DP_Indirect_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 6
                 Case &H43 'EOR sr,S
@@ -446,11 +446,11 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 4
                 Case &H45 'EOR dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 3
                 Case &H47 'EOR dp
-                    DP_Indirect_Long()
+                    Indirect_Long()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 6
                 Case &H49 'EOR #const
@@ -471,7 +471,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 5
                 Case &H51 'EOR ( dp),Y
-                    DP_Indirect_Indexed()
+                    Indirect_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 5
                 Case &H52 'EOR (_dp_)
@@ -479,15 +479,15 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 5
                 Case &H53 'EOR (_sr_,S),Y
-                    Stack_Relative_Indirect_Indexed()
+                    Indirect_Stack_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 7
                 Case &H55 'EOR dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 4
                 Case &H57 'EOR dp,Y
-                    DP_Indirect_Indexed_Long()
+                    Indirect_Long_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Exclusive_Or() Else Exclusive_Or_16()
                     Cycles += 6
                 Case &H59 'EOR addr,Y
@@ -507,7 +507,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Increment_A() Else Increment_A_16()
                     Cycles += 2
                 Case &HE6 'INC dp
-                    Direct()
+                    Zero_Page()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
                     Cycles += 5
                 Case &HEE 'INC addr
@@ -515,7 +515,7 @@
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
                     Cycles += 6
                 Case &HF6 'INC dp,X
-                    DP_Indexed_X()
+                    Zero_Page_X()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Increment() Else Increment_16()
                     Cycles += 6
                 Case &HFE 'INC addr,X
@@ -530,6 +530,16 @@
                 Case &HC8 'INY
                     If (Registers.P And Index_8_Bits_Flag) Then Increment_Y() Else Increment_Y_16()
                     Cycles += 2
+
+                Case &H4C : Absolute() : Jump() : Cycles += 3 'JMP addr
+                Case &H5C : Absolute_Long() : Jump() : Registers.PBR = (Effective_Address And &HFF0000) / &H10000 : Cycles += 4 'JMP long
+                Case &H6C : Indirect() : Jump() : Cycles += 5 'JMP (_addr_)
+                Case &H7C : Indirect_X() : Jump() : Cycles += 6 'JMP (_addr,X_)
+                Case &HDC : Indirect_Long_Jump() : Jump() : Registers.PBR = (Effective_Address And &HFF0000) / &H10000 : Cycles += 6 'JMP addr
+
+                Case &H20 : Absolute() : Jump_To_Subroutine() : Cycles += 6 'JSR addr
+                Case &H22 : Absolute_Long() : Jump_To_Subroutine(True) : Cycles += 8 'JSR long
+                Case &HFC : Indirect_X() : Jump_To_Subroutine() : Cycles += 8 'JSR (addr,X))
 
                 Case Else : MsgBox("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
             End Select
@@ -556,6 +566,25 @@
     Private Sub Test_Flag(Condition As Boolean, Value As Byte)
         If Condition Then Set_Flag(Value) Else Clear_Flag(Value)
     End Sub
+#End Region
+
+#Region "Stack Push/Pull"
+    Private Sub Push(Value As Byte)
+        Write_Memory(0, &H100 + Registers.Stack_Pointer, Value)
+        Registers.Stack_Pointer = (Registers.Stack_Pointer - 1) And &HFF
+    End Sub
+    Private Function Pull() As Byte
+        Registers.Stack_Pointer = (Registers.Stack_Pointer + 1) And &HFF
+        Return Read_Memory(0, &H100 + Registers.Stack_Pointer)
+    End Function
+    Private Sub Push_16(Value As Integer)
+        Write_Memory_16(0, &H100 + Registers.Stack_Pointer, Value)
+        Registers.Stack_Pointer = (Registers.Stack_Pointer - 2) And &HFF
+    End Sub
+    Private Function Pull_16() As Integer
+        Registers.Stack_Pointer = (Registers.Stack_Pointer + 2) And &HFF
+        Return Read_Memory_16(0, &H100 + Registers.Stack_Pointer)
+    End Function
 #End Region
 
 #Region "Addressing Modes"
@@ -603,56 +632,49 @@
         Effective_Address = Read_Memory_24(Registers.PBR, Registers.Program_Counter) + Registers.X
         Registers.Program_Counter += 3
     End Sub
-    Private Sub Direct()
+    Private Sub Indirect()
         Dim Addr As Integer = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
         Effective_Address = Read_Memory_16(Registers.PBR, Addr)
         Registers.Program_Counter += 2
-    End Sub
-    Private Sub DP_Indexed_X()
-        Dim Addr As Integer = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.X
-        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
-        Registers.Program_Counter += 1
-    End Sub
-    Private Sub DP_Indexed_Y()
-        Dim Addr As Integer = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.Y
-        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
-        Registers.Program_Counter += 1
     End Sub
     Private Sub DP_Indirect()
         Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
         Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
         Registers.Program_Counter += 1
     End Sub
-    Private Sub DP_Indexed_Indirect()
-        Dim Addr As Integer = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + Registers.X
-        Effective_Address = Read_Memory_16(Registers.PBR, Addr)
-        Registers.Program_Counter += 2
-    End Sub
-    Private Sub DP_Indirect_Indexed()
+    Private Sub Indirect_Y()
         Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
-        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000)
-        If (Effective_Address And &HFF00) <> ((Effective_Address + Registers.Y) And &HFF00) Then Page_Crossed = True
-        Effective_Address += Registers.Y
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000) + Registers.Y
         Registers.Program_Counter += 1
     End Sub
-    Private Sub Stack_Relative_Indirect_Indexed()
+    Private Sub Indirect_Stack_Y()
         Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.Stack_Pointer
         Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000) + Registers.Y
         Registers.Program_Counter += 1
     End Sub
-    Private Sub DP_Indirect_Long()
+    Private Sub Indirect_Long()
         Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
         Effective_Address = Read_Memory_24(0, Addr)
         Registers.Program_Counter += 1
     End Sub
-    Private Sub DP_Absolute_Indirect_Long()
+    Private Sub Indirect_Long_Jump()
         Dim Addr As Byte = Read_Memory_16(Registers.PBR, Registers.Program_Counter)
-        Effective_Address = Read_Memory_24(0, Addr) + Registers.Y
+        Effective_Address = Read_Memory_24(0, Addr)
         Registers.Program_Counter += 2
     End Sub
-    Private Sub DP_Indirect_Indexed_Long()
-        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D
+    Private Sub Indirect_Long_Y()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter)
         Effective_Address = Read_Memory_24(0, Addr) + Registers.Y
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Indirect_X()
+        Dim Addr As Byte = Read_Memory_16(Registers.PBR, Registers.Program_Counter) + Registers.X
+        Effective_Address = Read_Memory_16(Registers.PBR, Addr)
+        Registers.Program_Counter += 2
+    End Sub
+    Private Sub DP_Indirect_X()
+        Dim Addr As Byte = Read_Memory(Registers.PBR, Registers.Program_Counter) + Registers.D + Registers.X
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.DBR * &H10000) + Registers.Y
         Registers.Program_Counter += 1
     End Sub
 #End Region
@@ -928,6 +950,17 @@
     Private Sub Increment_Y_16() 'INY (16 bits)
         Registers.Y = (Registers.Y + 1) And &HFF
         Set_Zero_Negative_Flag_16(Registers.Y)
+    End Sub
+    Private Sub Jump() 'JMP
+        Registers.Program_Counter = Effective_Address And &HFFFF
+    End Sub
+    Private Sub Jump_To_Subroutine(Optional DBR As Boolean = False) 'JSR
+        If DBR Then
+            Push(Registers.PBR)
+            Registers.PBR = (Effective_Address And &HFF0000) / &H10000
+        End If
+        Push_16((Registers.Program_Counter - 1) And &HFFFF)
+        Registers.Program_Counter = Effective_Address And &HFFFF
     End Sub
 #End Region
 
