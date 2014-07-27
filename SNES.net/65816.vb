@@ -22,6 +22,7 @@
         Dim Program_Counter As Integer 'Posição para leitura de instruções
     End Structure
     Dim Registers As CPURegs
+    Dim Emulate_6502 As Boolean
 
     Dim Effective_Address As Integer
     Dim Page_Crossed As Boolean
@@ -775,6 +776,274 @@
                 Case &HFA : Pull_X() : Cycles += 4 'PLX
                 Case &H7A : Pull_Y() : Cycles += 4 'PLY
 
+                Case &HC2 : Immediate() : Reset_Status() : Cycles += 3 'REP #const
+
+                Case &H26 'ROL dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Left() Else Rotate_Left_16()
+                    Cycles += 5
+                Case &H2A 'ROL A
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Left_A() Else Rotate_Left_A_16()
+                    Cycles += 2
+                Case &H2E 'ROL addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Left() Else Rotate_Left_16()
+                    Cycles += 6
+                Case &H36 'ROL dp,X
+                    Zero_Page_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Left() Else Rotate_Left_16()
+                    Cycles += 6
+                Case &H3E 'ROL addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Left() Else Rotate_Left_16()
+                    Cycles += 7
+
+                Case &H66 'ROR dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Right() Else Rotate_Right_16()
+                    Cycles += 5
+                Case &H6A 'ROR A
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Right_A() Else Rotate_Right_A_16()
+                    Cycles += 2
+                Case &H6E 'ROR addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Right() Else Rotate_Right_16()
+                    Cycles += 6
+                Case &H76 'ROR dp,X
+                    Zero_Page_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Right() Else Rotate_Right_16()
+                    Cycles += 6
+                Case &H7E 'ROR addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Rotate_Right() Else Rotate_Right_16()
+                    Cycles += 7
+
+                Case &H40 : Return_From_Interrupt() : Cycles += 6 'RTI
+                Case &H6B : Return_From_Subroutine_Long() : Cycles += 6 'RTL
+                Case &H60 : Return_From_Subroutine() : Cycles += 6 'RTS
+
+                Case &HE1 'SBC (_dp_,X)
+                    DP_Indirect_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 6
+                Case &HE3 'SBC sr,S
+                    Stack_Relative()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 4
+                Case &HE5 'SBC dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 3
+                Case &HE7 'SBC dp
+                    Indirect_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 6
+                Case &HE9 'SBC #const
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Immediate()
+                        Subtract_With_Carry()
+                    Else
+                        Immediate_16()
+                        Subtract_With_Carry_16()
+                    End If
+                    Cycles += 2
+                Case &HED 'SBC addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 4
+                Case &HEF 'SBC long
+                    Absolute_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 5
+                Case &HF1 'SBC ( dp),Y
+                    Indirect_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 5
+                Case &HF2 'SBC (_dp_)
+                    DP_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 5
+                Case &HF3 'SBC (_sr_,S),Y
+                    Indirect_Stack_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 7
+                Case &HF5 'SBC dp,X
+                    Zero_Page_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 4
+                Case &HF7 'SBC dp,Y
+                    Indirect_Long_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 6
+                Case &HF9 'SBC addr,Y
+                    Absolute_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 4
+                Case &HFD 'SBC addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 4
+                Case &HFF 'SBC long,X
+                    Absolute_Long_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Subtract_With_Carry() Else Subtract_With_Carry_16()
+                    Cycles += 5
+
+                Case &H38 : Set_Carry() : Cycles += 2 'SEC
+                Case &HF8 : Set_Decimal() : Cycles += 2 'SED
+                Case &H78 : Set_Interrupt_Disable() : Cycles += 2 'SEI
+                Case &HE2 : Immediate() : Set_Status() : Cycles += 3 'SEP
+
+                Case &H81 'STA (_dp_,X)
+                    DP_Indirect_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 6
+                Case &H83 'STA sr,S
+                    Stack_Relative()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 4
+                Case &H85 'STA dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 3
+                Case &H87 'STA dp
+                    Indirect_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 6
+                Case &H89 'STA #const
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then
+                        Immediate()
+                        Store_Accumulator()
+                    Else
+                        Immediate_16()
+                        Store_Accumulator_16()
+                    End If
+                    Cycles += 2
+                Case &H8D 'STA addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 4
+                Case &H8F 'STA long
+                    Absolute_Long()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 5
+                Case &H91 'STA ( dp),Y
+                    Indirect_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 5
+                Case &H92 'STA (_dp_)
+                    DP_Indirect()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 5
+                Case &H93 'STA (_sr_,S),Y
+                    Indirect_Stack_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 7
+                Case &H95 'STA dp,X
+                    Zero_Page_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 4
+                Case &H97 'STA dp,Y
+                    Indirect_Long_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 6
+                Case &H99 'STA addr,Y
+                    Absolute_Y()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 4
+                Case &H9D 'STA addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 4
+                Case &H9F 'STA long,X
+                    Absolute_Long_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Accumulator() Else Store_Accumulator_16()
+                    Cycles += 5
+
+                Case &HDB : Stop_Processor() : Cycles += 3 'STP (Para a CPU)
+
+                Case &H86 'STX dp
+                    Zero_Page()
+                    If (Registers.P And Index_8_Bits_Flag) Then Store_X() Else Store_X_16()
+                    Cycles += 3
+                Case &H8E 'STX addr
+                    Absolute()
+                    If (Registers.P And Index_8_Bits_Flag) Then Store_X() Else Store_X_16()
+                    Cycles += 4
+                Case &H96 'STX dp,Y
+                    Zero_Page_Y()
+                    If (Registers.P And Index_8_Bits_Flag) Then Store_X() Else Store_X_16()
+                    Cycles += 4
+
+                Case &H84 'STY dp
+                    Zero_Page()
+                    If (Registers.P And Index_8_Bits_Flag) Then Store_Y() Else Store_Y_16()
+                    Cycles += 3
+                Case &H8C 'STY addr
+                    Absolute()
+                    If (Registers.P And Index_8_Bits_Flag) Then Store_Y() Else Store_Y_16()
+                    Cycles += 4
+                Case &H94 'STY dp,X
+                    Zero_Page_X()
+                    If (Registers.P And Index_8_Bits_Flag) Then Store_Y() Else Store_Y_16()
+                    Cycles += 4
+
+                Case &H64 'STZ dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Zero() Else Store_Zero_16()
+                    Cycles += 3
+                Case &H74 'STZ dp,X
+                    Zero_Page_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Zero() Else Store_Zero_16()
+                    Cycles += 4
+                Case &H9C 'STZ addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Zero() Else Store_Zero_16()
+                    Cycles += 4
+                Case &H9E 'STZ addr,X
+                    Absolute_X()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Store_Zero() Else Store_Zero_16()
+                    Cycles += 5
+
+                Case &HAA : Transfer_Accumulator_To_X() : Cycles += 2 'TAX
+                Case &HA8 : Transfer_Accumulator_To_Y() : Cycles += 2 'TAY
+                Case &H5B : Transfer_Accumulator_To_DP() : Cycles += 2 'TCD
+                Case &H1B : Transfer_Accumulator_To_SP() : Cycles += 2 'TCS
+                Case &H7B : Transfer_DP_To_Accumulator() : Cycles += 2 'TDC
+
+                Case &H14 'TRB dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_And_Reset_Bit() Else Test_And_Reset_Bit_16()
+                    Cycles += 5
+                Case &H1C 'TRB addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_And_Reset_Bit() Else Test_And_Reset_Bit_16()
+                    Cycles += 6
+
+                Case &H4 'TSB dp
+                    Zero_Page()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_And_Set_Bit() Else Test_And_Set_Bit_16()
+                    Cycles += 5
+                Case &HC 'TSB addr
+                    Absolute()
+                    If (Registers.P And Accumulator_8_Bits_Flag) Then Test_And_Set_Bit() Else Test_And_Set_Bit_16()
+                    Cycles += 6
+
+                Case &H3B : Transfer_SP_To_Accumulator() : Cycles += 2 'TSC
+                Case &HBA : Transfer_SP_To_X() : Cycles += 2 'TSX
+                Case &H8A : Transfer_X_To_Accumulator() : Cycles += 2 'TXA
+                Case &H9A : Transfer_X_To_SP() : Cycles += 2 'TXS
+                Case &H9B : Transfer_X_To_Y() : Cycles += 2 'TXY
+                Case &H98 : Transfer_Y_To_Accumulator() : Cycles += 2 'TYA
+                Case &HBB : Transfer_Y_To_X() : Cycles += 2 'TYX
+
+                Case &HCB : Wait_For_Interrupt() : Cycles += 3 'WAI (Para o processador, volta com Interrupt)
+
+                Case &H42 'WDM (Não usado, expansão)
+
+                Case &HEB : Exchange_Accumulator() : Cycles += 3 'XBA
+
+                Case &HFB : Exchange_Carry_And_Emulation() : Cycles += 2 'XCE
+
                 Case Else : MsgBox("Opcode não implementado em 0x" & Hex(Registers.Program_Counter) & " -> " & Hex(Opcode)) : Cycles += 1
             End Select
         End While
@@ -1327,6 +1596,251 @@
     End Sub
     Private Sub Pull_Y() 'PLY
         Registers.Y = Pull()
+    End Sub
+    Private Sub Reset_Status() 'REP
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Clear_Flag(Value)
+    End Sub
+    Private Sub Rotate_Left() 'ROL (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Value And &H80, Carry_Flag)
+            Value = (Value << 1) Or &H1
+        Else
+            Test_Flag(Value And &H80, Carry_Flag)
+            Value <<= 1
+        End If
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Set_Zero_Negative_Flag(Value)
+    End Sub
+    Private Sub Rotate_Left_A() 'ROL (8 bits)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Registers.A And &H80, Carry_Flag)
+            Registers.A = (Registers.A << 1) Or &H1
+        Else
+            Test_Flag(Registers.A And &H80, Carry_Flag)
+            Registers.A <<= 1
+        End If
+        Set_Zero_Negative_Flag(Registers.A)
+    End Sub
+    Private Sub Rotate_Left_16() 'ROL (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Value And &H8000, Carry_Flag)
+            Value = (Value << 1) Or &H1
+        Else
+            Test_Flag(Value And &H8000, Carry_Flag)
+            Value <<= 1
+        End If
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Set_Zero_Negative_Flag_16(Value)
+    End Sub
+    Private Sub Rotate_Left_A_16() 'ROL (16 bits)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Registers.A And &H8000, Carry_Flag)
+            Registers.A = (Registers.A << 1) Or &H1
+        Else
+            Test_Flag(Registers.A And &H8000, Carry_Flag)
+            Registers.A <<= 1
+        End If
+        Set_Zero_Negative_Flag_16(Registers.A)
+    End Sub
+    Private Sub Rotate_Right() 'ROR (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Value And &H1, Carry_Flag)
+            Value = (Value >> 1) Or &H80
+        Else
+            Test_Flag(Value And &H1, Carry_Flag)
+            Value >>= 1
+        End If
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Set_Zero_Negative_Flag(Value)
+    End Sub
+    Private Sub Rotate_Right_A() 'ROR (8 bits)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Registers.A And &H1, Carry_Flag)
+            Registers.A = (Registers.A >> 1) Or &H80
+        Else
+            Test_Flag(Registers.A And &H1, Carry_Flag)
+            Registers.A >>= 1
+        End If
+        Set_Zero_Negative_Flag(Registers.A)
+    End Sub
+    Private Sub Rotate_Right_16() 'ROR (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Value And &H1, Carry_Flag)
+            Value = (Value >> 1) Or &H8000
+        Else
+            Test_Flag(Value And &H1, Carry_Flag)
+            Value >>= 1
+        End If
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+        Set_Zero_Negative_Flag_16(Value)
+    End Sub
+    Private Sub Rotate_Right_A_16() 'ROR (16 bits)
+        If (Registers.P And Carry_Flag) Then
+            Test_Flag(Registers.A And &H1, Carry_Flag)
+            Registers.A = (Registers.A >> 1) Or &H8000
+        Else
+            Test_Flag(Registers.A And &H1, Carry_Flag)
+            Registers.A >>= 1
+        End If
+        Set_Zero_Negative_Flag_16(Registers.A)
+    End Sub
+    Private Sub Return_From_Interrupt() 'RTI
+        Registers.P = Pull()
+        Registers.Program_Counter = Pull_16()
+    End Sub
+    Private Sub Return_From_Subroutine_Long() 'RTL
+        Registers.Program_Counter = Pull_16()
+        Registers.Program_Counter += 1
+        Registers.PBR = Pull()
+    End Sub
+    Private Sub Return_From_Subroutine() 'RTS
+        Registers.Program_Counter = Pull_16()
+        Registers.Program_Counter += 1
+    End Sub
+    Private Sub Subtract_With_Carry() 'SBC (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF) Xor &HFF
+        Dim Temp As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
+        Test_Flag(Temp > &HFF, Carry_Flag)
+        Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Temp) And &H80), Overflow_Flag)
+        Registers.A = Temp And &HFF
+        Set_Zero_Negative_Flag(Registers.A)
+    End Sub
+    Private Sub Subtract_With_Carry_16() 'SBC (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF) Xor &HFFFF
+        Dim Temp As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
+        Test_Flag(Temp > &HFFFF, Carry_Flag)
+        Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Temp) And &H8000), Overflow_Flag)
+        Registers.A = Temp And &HFFFF
+        Set_Zero_Negative_Flag_16(Registers.A)
+    End Sub
+    Private Sub Set_Carry() 'SEC
+        Set_Flag(Carry_Flag)
+    End Sub
+    Private Sub Set_Decimal() 'SED
+        Set_Flag(Decimal_Flag)
+    End Sub
+    Private Sub Set_Interrupt_Disable() 'SEI
+        Set_Flag(Interrupt_Flag)
+    End Sub
+    Private Sub Set_Status() 'SEP
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Set_Flag(Value)
+    End Sub
+    Private Sub Store_Accumulator() 'STA (8 bits)
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Registers.A)
+    End Sub
+    Private Sub Store_Accumulator_16() 'STA (16 bits)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Registers.A)
+    End Sub
+    Private Sub Stop_Processor()
+        MsgBox("CPU parada através da instrução STP!", vbExclamation)
+        SNES_On = False
+    End Sub
+    Private Sub Store_X() 'STX (8 bits)
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Registers.X)
+    End Sub
+    Private Sub Store_X_16() 'STX (16 bits)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Registers.X)
+    End Sub
+    Private Sub Store_Y() 'STY (8 bits)
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Registers.Y)
+    End Sub
+    Private Sub Store_Y_16() 'STY (16 bits)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Registers.Y)
+    End Sub
+    Private Sub Store_Zero() 'STZ (8 bits)
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, 0)
+    End Sub
+    Private Sub Store_Zero_16() 'STZ (16 bits)
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, 0)
+    End Sub
+    Private Sub Transfer_Accumulator_To_X() 'TAX (8 bits)
+        Registers.X = Registers.A
+        Set_Zero_Negative_Flag(Registers.X)
+    End Sub
+    Private Sub Transfer_Accumulator_To_X_16() 'TAX (16 bits)
+        Registers.X = Registers.A
+        Set_Zero_Negative_Flag_16(Registers.X)
+    End Sub
+    Private Sub Transfer_Accumulator_To_Y() 'TAY (8 bits)
+        Registers.Y = Registers.A
+        Set_Zero_Negative_Flag(Registers.Y)
+    End Sub
+    Private Sub Transfer_Accumulator_To_Y_16() 'TAY (16 bits)
+        Registers.Y = Registers.A
+        Set_Zero_Negative_Flag_16(Registers.Y)
+    End Sub
+    Private Sub Transfer_Accumulator_To_DP() 'TCD
+        Registers.D = Registers.A
+    End Sub
+    Private Sub Transfer_Accumulator_To_SP() 'TCS
+        Registers.Stack_Pointer = Registers.A
+    End Sub
+    Private Sub Transfer_DP_To_Accumulator() 'TDC
+        Registers.A = Registers.D
+    End Sub
+    Private Sub Test_And_Reset_Bit() 'TRB (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag(Not (Registers.A And Value), Zero_Flag)
+        Value = Value And Not Registers.A
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Test_And_Reset_Bit_16() 'TRB (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag(Not (Registers.A And Value), Zero_Flag)
+        Value = Value And Not Registers.A
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Test_And_Set_Bit() 'TSB (8 bits)
+        Dim Value As Byte = Read_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag(Not (Registers.A And Value), Zero_Flag)
+        Value = Value Or Registers.A
+        Write_Memory(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Test_And_Set_Bit_16() 'TSB (16 bits)
+        Dim Value As Integer = Read_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF)
+        Test_Flag(Not (Registers.A And Value), Zero_Flag)
+        Value = Value Or Registers.A
+        Write_Memory_16(Effective_Address / &H10000, Effective_Address And &HFFFF, Value)
+    End Sub
+    Private Sub Transfer_SP_To_Accumulator() 'TSC
+        Registers.A = Registers.Stack_Pointer
+    End Sub
+    Private Sub Transfer_SP_To_X() 'TSX
+        Registers.X = Registers.Stack_Pointer
+    End Sub
+    Private Sub Transfer_X_To_Accumulator() 'TXA
+        Registers.A = Registers.X
+    End Sub
+    Private Sub Transfer_X_To_SP() 'TXS
+        Registers.Stack_Pointer = Registers.X
+    End Sub
+    Private Sub Transfer_X_To_Y() 'TXY
+        Registers.Y = Registers.X
+    End Sub
+    Private Sub Transfer_Y_To_Accumulator() 'TYA
+        Registers.A = Registers.Y
+    End Sub
+    Private Sub Transfer_Y_To_X() 'TYX
+        Registers.X = Registers.Y
+    End Sub
+    Private Sub Wait_For_Interrupt() 'WAI
+        '???
+    End Sub
+    Private Sub Exchange_Accumulator() 'XBA
+        Dim Low_Byte As Byte = Registers.A And &HFF
+        Dim High_Byte As Byte = (Registers.A And &HFF00) / &H100
+        Registers.A = High_Byte + (Low_Byte * &H100)
+    End Sub
+    Private Sub Exchange_Carry_And_Emulation() 'XCE
+        Dim Carry As Boolean = Registers.P And Carry_Flag
+        If Emulate_6502 Then Set_Flag(Carry_Flag) Else Clear_Flag(Carry_Flag)
+        Emulate_6502 = Carry
     End Sub
 #End Region
 
