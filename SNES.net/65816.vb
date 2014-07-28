@@ -1139,7 +1139,6 @@ Module _65816
     End Sub
     Private Sub Zero_Page()
         Effective_Address = Read_Memory(Registers.Program_Bank, Registers.Program_Counter) + Registers.Direct_Page
-        Effective_Address += Registers.Program_Bank * &H10000
         Registers.Program_Counter += 1
     End Sub
     Private Sub Zero_Page_X()
@@ -1228,7 +1227,7 @@ Module _65816
         Test_Flag(Temp > &HFF, Carry_Flag)
         Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Temp) And &H80), Overflow_Flag)
         Registers.A = Temp And &HFF
-        Set_Zero_Negative_Flag(Registers.A)
+        Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Add_With_Carry_16() 'ADC (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -1323,10 +1322,10 @@ Module _65816
         Registers.Program_Counter += Offset
     End Sub
     Private Sub Break() 'BRK
-        Write_Memory_24(0, Registers.Stack_Pointer, Registers.Program_Counter + (Registers.Program_Bank * &H10000))
-        Registers.Stack_Pointer -= 3
-        Write_Memory(0, Registers.Stack_Pointer, Registers.P)
-        Registers.Stack_Pointer -= 1
+        Push(Registers.Program_Bank)
+        Push((Registers.Program_Counter And &HFF00) / &H100)
+        Push(Registers.Program_Counter And &HFF)
+        Push(Registers.P)
         Registers.Program_Bank = 0
         Registers.Program_Counter = Read_Memory_16(0, &HFFE6)
     End Sub
@@ -1361,7 +1360,7 @@ Module _65816
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Dim Temp As Integer = Registers.A - Value
         Test_Flag(Registers.A >= Value, Carry_Flag)
-        Set_Zero_Negative_Flag(Temp)
+        Set_Zero_Negative_Flag(Temp And &HFF)
     End Sub
     Private Sub Compare_16() 'CMP (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -1377,7 +1376,7 @@ Module _65816
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Dim Temp As Integer = Registers.X - Value
         Test_Flag(Registers.X >= Value, Carry_Flag)
-        Set_Zero_Negative_Flag(Temp)
+        Set_Zero_Negative_Flag(Temp And &HFF)
     End Sub
     Private Sub Compare_With_X_16() 'CPX (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -1389,7 +1388,7 @@ Module _65816
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Dim Temp As Integer = Registers.Y - Value
         Test_Flag(Registers.Y >= Value, Carry_Flag)
-        Set_Zero_Negative_Flag(Temp)
+        Set_Zero_Negative_Flag(Temp And &HFF)
     End Sub
     Private Sub Compare_With_Y_16() 'CPY (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -1724,6 +1723,7 @@ Module _65816
     Private Sub Return_From_Interrupt() 'RTI
         Registers.P = Pull()
         Registers.Program_Counter = Pull_16()
+        Registers.Program_Bank = Pull()
     End Sub
     Private Sub Return_From_Subroutine_Long() 'RTL
         Registers.Program_Counter = Pull_16()
@@ -1914,10 +1914,11 @@ Module _65816
             WAI_Disable = False
             Exit Sub
         End If
-        Write_Memory_24(0, Registers.Stack_Pointer, Registers.Program_Counter + (Registers.Program_Bank * &H10000))
-        Registers.Stack_Pointer -= 3
-        Write_Memory(0, Registers.Stack_Pointer, Registers.P)
-        Registers.Stack_Pointer -= 1
+
+        Push(Registers.Program_Bank)
+        Push((Registers.Program_Counter And &HFF00) / &H100)
+        Push(Registers.Program_Counter And &HFF)
+        Push(Registers.P)
         Registers.Program_Bank = 0
         Registers.Program_Counter = Read_Memory_16(0, &HFFEE)
         Set_Flag(Interrupt_Flag)
@@ -1928,10 +1929,10 @@ Module _65816
             If WAI_Disable Then Registers.Program_Counter += 1
             WAI_Disable = False
         End If
-        Write_Memory_24(0, Registers.Stack_Pointer, Registers.Program_Counter + (Registers.Program_Bank * &H10000))
-        Registers.Stack_Pointer -= 3
-        Write_Memory(0, Registers.Stack_Pointer, Registers.P)
-        Registers.Stack_Pointer -= 1
+        Push(Registers.Program_Bank)
+        Push((Registers.Program_Counter And &HFF00) / &H100)
+        Push(Registers.Program_Counter And &HFF)
+        Push(Registers.P)
         Registers.Program_Bank = 0
         Registers.Program_Counter = Read_Memory_16(0, &HFFEA)
         Set_Flag(Interrupt_Flag)
