@@ -63,6 +63,7 @@
                 Palette(Pal_Address >> 1).G = ((Palette_Value >> 5) And 31) * 8
                 Palette(Pal_Address >> 1).B = ((Palette_Value >> 10) And 31) * 8
                 Pal_Address += 1
+            Case &H2140 To &H217F : Write_SPU(Address, Value)
         End Select
     End Sub
     Public Function Read_PPU(Address As Integer) As Byte
@@ -89,10 +90,6 @@
             Case &H213F : Old_Cycles = Cycles
             Case &H2140 To &H217F
                 Dim Temp As Byte = Read_SPU(Address)
-                'Select Case Address And &HFF
-                'Case &H40 : Temp = &HAA
-                'Case &H41 : Temp = &HBB
-                'End Select
                 WriteLine(1, "Debug SPU -> " & Hex(Temp))
                 Return Temp
             Case Else : Return Nothing 'Não deve acontecer

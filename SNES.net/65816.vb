@@ -1140,11 +1140,11 @@ Module _65816
 
 #Region "Addressing Modes"
     Private Sub Immediate() '8 bits
-        Effective_Address = Registers.Program_Counter
+        Effective_Address = Registers.Program_Counter + (Registers.Program_Bank * &H10000)
         Registers.Program_Counter += 1
     End Sub
     Private Sub Immediate_16() '16 bits
-        Effective_Address = Registers.Program_Counter
+        Effective_Address = Registers.Program_Counter + (Registers.Program_Bank * &H10000)
         Registers.Program_Counter += 2
     End Sub
     Private Sub Zero_Page()
@@ -1420,7 +1420,7 @@ Module _65816
         Set_Zero_Negative_Flag_16(Result)
     End Sub
     Private Sub Decrement() 'DEC (8 bits)
-        Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) - 1
+        Dim Value As Byte = (Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) - 1) And &HFF
         Set_Zero_Negative_Flag(Value)
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
@@ -1429,7 +1429,7 @@ Module _65816
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Decrement_16() 'DEC (16 bits)
-        Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) - 1
+        Dim Value As Integer = (Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) - 1) And &HFFFF
         Set_Zero_Negative_Flag_16(Value)
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
@@ -1464,7 +1464,7 @@ Module _65816
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Increment() 'INC (8 bits)
-        Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + 1
+        Dim Value As Byte = (Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + 1) And &HFF
         Set_Zero_Negative_Flag(Value)
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
@@ -1473,7 +1473,7 @@ Module _65816
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Increment_16() 'INC (16 bits)
-        Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + 1
+        Dim Value As Integer = (Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + 1) And &HFFFF
         Set_Zero_Negative_Flag_16(Value)
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
@@ -1814,8 +1814,8 @@ Module _65816
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, 0)
     End Sub
     Private Sub Transfer_Accumulator_To_X() 'TAX (8 bits)
-        Registers.X = Registers.A
-        Set_Zero_Negative_Flag(Registers.X)
+        Registers.X = (Registers.A And &HFF) + (Registers.X And &HFF00)
+        Set_Zero_Negative_Flag(Registers.X And &HFF)
     End Sub
     Private Sub Transfer_Accumulator_To_X_16() 'TAX (16 bits)
         Registers.X = Registers.A
@@ -1823,7 +1823,7 @@ Module _65816
     End Sub
     Private Sub Transfer_Accumulator_To_Y() 'TAY (8 bits)
         Registers.Y = Registers.A
-        Set_Zero_Negative_Flag(Registers.Y)
+        Set_Zero_Negative_Flag(Registers.Y And &HFF)
     End Sub
     Private Sub Transfer_Accumulator_To_Y_16() 'TAY (16 bits)
         Registers.Y = Registers.A
@@ -1869,8 +1869,8 @@ Module _65816
         Registers.X = Registers.Stack_Pointer
     End Sub
     Private Sub Transfer_X_To_Accumulator() 'TXA (8 bits)
-        Registers.A = Registers.X
-        Set_Zero_Negative_Flag(Registers.A)
+        Registers.A = (Registers.X And &HFF) + (Registers.A And &HFF00)
+        Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Transfer_X_To_Accumulator_16() 'TXA (16 bits)
         Registers.A = Registers.X
@@ -1880,24 +1880,24 @@ Module _65816
         Registers.Stack_Pointer = Registers.X
     End Sub
     Private Sub Transfer_X_To_Y() 'TXY (8 bits)
-        Registers.Y = Registers.X
-        Set_Zero_Negative_Flag(Registers.Y)
+        Registers.Y = (Registers.X And &HFF) + (Registers.Y And &HFF00)
+        Set_Zero_Negative_Flag(Registers.Y And &HFF)
     End Sub
     Private Sub Transfer_X_To_Y_16() 'TXY (16 bits)
         Registers.Y = Registers.X
         Set_Zero_Negative_Flag_16(Registers.Y)
     End Sub
     Private Sub Transfer_Y_To_Accumulator() 'TYA (8 bits)
-        Registers.A = Registers.Y
-        Set_Zero_Negative_Flag(Registers.A)
+        Registers.A = (Registers.Y And &HFF) + (Registers.A And &HFF00)
+        Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Transfer_Y_To_Accumulator_16() 'TYA (16 bits)
         Registers.A = Registers.Y
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Transfer_Y_To_X() 'TYX (8 bits)
-        Registers.X = Registers.Y
-        Set_Zero_Negative_Flag(Registers.X)
+        Registers.X = (Registers.Y And &HFF) + (Registers.X And &HFF00)
+        Set_Zero_Negative_Flag(Registers.X And &HFF)
     End Sub
     Private Sub Transfer_Y_To_X_16() 'TYX (16 bits)
         Registers.X = Registers.Y

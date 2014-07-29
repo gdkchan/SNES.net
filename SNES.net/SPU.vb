@@ -4,6 +4,9 @@
     Dim Temp As Integer
 
     Public Old_Cycles As Integer
+    Public Sub Write_SPU(Address As Integer, Value As Byte)
+        SPU_Memory(&HF4 + (Address And 3)) = Value
+    End Sub
     Public Function Read_SPU(Address As Integer) As Byte
         Select Case Address And &HFF
             Case &H40, &H42
@@ -78,5 +81,7 @@
                     Case Else : Return 0
                 End Select
         End Select
+
+        Return Nothing
     End Function
 End Module
