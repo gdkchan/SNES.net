@@ -110,6 +110,7 @@
     </Compile>
     <Compile Include="PPU.vb" />
     <Compile Include="ROM.vb" />
+    <Compile Include="SPU.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="FrmMain.resx">

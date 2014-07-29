@@ -21,6 +21,7 @@
     Dim VRAM(&HFFFF) As Byte
     Dim CGRAM(&H1FF) As Byte
     Public Sub Write_PPU(Address As Integer, Value As Byte)
+        WriteLine(1, "PPU Write -> " & Hex(Address) & " - " & Hex(Value))
         Select Case Address
             Case &H2105
             Case &H2106 'Mosaico
@@ -65,6 +66,7 @@
         End Select
     End Sub
     Public Function Read_PPU(Address As Integer) As Byte
+        WriteLine(1, "PPU Read -> " & Hex(Address))
         Select Case Address
             Case &H2139
                 If First_Read_VRAM Then
@@ -84,10 +86,27 @@
                     If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                     Return Value
                 End If
+            Case &H213F : Old_Cycles = Cycles
+            Case &H2140 To &H217F
+                Dim Temp As Byte = Read_SPU(Address)
+                'Select Case Address And &HFF
+                'Case &H40 : Temp = &HAA
+                'Case &H41 : Temp = &HBB
+                'End Select
+                WriteLine(1, "Debug SPU -> " & Hex(Temp))
+                Return Temp
             Case Else : Return Nothing 'Não deve acontecer
         End Select
     End Function
     Public Sub Render_Scanline(Scanline As Integer)
-        
+        FrmMain.PicScreen.BackColor = Color.Black
+        For i As Integer = 0 To 255
+            If Palette(i).R <> 0 Or Palette(i).G <> 0 Or Palette(i).B <> 0 Then
+                FrmMain.PicScreen.BackColor = Color.FromArgb(Palette(i).R, Palette(i).G, Palette(i).B)
+                'MsgBox("R: " & Palette(i).R & " G: " & Palette(i).G & " B: " & Palette(i).B)
+                FrmMain.PicScreen.Refresh()
+                Application.DoEvents()
+            End If
+        Next
     End Sub
 End Module

@@ -1,9 +1,5 @@
 ﻿Imports System.IO
 Module _65816
-    Const NMI_Vector = &HFFFA
-    Const Reset_Vector = &HFFFC
-    Const IRQ_Vector = &HFFFE
-
     Const Negative_Flag = &H80
     Const Overflow_Flag = &H40
     Const Accumulator_8_Bits_Flag = &H20
@@ -12,7 +8,7 @@ Module _65816
     Const Interrupt_Flag = &H4
     Const Zero_Flag = &H2
     Const Carry_Flag = &H1
-    Private Structure CPURegs
+    Public Structure CPURegs
         Dim A As Integer 'Accumulator (16 bits)
         Dim X, Y As Integer 'Index X/Y (16 bits)
         Dim Stack_Pointer As Integer
@@ -22,18 +18,19 @@ Module _65816
         Dim P As Byte 'Flags de status - Ver flags acima
         Dim Program_Counter As Integer 'Posição para leitura de instruções
     End Structure
-    Dim Registers As CPURegs
+    Public Registers As CPURegs
     Dim Emulate_6502 As Boolean = True
 
     Dim Effective_Address As Integer
     Dim Page_Crossed As Boolean
 
-    Public Memory(&H1FFFF)
+    Public Cycles As Double
 
     Public SNES_On As Boolean
-    Dim WAI_Disable, STP_Disable As Boolean
+    Public STP_Disable As Boolean
+    Dim WAI_Disable As Boolean
 
-    Dim Cycles As Double
+    Public Memory(&H1FFFF)
 
     Dim dbg_cnt As Long
 
@@ -113,7 +110,7 @@ Module _65816
         Set_Flag(Accumulator_8_Bits_Flag)
         Set_Flag(Index_8_Bits_Flag) 'Processador inicia no modo 8 bits
 
-        Registers.Program_Counter = Read_Memory_16(0, Reset_Vector)
+        Registers.Program_Counter = Read_Memory_16(0, &HFFFC)
     End Sub
     Public Sub Execute_65816(Target_Cycles As Double)
         While Cycles < Target_Cycles
@@ -372,7 +369,6 @@ Module _65816
                 Case &HD1 'CMP ( dp),Y
                     Indirect_Y()
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Compare() Else Compare_16()
-                    If Page_Crossed Then Cycles += 1
                     Cycles += 5
                 Case &HD2 'CMP (_dp_)
                     DP_Indirect()
@@ -797,8 +793,12 @@ Module _65816
                 Case &HB : Push_Direct_Page() : Cycles += 4 'PHD
                 Case &H4B : Push_Program_Bank() : Cycles += 3 'PHK
                 Case &H8 : Push_Processor_Status() : Cycles += 3 'PHP
-                Case &HDA : Push_X() : Cycles += 3 'PHX
-                Case &H5A : Push_Y() : Cycles += 3 'PHY
+                Case &HDA 'PHX
+                    If (Registers.P And Index_8_Bits_Flag) Then Push_X() Else Push_X_16()
+                    Cycles += 3
+                Case &H5A
+                    If (Registers.P And Index_8_Bits_Flag) Then Push_Y() Else Push_Y_16()
+                    Cycles += 3 'PHY
 
                 Case &H68 'PLA
                     If (Registers.P And Accumulator_8_Bits_Flag) Then Pull_Accumulator() Else Pull_Accumulator_16()
@@ -806,8 +806,12 @@ Module _65816
                 Case &HAB : Pull_Data_Bank() : Cycles += 4 'PLB
                 Case &H2B : Pull_Direct_Page() : Cycles += 5 'PLD
                 Case &H28 : Pull_Processor_Status() : Cycles += 4 'PLP
-                Case &HFA : Pull_X() : Cycles += 4 'PLX
-                Case &H7A : Pull_Y() : Cycles += 4 'PLY
+                Case &HFA 'PLX
+                    If (Registers.P And Index_8_Bits_Flag) Then Pull_X() Else Pull_X_16()
+                    Cycles += 4
+                Case &H7A 'PLY
+                    If (Registers.P And Index_8_Bits_Flag) Then Pull_Y() Else Pull_Y_16()
+                    Cycles += 4
 
                 Case &HC2 : Immediate() : Reset_Status() : Cycles += 3 'REP #const
 
@@ -1191,7 +1195,9 @@ Module _65816
     End Sub
     Private Sub Indirect_Y()
         Dim Addr As Integer = Read_Memory(Registers.Program_Bank, Registers.Program_Counter) + Registers.Direct_Page
-        Effective_Address = Read_Memory_16(0, Addr) + (Registers.Data_Bank * &H10000) + Registers.Y
+        Effective_Address = Read_Memory_16(0, Addr) + (Registers.Data_Bank * &H10000)
+        If (Effective_Address And &HFF00) <> ((Effective_Address + Registers.Y) And &HFF00) Then Page_Crossed = True
+        Effective_Address += Registers.Y
         Registers.Program_Counter += 1
     End Sub
     Private Sub Indirect_Stack_Y()
@@ -1503,27 +1509,27 @@ Module _65816
         Registers.Program_Counter = Effective_Address And &HFFFF
     End Sub
     Private Sub Load_Accumulator() 'LDA (8 bits)
-        Registers.A = Read_Memory(Registers.Program_Bank, Effective_Address) + (Registers.A And &HFF00)
+        Registers.A = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Load_Accumulator_16() 'LDA (16 bits)
-        Registers.A = Read_Memory_16(Registers.Program_Bank, Effective_Address)
+        Registers.A = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Load_X() 'LDX (8 bits)
-        Registers.X = Read_Memory(Registers.Program_Bank, Effective_Address) + (Registers.X And &HFF00)
+        Registers.X = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + (Registers.X And &HFF00)
         Set_Zero_Negative_Flag(Registers.X And &HFF)
     End Sub
     Private Sub Load_X_16() 'LDX (16 bits)
-        Registers.X = Read_Memory_16(Registers.Program_Bank, Effective_Address)
+        Registers.X = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Set_Zero_Negative_Flag_16(Registers.X)
     End Sub
     Private Sub Load_Y() 'LDY (8 bits)
-        Registers.Y = Read_Memory(Registers.Program_Bank, Effective_Address) + (Registers.Y And &HFF00)
+        Registers.Y = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) + (Registers.Y And &HFF00)
         Set_Zero_Negative_Flag(Registers.Y And &HFF)
     End Sub
     Private Sub Load_Y_16() 'LDY (16 bits)
-        Registers.Y = Read_Memory_16(Registers.Program_Bank, Effective_Address)
+        Registers.Y = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Set_Zero_Negative_Flag_16(Registers.Y)
     End Sub
     Private Sub Logical_Shift_Right() 'LSR (8 bits)
@@ -1586,7 +1592,7 @@ Module _65816
         Push_16(Effective_Address)
     End Sub
     Private Sub Push_Accumulator() 'PHA (8 bits)
-        Push(Registers.A)
+        Push(Registers.A And &HFF)
     End Sub
     Private Sub Push_Accumulator_16() 'PHA (16 bits)
         Push_16(Registers.A)
@@ -1603,14 +1609,20 @@ Module _65816
     Private Sub Push_Processor_Status() 'PHP
         Push(Registers.P)
     End Sub
-    Private Sub Push_X() 'PHX
+    Private Sub Push_X() 'PHX (8 bits)
+        Push(Registers.X And &HFF)
+    End Sub
+    Private Sub Push_X_16() 'PHX (16 bits)
         Push_16(Registers.X)
     End Sub
-    Private Sub Push_Y() 'PHY
+    Private Sub Push_Y() 'PHY (8 bits)
+        Push(Registers.Y And &HFF)
+    End Sub
+    Private Sub Push_Y_16() 'PHY (16 bits)
         Push_16(Registers.Y)
     End Sub
     Private Sub Pull_Accumulator() 'PLA (8 bits)
-        Registers.A = Pull()
+        Registers.A = Pull() + (Registers.A And &HFF00)
     End Sub
     Private Sub Pull_Accumulator_16() 'PLA (16 bits)
         Registers.A = Pull_16()
@@ -1625,10 +1637,16 @@ Module _65816
         Registers.P = Pull()
         Update_Mode()
     End Sub
-    Private Sub Pull_X() 'PLX
+    Private Sub Pull_X() 'PLX (8 bits)
+        Registers.X = Pull() + (Registers.X And &HFF00)
+    End Sub
+    Private Sub Pull_X_16() 'PLX (16 bits)
         Registers.X = Pull_16()
     End Sub
-    Private Sub Pull_Y() 'PLY
+    Private Sub Pull_Y() 'PLY (8 bits)
+        Registers.Y = Pull() + (Registers.Y And &HFF00)
+    End Sub
+    Private Sub Pull_Y_16() 'PLY (16 bits)
         Registers.Y = Pull_16()
     End Sub
     Private Sub Reset_Status() 'REP
@@ -1748,10 +1766,10 @@ Module _65816
     End Sub
     Private Sub Subtract_With_Carry_16() 'SBC (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) Xor &HFFFF
-        Dim Temp As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
-        Test_Flag(Temp > &HFFFF, Carry_Flag)
-        Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Temp) And &H8000), Overflow_Flag)
-        Registers.A = Temp And &HFFFF
+        Dim Result As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
+        Test_Flag(Result > &HFFFF, Carry_Flag)
+        Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Result) And &H8000), Overflow_Flag)
+        Registers.A = Result And &HFFFF
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Set_Carry() 'SEC
