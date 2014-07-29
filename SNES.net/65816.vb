@@ -41,6 +41,7 @@ Module _65816
             Select Case Address
                 Case 0 To &H1FFF : Return Memory(Address)
                 Case &H2000 To &H2FFF : Return Read_PPU(Address)
+                Case &H4000 To &H4FFF : Return Read_IO(Address)
                 Case &H8000 To &HFFFF : Return ROM_Data(Bank, Address And &H7FFF)
             End Select
         End If
@@ -59,11 +60,12 @@ Module _65816
             (Read_Memory(Bank, Address + 1) * &H100) + _
             (Read_Memory(Bank, Address + 2) * &H10000)
     End Function
-    Private Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
+    Public Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
         Bank = Bank And &H7F
         If Bank < &H60 Then
             Select Case Address
                 Case 0 To &H1FFF : Memory(Address) = Value
+                Case &H4000 To &H4FFF : Write_IO(Address, Value)
                 Case &H2000 To &H2FFF : Write_PPU(Address, Value)
             End Select
         End If
@@ -71,11 +73,11 @@ Module _65816
         If Bank = &H7E Then Memory(Address) = Value
         If Bank = &H7F Then Memory(Address + &H10000) = Value
     End Sub
-    Private Sub Write_Memory_16(Bank As Integer, Address As Integer, Value As Integer)
+    Public Sub Write_Memory_16(Bank As Integer, Address As Integer, Value As Integer)
         Write_Memory(Bank, Address, Value And &HFF)
         Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
     End Sub
-    Private Sub Write_Memory_24(Bank As Integer, Address As Integer, Value As Integer)
+    Public Sub Write_Memory_24(Bank As Integer, Address As Integer, Value As Integer)
         Write_Memory(Bank, Address, Value And &HFF)
         Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
         Write_Memory(Bank, Address + 2, (Value And &HFF0000) / &H10000)
