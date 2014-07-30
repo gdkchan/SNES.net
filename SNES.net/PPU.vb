@@ -59,9 +59,9 @@
             Case &H2122
                 CGRAM(Pal_Address And &H1FF) = Value
                 Dim Palette_Value As Integer = CGRAM(Pal_Address And &H1FE) + (CGRAM((Pal_Address And &H1FE) + 1) * &H100)
-                Palette(Pal_Address >> 1).R = (Palette_Value And 31) * 8
-                Palette(Pal_Address >> 1).G = ((Palette_Value >> 5) And 31) * 8
-                Palette(Pal_Address >> 1).B = ((Palette_Value >> 10) And 31) * 8
+                Palette((Pal_Address / 2) And &HFF).R = (Palette_Value And 31) * 8
+                Palette((Pal_Address / 2) And &HFF).G = ((Palette_Value >> 5) And 31) * 8
+                Palette((Pal_Address / 2) And &HFF).B = ((Palette_Value >> 10) And 31) * 8
                 Pal_Address += 1
             Case &H2140 To &H217F : Write_SPU(Address, Value)
         End Select

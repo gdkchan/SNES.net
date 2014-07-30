@@ -119,7 +119,7 @@ Module _65816
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
             Registers.Program_Counter += 1
 
-            WriteLine(1, "DEBUG " & dbg_cnt & " - > " & "PC: " & Hex(Registers.Program_Counter - 1) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " --OP: " & Hex(Opcode))
+            'WriteLine(1, "DEBUG " & dbg_cnt & " - > " & "PC: " & Hex(Registers.Program_Counter - 1) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " --OP: " & Hex(Opcode))
             dbg_cnt += 1
 
             Page_Crossed = False

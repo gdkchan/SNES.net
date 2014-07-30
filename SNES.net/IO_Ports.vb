@@ -47,7 +47,7 @@
                     If Value And (1 << Channel) Then 'Verifica se deve transferir
                         Dim Source As Integer = DMA_Source(Channel)
                         Dim Dest As Byte = DMA_Dest(Channel)
-                        If Not DMA_Size(Channel) Then DMA_Size(Channel) = &H10000
+                        If DMA_Size(Channel) = 0 Then DMA_Size(Channel) = &H10000
                         While DMA_Size(Channel)
                             If DMA_Control(Channel) And &H80 Then
                                 Write_Memory((Source And &HFF0000) / &H10000, Source And &HFFFF, Read_Memory(0, &H2100 Or Dest))
