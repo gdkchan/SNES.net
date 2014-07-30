@@ -23,6 +23,7 @@ Partial Class FrmMain
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.PicScreen = New System.Windows.Forms.PictureBox()
+        Me.Button1 = New System.Windows.Forms.Button()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -35,11 +36,21 @@ Partial Class FrmMain
         Me.PicScreen.TabIndex = 0
         Me.PicScreen.TabStop = False
         '
+        'Button1
+        '
+        Me.Button1.Location = New System.Drawing.Point(12, 242)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(138, 48)
+        Me.Button1.TabIndex = 1
+        Me.Button1.Text = "Dump VRAM"
+        Me.Button1.UseVisualStyleBackColor = True
+        '
         'FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(575, 429)
+        Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.PicScreen)
         Me.Name = "FrmMain"
         Me.Text = "Form1"
@@ -48,5 +59,6 @@ Partial Class FrmMain
 
     End Sub
     Friend WithEvents PicScreen As System.Windows.Forms.PictureBox
+    Friend WithEvents Button1 As System.Windows.Forms.Button
 
 End Class

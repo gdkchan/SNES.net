@@ -1,5 +1,4 @@
-﻿Imports System.IO
-Module _65816
+﻿Module _65816
     Const Negative_Flag = &H80
     Const Overflow_Flag = &H40
     Const Accumulator_8_Bits_Flag = &H20
@@ -31,8 +30,6 @@ Module _65816
     Dim WAI_Disable As Boolean
 
     Public Memory(&H1FFFF)
-
-    Dim dbg_cnt As Long
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
@@ -82,24 +79,10 @@ Module _65816
         Write_Memory(Bank, Address + 1, (Value And &HFF00) / &H100)
         Write_Memory(Bank, Address + 2, (Value And &HFF0000) / &H10000)
     End Sub
-
-    Private Function Signed_Byte(Byte_To_Convert As Byte) As SByte
-        If (Byte_To_Convert < 128) Then Return Byte_To_Convert
-        Return Byte_To_Convert - 256
-    End Function
-
-    Private Sub Update_Mode()
-        If Registers.P And Index_8_Bits_Flag Or Emulate_6502 Then 'Remove High Byte
-            Registers.X = Registers.X And &HFF
-            Registers.Y = Registers.Y And &HFF
-        End If
-    End Sub
 #End Region
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
-        FileOpen(1, "D:\snes_cpu_dbg.txt", OpenMode.Output)
-
         Registers.A = 0
         Registers.X = 0
         Registers.Y = 0
@@ -118,9 +101,6 @@ Module _65816
         While Cycles < Target_Cycles
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
             Registers.Program_Counter += 1
-
-            'WriteLine(1, "DEBUG " & dbg_cnt & " - > " & "PC: " & Hex(Registers.Program_Counter - 1) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " --OP: " & Hex(Opcode))
-            dbg_cnt += 1
 
             Page_Crossed = False
 
@@ -1140,6 +1120,24 @@ Module _65816
     End Function
 #End Region
 
+#Region "Unsigned/Signed converter, Update_Mode"
+    Private Function Signed_Byte(Byte_To_Convert As Byte) As SByte
+        If (Byte_To_Convert < &H80) Then Return Byte_To_Convert
+        Return Byte_To_Convert - &H100
+    End Function
+    Private Function Signed_Integer(Integer_To_Convert As Integer) As Integer
+        If (Integer_To_Convert < &H8000) Then Return Integer_To_Convert
+        Return Integer_To_Convert - &H10000
+    End Function
+
+    Private Sub Update_Mode()
+        If Registers.P And Index_8_Bits_Flag Or Emulate_6502 Then 'Remove High Byte
+            Registers.X = Registers.X And &HFF
+            Registers.Y = Registers.Y And &HFF
+        End If
+    End Sub
+#End Region
+
 #Region "Addressing Modes"
     Private Sub Immediate() '8 bits
         Effective_Address = Registers.Program_Counter + (Registers.Program_Bank * &H10000)
@@ -1350,7 +1348,7 @@ Module _65816
         End If
     End Sub
     Private Sub Branch_Long_Always() 'BRL
-        Dim Offset As Integer = Read_Memory_16(Registers.Program_Bank, Registers.Program_Counter)
+        Dim Offset As Integer = Signed_Integer(Read_Memory_16(Registers.Program_Bank, Registers.Program_Counter))
         Registers.Program_Counter += 2
         Registers.Program_Counter += Offset
     End Sub
@@ -1976,11 +1974,14 @@ Module _65816
             For Scanline As Integer = 0 To 261
                 If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
                 If Scanline < 224 Then
-                    Render_Scanline(Scanline)
-                Else 'VBlank
-                    If Scanline = 224 Then NMI() 'Nota: Lembrar de adc o NMI enable!!!
+                    'Render_Scanline(Scanline)
+                    H_Blank_DMA(Scanline) 'H-Blank
+                Else 'V-Blank
+                    If Scanline = 224 And NMI_Enable Then NMI() 'Nota: Lembrar de adc o NMI enable!!!
                 End If
             Next
+            Render_Background()
+            Blit()
 
             Application.DoEvents()
         End While

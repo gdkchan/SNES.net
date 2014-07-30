@@ -8,14 +8,14 @@ Module ROM
     End Structure
     Public Header As ROMHeader
 
-    Public ROM_Data(0, 32767) 'As ROMs são mapeadas em bancos de 32kb
+    Public ROM_Data(0, &H7FFF) 'As ROMs são mapeadas em bancos de 32kb
     Public Sub Load_Rom(File_Name As String)
         Dim Data() As Byte = File.ReadAllBytes(File_Name)
-        Dim BankNum As Integer = Data.Length / 32768
-        ReDim ROM_Data(BankNum, 32767)
+        Dim BankNum As Integer = Data.Length / &H8000
+        ReDim ROM_Data(BankNum, &H7FFF)
         For Bank As Integer = 0 To BankNum - 1
-            For Offset As Integer = 0 To 32767
-                ROM_Data(Bank, Offset) = Data((Bank * 32768) + Offset)
+            For Offset As Integer = 0 To &H7FFF
+                ROM_Data(Bank, Offset) = Data((Bank * &H8000) + Offset)
             Next
         Next
 
