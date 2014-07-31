@@ -1,5 +1,6 @@
 ﻿Imports System.Drawing
 Imports System.Drawing.Drawing2D
+Imports System.IO
 Module PPU
     Private Structure Color_Palette
         Dim R As Byte
@@ -70,19 +71,25 @@ Module PPU
             Case &H2114 : Background(3).V_Scroll >>= 8 : Background(3).V_Scroll = Background(3).V_Scroll Or (Value << 8)
             Case &H2115 'VRAM Control
                 Select Case Value And 3
-                    Case 0 : VRAM_Increment = 2
-                    Case 1 : VRAM_Increment = 64
+                    Case 0 : VRAM_Increment = 1
+                    Case 1 : VRAM_Increment = 32
                     Case 2 : VRAM_Increment = 128
                     Case 3 : VRAM_Increment = 256
                 End Select
                 Increment_2119_213A = Value And &H80
-            Case &H2116 : VRAM_Address = (VRAM_Address And &HFF00) Or Value 'VRAM Access
-            Case &H2117 : VRAM_Address = (VRAM_Address And &HFF) Or ((Value And &HFF) << 8)
+            Case &H2116 'VRAM Access
+                VRAM_Address = Value + (VRAM_Address And &HFF00)
+                First_Read_VRAM = True
+            Case &H2117
+                VRAM_Address = (Value * &H100) + (VRAM_Address And &HFF)
+                First_Read_VRAM = True
             Case &H2118
+                'WriteLine(1, "VRAM Write 2118 // " & Hex(VRAM_Address) & " -> " & Hex(Value))
                 VRAM((VRAM_Address << 1) And &HFFFF) = Value
                 If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
             Case &H2119
+                'WriteLine(1, "VRAM Write 2119 // " & Hex(VRAM_Address) & " -> " & Hex(Value))
                 VRAM(((VRAM_Address << 1) + 1) And &HFFFF) = Value
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
@@ -103,20 +110,18 @@ Module PPU
                 If First_Read_VRAM Then
                     First_Read_VRAM = False
                     Return VRAM((VRAM_Address << 1) And &HFFFF)
-                Else
-                    Dim Value As Byte = VRAM(((VRAM_Address << 1) - 2) And &HFFFF)
-                    If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
-                    Return Value
                 End If
+                Dim Value As Byte = VRAM(((VRAM_Address << 1) - 2) And &HFFFF)
+                If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
+                Return Value
             Case &H213A
                 If First_Read_VRAM Then
                     First_Read_VRAM = False
                     Return VRAM(((VRAM_Address << 1) + 1) And &HFFFF)
-                Else
-                    Dim Value As Byte = VRAM(((VRAM_Address << 1) - 1) And &HFFFF)
-                    If Increment_2119_213A Then VRAM_Address += VRAM_Increment
-                    Return Value
                 End If
+                Dim Value As Byte = VRAM(((VRAM_Address << 1) - 1) And &HFFFF)
+                If Increment_2119_213A Then VRAM_Address += VRAM_Increment
+                Return Value
             Case &H213F : Old_Cycles = Cycles
             Case &H2140 To &H217F
                 Dim Temp As Byte = Read_SPU(Address)

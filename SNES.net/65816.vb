@@ -13,7 +13,7 @@ Module _65816
         Dim X, Y As Integer 'Index X/Y (16 bits)
         Dim Stack_Pointer As Integer
         Dim Data_Bank As Byte
-        Dim Direct_Page As Byte
+        Dim Direct_Page As Integer
         Dim Program_Bank As Byte
         Dim P As Byte 'Flags de status - Ver flags acima
         Dim Program_Counter As Integer 'Posição para leitura de instruções
@@ -103,9 +103,7 @@ Module _65816
     Public Sub Execute_65816(Target_Cycles As Double)
         While Cycles < Target_Cycles
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
-            If Registers.Program_Counter = &H82B9 Then
-                WriteLine(1, "DEBUG -> " & Hex(Registers.A) & " - X: " & Hex(Registers.X) & " - Y: " & Hex(Registers.Y) & " -- OP: " & Hex(Opcode))
-            End If
+            'WriteLine(1, "PC: " & Hex(Registers.Program_Counter) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " -- OP: " & Hex(Opcode))
             Registers.Program_Counter += 1
 
             Page_Crossed = False
@@ -1567,10 +1565,10 @@ Module _65816
         Dim Bank As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter + 1)
         Registers.Program_Counter += 2
         Dim Byte_To_Transfer As Byte = Read_Memory(Bank, Registers.X)
-        Registers.X += 1
+        Registers.X = (Registers.X + 1) And &HFFFF
         Write_Memory(Registers.Data_Bank, Registers.Y, Byte_To_Transfer)
-        Registers.Y += 1
-        Registers.A -= 1
+        Registers.Y = (Registers.Y + 1) And &HFFFF
+        Registers.A = (Registers.A - 1) And &HFFFF
         If Registers.A <> &HFFFF Then Registers.Program_Counter -= 3
     End Sub
     Private Sub Block_Move_Positive() 'MVP
@@ -1578,10 +1576,10 @@ Module _65816
         Dim Bank As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter + 1)
         Registers.Program_Counter += 2
         Dim Byte_To_Transfer As Byte = Read_Memory(Bank, Registers.X)
-        Registers.X -= 1
+        Registers.X = (Registers.X - 1) And &HFFFF
         Write_Memory(Registers.Data_Bank, Registers.Y, Byte_To_Transfer)
-        Registers.Y -= 1
-        Registers.A -= 1
+        Registers.Y = (Registers.Y - 1) And &HFFFF
+        Registers.A = (Registers.A - 1) And &HFFFF
         If Registers.A <> &HFFFF Then Registers.Program_Counter -= 3
     End Sub
     Private Sub Or_With_Accumulator() 'ORA (8 bits)
@@ -1607,7 +1605,7 @@ Module _65816
         Push(Registers.Data_Bank)
     End Sub
     Private Sub Push_Direct_Page() 'PHD
-        Push(Registers.Direct_Page)
+        Push_16(Registers.Direct_Page)
     End Sub
     Private Sub Push_Program_Bank() 'PHK
         Push(Registers.Program_Bank)
@@ -1629,15 +1627,17 @@ Module _65816
     End Sub
     Private Sub Pull_Accumulator() 'PLA (8 bits)
         Registers.A = Pull() + (Registers.A And &HFF00)
+        Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Pull_Accumulator_16() 'PLA (16 bits)
         Registers.A = Pull_16()
+        Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Pull_Data_Bank() 'PLB
         Registers.Data_Bank = Pull()
     End Sub
     Private Sub Pull_Direct_Page() 'PLD
-        Registers.Direct_Page = Pull()
+        Registers.Direct_Page = Pull_16()
     End Sub
     Private Sub Pull_Processor_Status() 'PLP
         Registers.P = Pull()
@@ -1645,15 +1645,19 @@ Module _65816
     End Sub
     Private Sub Pull_X() 'PLX (8 bits)
         Registers.X = Pull() + (Registers.X And &HFF00)
+        Set_Zero_Negative_Flag(Registers.X And &HFF)
     End Sub
     Private Sub Pull_X_16() 'PLX (16 bits)
         Registers.X = Pull_16()
+        Set_Zero_Negative_Flag_16(Registers.X)
     End Sub
     Private Sub Pull_Y() 'PLY (8 bits)
         Registers.Y = Pull() + (Registers.Y And &HFF00)
+        Set_Zero_Negative_Flag(Registers.Y And &HFF)
     End Sub
     Private Sub Pull_Y_16() 'PLY (16 bits)
         Registers.Y = Pull_16()
+        Set_Zero_Negative_Flag_16(Registers.Y)
     End Sub
     Private Sub Reset_Status() 'REP
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -1724,7 +1728,7 @@ Module _65816
             Test_Flag(Registers.A And &H1, Carry_Flag)
             Registers.A = ((Registers.A And &HFF) >> 1) + (Registers.A And &HFF00)
         End If
-        Set_Zero_Negative_Flag(Registers.A)
+        Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Rotate_Right_16() 'ROR (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -1836,7 +1840,7 @@ Module _65816
         Set_Zero_Negative_Flag_16(Registers.Y)
     End Sub
     Private Sub Transfer_Accumulator_To_DP() 'TCD
-        Registers.Direct_Page = Registers.A And &HFF
+        Registers.Direct_Page = Registers.A
     End Sub
     Private Sub Transfer_Accumulator_To_SP() 'TCS
         Registers.Stack_Pointer = Registers.A
@@ -1869,10 +1873,10 @@ Module _65816
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
     Private Sub Transfer_SP_To_Accumulator() 'TSC
-        Registers.A = Registers.Stack_Pointer + (Registers.A And &HFF00)
+        Registers.A = Registers.Stack_Pointer
     End Sub
     Private Sub Transfer_SP_To_X() 'TSX
-        Registers.X = Registers.Stack_Pointer + (Registers.X And &HFF00)
+        Registers.X = Registers.Stack_Pointer
     End Sub
     Private Sub Transfer_X_To_Accumulator() 'TXA (8 bits)
         Registers.A = (Registers.X And &HFF) + (Registers.A And &HFF00)
@@ -1883,7 +1887,7 @@ Module _65816
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Transfer_X_To_SP() 'TXS
-        Registers.Stack_Pointer = Registers.X And &HFF
+        Registers.Stack_Pointer = Registers.X
     End Sub
     Private Sub Transfer_X_To_Y() 'TXY (8 bits)
         Registers.Y = (Registers.X And &HFF) + (Registers.Y And &HFF00)
