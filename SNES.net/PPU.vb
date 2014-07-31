@@ -76,8 +76,8 @@ Module PPU
                     Case 3 : VRAM_Increment = 256
                 End Select
                 Increment_2119_213A = Value And &H80
-            Case &H2116 : VRAM_Address = (VRAM_Address And &H7F00) Or Value 'VRAM Access
-            Case &H2117 : VRAM_Address = (VRAM_Address And &HFF) Or ((Value And &H7F) << 8)
+            Case &H2116 : VRAM_Address = (VRAM_Address And &HFF00) Or Value 'VRAM Access
+            Case &H2117 : VRAM_Address = (VRAM_Address And &HFF) Or ((Value And &HFF) << 8)
             Case &H2118
                 VRAM((VRAM_Address << 1) And &HFFFF) = Value
                 If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment

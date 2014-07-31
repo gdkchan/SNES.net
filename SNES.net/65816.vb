@@ -1,4 +1,5 @@
-﻿Module _65816
+﻿Imports System.IO
+Module _65816
     Const Negative_Flag = &H80
     Const Overflow_Flag = &H40
     Const Accumulator_8_Bits_Flag = &H20
@@ -83,6 +84,8 @@
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
+        FileOpen(1, "D:\tempdbg.txt", OpenMode.Output)
+
         Registers.A = 0
         Registers.X = 0
         Registers.Y = 0
@@ -100,6 +103,9 @@
     Public Sub Execute_65816(Target_Cycles As Double)
         While Cycles < Target_Cycles
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+            If Registers.Program_Counter = &H82B9 Then
+                WriteLine(1, "DEBUG -> " & Hex(Registers.A) & " - X: " & Hex(Registers.X) & " - Y: " & Hex(Registers.Y) & " -- OP: " & Hex(Opcode))
+            End If
             Registers.Program_Counter += 1
 
             Page_Crossed = False
@@ -1267,7 +1273,7 @@
         Set_Zero_Negative_Flag(Value)
     End Sub
     Private Sub Arithmetic_Shift_Left_A() 'ASL_A (8 bits)
-        Test_Flag(Registers.A And &H80, Carry_Flag)
+        Test_Flag((Registers.A And &HFF) And &H80, Carry_Flag)
         Registers.A = ((Registers.A And &HFF) << 1) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
@@ -1540,8 +1546,8 @@
         Set_Zero_Negative_Flag(Value)
     End Sub
     Private Sub Logical_Shift_Right_A() 'LSR_A (8 bits)
-        Test_Flag(Registers.A And &H1, Carry_Flag)
-        Registers.A >>= 1
+        Test_Flag((Registers.A And &HFF) And &H1, Carry_Flag)
+        Registers.A = ((Registers.A And &HFF) >> 1) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Logical_Shift_Right_16() 'LSR (16 bits)
@@ -1580,7 +1586,7 @@
     End Sub
     Private Sub Or_With_Accumulator() 'ORA (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
-        Registers.A = ((Registers.A And &HFF) Or Value) + (Registers.A And &HFF)
+        Registers.A = ((Registers.A And &HFF) Or Value) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Or_With_Accumulator_16() 'ORA (16 bits)
@@ -1822,7 +1828,7 @@
         Set_Zero_Negative_Flag_16(Registers.X)
     End Sub
     Private Sub Transfer_Accumulator_To_Y() 'TAY (8 bits)
-        Registers.Y = Registers.A
+        Registers.Y = (Registers.A And &HFF) + (Registers.Y And &HFF00)
         Set_Zero_Negative_Flag(Registers.Y And &HFF)
     End Sub
     Private Sub Transfer_Accumulator_To_Y_16() 'TAY (16 bits)
@@ -1830,18 +1836,18 @@
         Set_Zero_Negative_Flag_16(Registers.Y)
     End Sub
     Private Sub Transfer_Accumulator_To_DP() 'TCD
-        Registers.Direct_Page = Registers.A
+        Registers.Direct_Page = Registers.A And &HFF
     End Sub
     Private Sub Transfer_Accumulator_To_SP() 'TCS
         Registers.Stack_Pointer = Registers.A
     End Sub
     Private Sub Transfer_DP_To_Accumulator() 'TDC
-        Registers.A = Registers.Direct_Page
+        Registers.A = Registers.Direct_Page + (Registers.A And &HFF00)
     End Sub
     Private Sub Test_And_Reset_Bit() 'TRB (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
-        Test_Flag(Not (Registers.A And Value), Zero_Flag)
-        Value = Value And Not Registers.A
+        Test_Flag(Not ((Registers.A And &HFF) And Value), Zero_Flag)
+        Value = Value And Not (Registers.A And &HFF)
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
     Private Sub Test_And_Reset_Bit_16() 'TRB (16 bits)
@@ -1852,8 +1858,8 @@
     End Sub
     Private Sub Test_And_Set_Bit() 'TSB (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
-        Test_Flag(Not (Registers.A And Value), Zero_Flag)
-        Value = Value Or Registers.A
+        Test_Flag(Not ((Registers.A And &HFF) And Value), Zero_Flag)
+        Value = Value Or (Registers.A And &HFF)
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
     Private Sub Test_And_Set_Bit_16() 'TSB (16 bits)
@@ -1863,10 +1869,10 @@
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
     End Sub
     Private Sub Transfer_SP_To_Accumulator() 'TSC
-        Registers.A = Registers.Stack_Pointer
+        Registers.A = Registers.Stack_Pointer + (Registers.A And &HFF00)
     End Sub
     Private Sub Transfer_SP_To_X() 'TSX
-        Registers.X = Registers.Stack_Pointer
+        Registers.X = Registers.Stack_Pointer + (Registers.X And &HFF00)
     End Sub
     Private Sub Transfer_X_To_Accumulator() 'TXA (8 bits)
         Registers.A = (Registers.X And &HFF) + (Registers.A And &HFF00)
@@ -1877,7 +1883,7 @@
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Transfer_X_To_SP() 'TXS
-        Registers.Stack_Pointer = Registers.X
+        Registers.Stack_Pointer = Registers.X And &HFF
     End Sub
     Private Sub Transfer_X_To_Y() 'TXY (8 bits)
         Registers.Y = (Registers.X And &HFF) + (Registers.Y And &HFF00)

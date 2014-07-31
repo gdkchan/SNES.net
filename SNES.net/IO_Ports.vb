@@ -86,7 +86,7 @@
                         End With
                     End If
                 Next
-            Case &HC : HDMA_Enabled = Value
+            Case &HC : If Value > 0 Then MsgBox(Hex(Value)) : HDMA_Enabled = Value
             Case &H100, &H110, &H120, &H130, &H140, &H150, &H160, &H170 : DMA_Channels((Address >> 4) And 7).Control = Value
             Case &H101, &H111, &H121, &H131, &H141, &H151, &H161, &H171 : DMA_Channels((Address >> 4) And 7).Dest = Value
             Case &H102, &H112, &H122, &H132, &H142, &H152, &H162, &H172 'High Byte de leitura
@@ -119,6 +119,7 @@
                 End If
 
                 If HDMA_Enabled And (1 << Channel) Then 'Verifica se deve transferir
+                    MsgBox("DMA Ocurred!")
                     '+===========================+
                     '| Carrega valores da tabela |
                     '+===========================+
@@ -162,36 +163,36 @@
                         End Select
                         .First = True
                     End If
+
+                    '+=================+
+                    '| Escreve valores |
+                    '+=================+
+
+                    If .First Or .Repeat Then
+                        .First = False
+                        Select Case DMA_Channels(Channel).Control And &H7
+                            Case 0 : Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                            Case 1
+                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
+                            Case 2
+                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(1))
+                            Case 3
+                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
+                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(2))
+                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(3))
+                            Case 4
+                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
+                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 2), .Data(2))
+                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 3), .Data(3))
+                        End Select
+                    End If
+
+                    .Count -= 1
                 End If
-
-                '+=================+
-                '| Escreve valores |
-                '+=================+
-
-                If .First Or .Repeat Then
-                    .First = False
-                    Select Case DMA_Channels(Channel).Control And &H7
-                        Case 0 : Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                        Case 1
-                            Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                            Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
-                        Case 2
-                            Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                            Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(1))
-                        Case 3
-                            Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                            Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
-                            Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(2))
-                            Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(3))
-                        Case 4
-                            Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                            Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
-                            Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 2), .Data(2))
-                            Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 3), .Data(3))
-                    End Select
-                End If
-
-                .Count -= 1
             End With
         Next
     End Sub
