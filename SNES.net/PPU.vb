@@ -56,10 +56,10 @@ Module PPU
                 Background(3).Address = (Value And &H7C) << 9
                 Background(3).Size = Value And 3
             Case &H210B 'CHR Address
-                Background(0).CHR_Address = (Value And &HF) << 13
+                Background(0).CHR_Address = (Value And 7) << 13
                 Background(1).CHR_Address = (Value >> 4) << 13
             Case &H210C
-                Background(2).CHR_Address = (Value And &HF) << 13
+                Background(2).CHR_Address = (Value And 7) << 13
                 Background(3).CHR_Address = (Value >> 4) << 13
             Case &H210D : Background(0).H_Scroll >>= 8 : Background(0).H_Scroll = Background(0).H_Scroll Or (Value << 8) 'Background Scrolling
             Case &H210E : Background(0).V_Scroll >>= 8 : Background(0).V_Scroll = Background(0).V_Scroll Or (Value << 8)
@@ -131,12 +131,12 @@ Module PPU
         Return Nothing 'Nunca deve acontecer
     End Function
     Public Sub Render_Background()
-        For BgNum As Integer = 0 To 3
+        For BgNum As Integer = 2 To 2
             With Background(BgNum)
                 For Y As Integer = 0 To 27
                     For X As Integer = 0 To 31
-                        Dim Character_Number = (Y * 32) + X
-                        Dim Tile_Offset As Integer = (.Address / 2) + (Character_Number * 2)
+                        Dim Character_Number = (Y * 64) + (X * 2)
+                        Dim Tile_Offset As Integer = (.Address / 2) + Character_Number
                         Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
 
                         Dim Tile_Number As Integer = Tile_Data And &H3FF
