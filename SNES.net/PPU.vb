@@ -27,6 +27,7 @@ Module PPU
 
     Public Video_Buffer((256 * 224) - 1) As Integer
     Public Color_LookUp(65536 * 8 - 1) As Byte
+    Public Power_Of_2(31) As Integer
     Public Sub Init_PPU()
         Dim c As Integer
 
@@ -38,6 +39,10 @@ Module PPU
                     Color_LookUp(b1 * 2048 + b2 * 8 + X) = c
                 Next X
         Next b2, b1
+
+        For i As Integer = 0 To 30
+            Power_Of_2(i) = 2 ^ i
+        Next
     End Sub
     Public Sub Write_PPU(Address As Integer, Value As Byte)
         Select Case Address
@@ -145,17 +150,28 @@ Module PPU
                         Dim H_Flip As Boolean = Tile_Data And &H4000
                         Dim V_Flip As Boolean = Tile_Data And &H8000
 
+
+                        'FrmMain.Text = Hex(.CHR_Address)
+
                         '2BPP - OBS: Tem outros modos, vou adc depois
+
+                        Dim Base_Tile As Integer = Tile_Number * 32
                         For Tile_Y As Integer = 0 To 7
-                            Dim Low_Byte As Byte = VRAM(.CHR_Address + (Tile_Number * 16) + (Tile_Y * 2))
-                            Dim High_Byte As Byte = VRAM(.CHR_Address + (Tile_Number * 16) + (Tile_Y * 2) + 1)
-                            Dim Color_LookUp_Offset As Integer = Low_Byte * 2048 + High_Byte * 8
+                            Dim Byte_0 As Byte = VRAM(0 + Base_Tile + (Tile_Y * 2))
+                            Dim Byte_1 As Byte = VRAM(0 + Base_Tile + (Tile_Y * 2) + 1)
+                            Dim Byte_2 As Byte = VRAM(0 + Base_Tile + (Tile_Y * 2) + 16)
+                            Dim Byte_3 As Byte = VRAM(0 + Base_Tile + (Tile_Y * 2) + 17)
                             For Tile_X As Integer = 0 To 7
-                                Dim Pixel_Color As Integer = Color_LookUp(Color_LookUp_Offset + Tile_X)
+                                Dim Pixel_Color As Integer = 0
+                                Dim Bit_To_Test As Integer = Power_Of_2(IIf(H_Flip, Tile_X, 7 - Tile_X))
+                                If Byte_0 And Bit_To_Test Then Pixel_Color += 1
+                                If Byte_1 And Bit_To_Test Then Pixel_Color += 2
+                                If Byte_2 And Bit_To_Test Then Pixel_Color += 4
+                                If Byte_3 And Bit_To_Test Then Pixel_Color += 8
                                 Video_Buffer(((X * 8) + Tile_X) + (((Y * 8) + Tile_Y) * 256)) = _
-                                    Palette(Pal_Num + Pixel_Color).B + _
-                                    (Palette(Pal_Num + Pixel_Color).G * &H100) + _
-                                    (Palette(Pal_Num + Pixel_Color).R * &H10000)
+                                    Palette((Pal_Num * 16) + Pixel_Color).B + _
+                                    (Palette((Pal_Num * 16) + Pixel_Color).G * &H100) + _
+                                    (Palette((Pal_Num * 16) + Pixel_Color).R * &H10000)
                             Next
                         Next
                     Next
