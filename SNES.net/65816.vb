@@ -1982,6 +1982,7 @@ Module _65816
     Public Sub Main_Loop()
         While SNES_On
             For Scanline As Integer = 0 To 261
+                If Scanline = vertcomp And (INT_Enable And &H20) Then IRQ()
                 If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
                 If Scanline < 224 Then
                     'Render_Scanline(Scanline)
