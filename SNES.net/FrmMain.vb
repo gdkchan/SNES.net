@@ -1,10 +1,10 @@
 ﻿Public Class FrmMain
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Show()
         Init_PPU()
         Init_IO()
         Hi_Res_Timer_Initialize()
-        Show()
-        Load_Rom("D:\zelda.smc")
+        Load_Rom("D:\mx.smc")
         Reset_65816()
         SNES_On = True
         Main_Loop()

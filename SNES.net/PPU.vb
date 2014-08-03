@@ -252,57 +252,62 @@ Module PPU
 
                             For Scroll_Y As Integer = 0 To 1
                                 For Scroll_X As Integer = 0 To 1
-                                    Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
-                                    Dim Tile_Number As Integer = Tile_Data And &H3FF
-                                    Dim Pal_Num As Integer = (Tile_Data And &H1C00) >> 10
-                                    Dim Priority As Boolean = Tile_Data And &H2000
-                                    Dim H_Flip As Boolean = Tile_Data And &H4000
-                                    Dim V_Flip As Boolean = Tile_Data And &H8000
+                                    Dim Temp_X As Integer = (((X * 8) + 7) + (Scroll_X * 256) - (.H_Scroll Mod 256))
+                                    Dim Temp_Y As Integer = ((Y * 8) + 7) + (Scroll_Y * 256) - (.V_Scroll Mod 256)
 
-                                    If Priority = Foreground Then
-                                        Dim Base_Tile As Integer = .CHR_Address + (Tile_Number * (BPP * 8))
-                                        For Tile_Y As Integer = 0 To 7
-                                            Dim Byte_0, Byte_1, Byte_2, Byte_3, Byte_4, Byte_5, Byte_6, Byte_7 As Byte
-                                            Byte_0 = VRAM(Base_Tile + (Tile_Y * 2))
-                                            Byte_1 = VRAM(Base_Tile + (Tile_Y * 2) + 1)
-                                            If BPP = 4 Or BPP = 8 Then
-                                                Byte_2 = VRAM(Base_Tile + (Tile_Y * 2) + 16)
-                                                Byte_3 = VRAM(Base_Tile + (Tile_Y * 2) + 17)
-                                                If BPP = 8 Then
-                                                    Byte_4 = VRAM(Base_Tile + (Tile_Y * 2) + 32)
-                                                    Byte_5 = VRAM(Base_Tile + (Tile_Y * 2) + 33)
-                                                    Byte_6 = VRAM(Base_Tile + (Tile_Y * 2) + 48)
-                                                    Byte_7 = VRAM(Base_Tile + (Tile_Y * 2) + 49)
-                                                End If
-                                            End If
-                                            For Tile_X As Integer = 0 To 7
-                                                Dim Pixel_Color As Integer = 0
-                                                Dim Bit_To_Test As Integer = Power_Of_2(If(H_Flip, Tile_X, 7 - Tile_X))
-                                                If Byte_0 And Bit_To_Test Then Pixel_Color += 1
-                                                If Byte_1 And Bit_To_Test Then Pixel_Color += 2
+                                    If (Temp_X >= 0 And Temp_X < 256) And (Temp_Y >= 0 And Temp_Y < 224) Then
+                                        Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
+                                        Dim Tile_Number As Integer = Tile_Data And &H3FF
+                                        Dim Pal_Num As Integer = (Tile_Data And &H1C00) >> 10
+                                        Dim Priority As Boolean = Tile_Data And &H2000
+                                        Dim H_Flip As Boolean = Tile_Data And &H4000
+                                        Dim V_Flip As Boolean = Tile_Data And &H8000
+
+                                        If Priority = Foreground Then
+                                            Dim Base_Tile As Integer = .CHR_Address + (Tile_Number * (BPP * 8))
+                                            For Tile_Y As Integer = 0 To 7
+                                                Dim Byte_0, Byte_1, Byte_2, Byte_3, Byte_4, Byte_5, Byte_6, Byte_7 As Byte
+                                                Byte_0 = VRAM(Base_Tile + (Tile_Y * 2))
+                                                Byte_1 = VRAM(Base_Tile + (Tile_Y * 2) + 1)
                                                 If BPP = 4 Or BPP = 8 Then
-                                                    If Byte_2 And Bit_To_Test Then Pixel_Color += 4
-                                                    If Byte_3 And Bit_To_Test Then Pixel_Color += 8
+                                                    Byte_2 = VRAM(Base_Tile + (Tile_Y * 2) + 16)
+                                                    Byte_3 = VRAM(Base_Tile + (Tile_Y * 2) + 17)
                                                     If BPP = 8 Then
-                                                        If Byte_4 And Bit_To_Test Then Pixel_Color += 16
-                                                        If Byte_5 And Bit_To_Test Then Pixel_Color += 32
-                                                        If Byte_6 And Bit_To_Test Then Pixel_Color += 64
-                                                        If Byte_7 And Bit_To_Test Then Pixel_Color += 128
+                                                        Byte_4 = VRAM(Base_Tile + (Tile_Y * 2) + 32)
+                                                        Byte_5 = VRAM(Base_Tile + (Tile_Y * 2) + 33)
+                                                        Byte_6 = VRAM(Base_Tile + (Tile_Y * 2) + 48)
+                                                        Byte_7 = VRAM(Base_Tile + (Tile_Y * 2) + 49)
                                                     End If
                                                 End If
-                                                If Pixel_Color <> 0 Then
-                                                    If V_Flip Then
-                                                        Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
-                                                            ((Y * 8) + (7 - Tile_Y)) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
-                                                            (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
-                                                    Else
-                                                        Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
-                                                            ((Y * 8) + Tile_Y) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
-                                                            (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                For Tile_X As Integer = 0 To 7
+                                                    Dim Pixel_Color As Integer = 0
+                                                    Dim Bit_To_Test As Integer = Power_Of_2(If(H_Flip, Tile_X, 7 - Tile_X))
+                                                    If Byte_0 And Bit_To_Test Then Pixel_Color += 1
+                                                    If Byte_1 And Bit_To_Test Then Pixel_Color += 2
+                                                    If BPP = 4 Or BPP = 8 Then
+                                                        If Byte_2 And Bit_To_Test Then Pixel_Color += 4
+                                                        If Byte_3 And Bit_To_Test Then Pixel_Color += 8
+                                                        If BPP = 8 Then
+                                                            If Byte_4 And Bit_To_Test Then Pixel_Color += 16
+                                                            If Byte_5 And Bit_To_Test Then Pixel_Color += 32
+                                                            If Byte_6 And Bit_To_Test Then Pixel_Color += 64
+                                                            If Byte_7 And Bit_To_Test Then Pixel_Color += 128
+                                                        End If
                                                     End If
-                                                End If
+                                                    If Pixel_Color <> 0 Then
+                                                        If V_Flip Then
+                                                            Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
+                                                                ((Y * 8) + (7 - Tile_Y)) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
+                                                                (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                        Else
+                                                            Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
+                                                                ((Y * 8) + Tile_Y) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
+                                                                (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                        End If
+                                                    End If
+                                                Next
                                             Next
-                                        Next
+                                        End If
                                     End If
 
                                     Tile_Offset += 2048
