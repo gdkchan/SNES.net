@@ -12,4 +12,9 @@
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         System.IO.File.WriteAllBytes("D:\Gabriel\vram_dump.bin", VRAM)
     End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        debug = True
+
+    End Sub
 End Class

@@ -30,24 +30,35 @@ Module _65816
     Public STP_Disable As Boolean
     Dim WAI_Disable As Boolean
 
+    Public debug As Boolean
+
     Public Memory(&H1FFFF)
+
+    Public dbglist(100) As String
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
-        Bank = Bank And &H7F
-        If Bank < &H60 Then
-            Select Case Address
-                Case 0 To &H1FFF : Return Memory(Address)
-                Case &H2000 To &H2FFF : Return Read_PPU(Address)
-                Case &H4000 To &H4FFF : Return Read_IO(Address)
-                Case &H8000 To &HFFFF : Return ROM_Data(Bank, Address And &H7FFF)
-            End Select
-        End If
+        Try
+            Bank = Bank And &H7F
+            If Bank < &H60 Then
+                Select Case Address
+                    Case 0 To &H1FFF : Return Memory(Address)
+                    Case &H2000 To &H2FFF : Return Read_PPU(Address)
+                    Case &H4000 To &H4FFF : Return Read_IO(Address)
+                    Case &H8000 To &HFFFF : Return ROM_Data(Bank, Address And &H7FFF)
+                End Select
+            End If
 
-        If Bank = &H7E Then Return Memory(Address)
-        If Bank = &H7F Then Return Memory(Address + &H10000)
+            If Bank = &H7E Then Return Memory(Address)
+            If Bank = &H7F Then Return Memory(Address + &H10000)
 
-        Return Nothing 'Nunca deve acontecer
+            Return Nothing 'Nunca deve acontecer
+        Catch
+            For i As Integer = 0 To 100
+                WriteLine(1, dbglist(i))
+            Next
+            MsgBox(Hex(Bank) & ":" & Hex(Address))
+        End Try
     End Function
     Public Function Read_Memory_16(Bank As Integer, Address As Integer) As Integer
         Return Read_Memory(Bank, Address) + _
@@ -103,7 +114,13 @@ Module _65816
     Public Sub Execute_65816(Target_Cycles As Double)
         While Cycles < Target_Cycles
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
-            'WriteLine(1, "PC: " & Hex(Registers.Program_Counter) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " -- OP: " & Hex(Opcode))
+            'If debug Then WriteLine(1, "PC: " & Hex(Registers.Program_Counter) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " -- OP: " & Hex(Opcode))
+            If debug Then
+                For j As Integer = 0 To 99
+                    dbglist(j) = dbglist(j + 1)
+                Next
+                dbglist(100) = "PC: " & Hex(Registers.Program_Counter) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " -- OP: " & Hex(Opcode)
+            End If
             Registers.Program_Counter += 1
 
             Page_Crossed = False

@@ -136,7 +136,7 @@
                     '| Carrega valores da tabela |
                     '+===========================+
 
-                    If Not (.Count And &H7F) Then
+                    If (.Count And &H7F) = 0 Then
                         .Count = Read_Memory(.Source_Bank, .Source)
                         .Source += 1
                         .Repeat = .Count And &H80

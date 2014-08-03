@@ -11,9 +11,8 @@ Module PPU
         Dim Address As Integer
         Dim CHR_Address As Integer
         Dim Size As Byte
-        Dim H_Scroll As Integer
-        Dim H_Low_High_Toggle As Boolean
-        Dim V_Scroll As Integer
+        Dim H_Scroll, V_Scroll As Integer
+        Dim H_Low_High_Toggle, V_Low_High_Toggle As Boolean
     End Structure
     Dim Palette(255) As Color_Palette
     Dim Background(3) As PPU_Background
@@ -71,19 +70,77 @@ Module PPU
                 Background(2).CHR_Address = (Value And 7) << 13
                 Background(3).CHR_Address = (Value >> 4) << 13
             Case &H210D
-                If Background(0).H_Low_High_Toggle Then
-                    Background(0).H_Scroll = (Value * &H100) + (Background(0).H_Scroll And &HFF)
-                Else
-                    Background(0).H_Scroll = Value + (Background(0).H_Scroll And &HFF00)
-                End If
-                Background(0).H_Low_High_Toggle = Not Background(0).H_Low_High_Toggle
-            Case &H210E : Background(0).V_Scroll >>= 8 : Background(0).V_Scroll = Background(0).V_Scroll Or (Value << 8)
-            Case &H210F : Background(1).H_Scroll >>= 8 : Background(1).H_Scroll = Background(1).H_Scroll Or (Value << 8)
-            Case &H2110 : Background(1).V_Scroll >>= 8 : Background(1).V_Scroll = Background(1).V_Scroll Or (Value << 8)
-            Case &H2111 : Background(2).H_Scroll >>= 8 : Background(2).H_Scroll = Background(2).H_Scroll Or (Value << 8)
-            Case &H2112 : Background(2).V_Scroll >>= 8 : Background(2).V_Scroll = Background(2).V_Scroll Or (Value << 8)
-            Case &H2113 : Background(3).H_Scroll >>= 8 : Background(3).H_Scroll = Background(3).H_Scroll Or (Value << 8)
-            Case &H2114 : Background(3).V_Scroll >>= 8 : Background(3).V_Scroll = Background(3).V_Scroll Or (Value << 8)
+                With Background(0)
+                    If .H_Low_High_Toggle Then
+                        .H_Scroll = (Value * &H100) + (.H_Scroll And &HFF)
+                    Else
+                        .H_Scroll = Value + (.H_Scroll And &HFF00)
+                    End If
+                    .H_Low_High_Toggle = Not .H_Low_High_Toggle
+                End With
+            Case &H210E
+                With Background(0)
+                    If .V_Low_High_Toggle Then
+                        .V_Scroll = (Value * &H100) + (.V_Scroll And &HFF)
+                    Else
+                        .V_Scroll = Value + (.V_Scroll And &HFF00)
+                    End If
+                    .V_Low_High_Toggle = Not .V_Low_High_Toggle
+                End With
+            Case &H210F
+                With Background(1)
+                    If .H_Low_High_Toggle Then
+                        .H_Scroll = (Value * &H100) + (.H_Scroll And &HFF)
+                    Else
+                        .H_Scroll = Value + (.H_Scroll And &HFF00)
+                    End If
+                    .H_Low_High_Toggle = Not .H_Low_High_Toggle
+                End With
+            Case &H2110
+                With Background(1)
+                    If .V_Low_High_Toggle Then
+                        .V_Scroll = (Value * &H100) + (.V_Scroll And &HFF)
+                    Else
+                        .V_Scroll = Value + (.V_Scroll And &HFF00)
+                    End If
+                    .V_Low_High_Toggle = Not .V_Low_High_Toggle
+                End With
+            Case &H2111
+                With Background(2)
+                    If .H_Low_High_Toggle Then
+                        .H_Scroll = (Value * &H100) + (.H_Scroll And &HFF)
+                    Else
+                        .H_Scroll = Value + (.H_Scroll And &HFF00)
+                    End If
+                    .H_Low_High_Toggle = Not .H_Low_High_Toggle
+                End With
+            Case &H2112
+                With Background(2)
+                    If .V_Low_High_Toggle Then
+                        .V_Scroll = (Value * &H100) + (.V_Scroll And &HFF)
+                    Else
+                        .V_Scroll = Value + (.V_Scroll And &HFF00)
+                    End If
+                    .V_Low_High_Toggle = Not .V_Low_High_Toggle
+                End With
+            Case &H2113
+                With Background(3)
+                    If .H_Low_High_Toggle Then
+                        .H_Scroll = (Value * &H100) + (.H_Scroll And &HFF)
+                    Else
+                        .H_Scroll = Value + (.H_Scroll And &HFF00)
+                    End If
+                    .H_Low_High_Toggle = Not .H_Low_High_Toggle
+                End With
+            Case &H2114
+                With Background(3)
+                    If .V_Low_High_Toggle Then
+                        .V_Scroll = (Value * &H100) + (.V_Scroll And &HFF)
+                    Else
+                        .V_Scroll = Value + (.V_Scroll And &HFF00)
+                    End If
+                    .V_Low_High_Toggle = Not .V_Low_High_Toggle
+                End With
             Case &H2115 'VRAM Control
                 Select Case Value And 3
                     Case 0 : VRAM_Increment = 1
@@ -99,12 +156,12 @@ Module PPU
                 VRAM_Address = (Value * &H100) + (VRAM_Address And &HFF)
                 First_Read_VRAM = True
             Case &H2118
-                'WriteLine(1, "VRAM Write 2118 // " & Hex(VRAM_Address) & " -> " & Hex(Value))
+                'If (VRAM_Address << 1) < &H4000 Then WriteLine(1, "VRAM Write -> " & Hex(VRAM_Address << 1) & " -> " & Hex(Value))
                 VRAM((VRAM_Address << 1) And &HFFFF) = Value
                 If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
             Case &H2119
-                'WriteLine(1, "VRAM Write 2119 // " & Hex(VRAM_Address) & " -> " & Hex(Value))
+                'If (VRAM_Address << 1) < &H4000 Then WriteLine(1, "VRAM Write -> " & Hex(VRAM_Address << 1) & " -> " & Hex(Value))
                 VRAM(((VRAM_Address << 1) + 1) And &HFFFF) = Value
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
@@ -151,7 +208,7 @@ Module PPU
         Dim BPP As Integer = 2
 
         For Layer As Integer = 0 To 3
-            If Bg_Main_Enabled And (1 << Layer) Then
+            If (Bg_Main_Enabled Or Bg_Sub_Enabled) And Power_Of_2(Layer) Then
                 Select Case Layer
                     Case 0
                         Select Case PPU_Mode
@@ -167,14 +224,16 @@ Module PPU
                     Case 2 : If PPU_Mode < 2 Then BPP = 2
                     Case 3 : If PPU_Mode = 0 Then BPP = 2
                 End Select
+
                 With Background(Layer)
-                    'FrmMain.Text = (.H_Scroll) & " - " & .H_Scroll Mod 256
+                    'If Layer = 0 Then FrmMain.Text = (.H_Scroll) & " - " & .H_Scroll Mod 256
                     For Y As Integer = 0 To 31
                         For X As Integer = 0 To 31
                             Dim Character_Number = (Y * 64) + (X * 2)
+                            'Dim Tile_Offset As Integer = ((.Address >> 1) + ((.V_Scroll >> 3) << 5) + (((.H_Scroll >> 3) And 31) >> 1)) + Character_Number
                             Dim Tile_Offset As Integer = .Address + Character_Number
 
-                            For Scroll_Y = 1 To 0 Step -1
+                            For Scroll_Y As Integer = 1 To 0 Step -1
                                 For Scroll_X = 0 To 1
                                     Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
                                     Dim Tile_Number As Integer = Tile_Data And &H3FF
@@ -183,19 +242,19 @@ Module PPU
                                     Dim H_Flip As Boolean = Tile_Data And &H4000
                                     Dim V_Flip As Boolean = Tile_Data And &H8000
 
-                                    Dim Base_Tile As Integer = Tile_Number * (BPP * 8)
+                                    Dim Base_Tile As Integer = .CHR_Address + (Tile_Number * (BPP * 8))
                                     For Tile_Y As Integer = 0 To 7
                                         Dim Byte_0, Byte_1, Byte_2, Byte_3, Byte_4, Byte_5, Byte_6, Byte_7 As Byte
-                                        Byte_0 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2))
-                                        Byte_1 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 1)
+                                        Byte_0 = VRAM(Base_Tile + (Tile_Y * 2))
+                                        Byte_1 = VRAM(Base_Tile + (Tile_Y * 2) + 1)
                                         If BPP = 4 Then
-                                            Byte_2 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 16)
-                                            Byte_3 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 17)
+                                            Byte_2 = VRAM(Base_Tile + (Tile_Y * 2) + 16)
+                                            Byte_3 = VRAM(Base_Tile + (Tile_Y * 2) + 17)
                                             If BPP = 8 Then
-                                                Byte_4 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 32)
-                                                Byte_5 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 33)
-                                                Byte_6 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 48)
-                                                Byte_7 = VRAM(.CHR_Address + Base_Tile + (Tile_Y * 2) + 49)
+                                                Byte_4 = VRAM(Base_Tile + (Tile_Y * 2) + 32)
+                                                Byte_5 = VRAM(Base_Tile + (Tile_Y * 2) + 33)
+                                                Byte_6 = VRAM(Base_Tile + (Tile_Y * 2) + 48)
+                                                Byte_7 = VRAM(Base_Tile + (Tile_Y * 2) + 49)
                                             End If
                                         End If
                                         For Tile_X As Integer = 0 To 7
@@ -214,9 +273,15 @@ Module PPU
                                                 End If
                                             End If
                                             If Pixel_Color <> 0 Then
-                                                Draw_Pixel((X * 8) + Tile_X + (Scroll_X * 256) - (.H_Scroll Mod 256), _
-                                                    (Y * 8) + Tile_Y - (Scroll_Y * 256), _
-                                                    (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                If V_Flip Then
+                                                    Draw_Pixel((X * 8) + Tile_X, _
+                                                        (Y * 8) + (7 - Tile_Y), _
+                                                        (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                Else
+                                                    Draw_Pixel((X * 8) + Tile_X, _
+                                                        (Y * 8) + Tile_Y, _
+                                                        (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                End If
                                             End If
                                         Next
                                     Next
