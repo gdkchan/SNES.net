@@ -243,12 +243,12 @@ Module PPU
 
             If BPP <> 0 Then
                 With Background(Layer)
-                    'If .H_Scroll > 0 Then FrmMain.Text = (.H_Scroll) & " - " & .H_Scroll Mod 256
+                    Dim Reverse_X, Reverse_Y As Boolean
+                    Reverse_X = If((.H_Scroll \ 256) Mod 2, False, True)
+                    Reverse_Y = If((.V_Scroll \ 256) Mod 2, False, True)
                     For Y As Integer = 0 To 31
                         For X As Integer = 0 To 31
                             Dim Character_Number As Integer = (Y * 64) + (X * 2)
-                            'Dim Tile_Offset As Integer = ((.Address >> 1) + ((.V_Scroll >> 3) << 5) + (((.H_Scroll >> 3) And 31) >> 1)) + Character_Number
-
                             For Scroll_Y As Integer = 0 To 1
                                 For Scroll_X As Integer = 0 To 1
                                     Dim Temp_X As Integer = (((X * 8) + 7) + (Scroll_X * 256) - (.H_Scroll Mod 256))
@@ -257,9 +257,9 @@ Module PPU
                                     If (Temp_X >= 0 And Temp_X < 256) And (Temp_Y >= 0 And Temp_Y < 224) Then
                                         Dim Tile_Offset As Integer = .Address + Character_Number
                                         Select Case .Size
-                                            Case 1 : Tile_Offset += (2048 * Scroll_X)
-                                            Case 2 : Tile_Offset += (2048 * Scroll_Y)
-                                            Case 3 : Tile_Offset += (2048 * (Scroll_Y * 2)) + (2048 * Scroll_X)
+                                            Case 1 : Tile_Offset += (2048 * If(Reverse_X, Scroll_X, 1 - Scroll_X))
+                                            Case 2 : Tile_Offset += (2048 * If(Reverse_Y, Scroll_Y, 1 - Scroll_Y))
+                                            Case 3 : Tile_Offset += (2048 * (If(Reverse_Y, Scroll_Y, 1 - Scroll_Y) * 2)) + (2048 * If(Reverse_X, Scroll_X, 1 - Scroll_X))
                                         End Select
 
                                         Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
