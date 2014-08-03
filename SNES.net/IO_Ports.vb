@@ -20,8 +20,8 @@
 
     Public NMI_Enable As Boolean
     Public INT_Enable As Byte
-    Dim Multiplicand, Multiplier, Divisor As Byte
-    Dim Mult_Result, Div_Result, Dividend As Integer
+    Dim Multiplicand, Multiplier, Divisor, Dividend As Integer
+    Dim Mult_Result, Div_Result As Integer
 
     Public vertcomp As Integer
     Public Sub Init_IO()
@@ -75,11 +75,7 @@
                         With DMA_Channels(Channel)
                             Dim Original_Dest As Integer = .Dest
 
-                            If .Size = 0 Then
-                                'WriteLine(1, "Oops! O tamanho é zero (0) - " & Channel)
-                                .Size = &H10000
-                            End If
-
+                            If .Size = 0 Then .Size = &H10000
                             While .Size
                                 If .Control And &H80 Then
                                     Write_Memory(.Source_Bank, .Source, Read_Memory(0, &H2100 Or .Dest))

@@ -55,23 +55,23 @@ Module PPU
                 BG3_Priority = Value And 4
             Case &H2106 'Mosaico
             Case &H2107 'Address
-                Background(0).Address = (Value And &H7C) << 9
+                Background(0).Address = (Value And &H7C) * &H200
                 Background(0).Size = Value And 3
             Case &H2108
-                Background(1).Address = (Value And &H7C) << 9
+                Background(1).Address = (Value And &H7C) * &H200
                 Background(1).Size = Value And 3
             Case &H2109
-                Background(2).Address = (Value And &H7C) << 9
+                Background(2).Address = (Value And &H7C) * &H200
                 Background(2).Size = Value And 3
             Case &H210A
-                Background(3).Address = (Value And &H7C) << 9
+                Background(3).Address = (Value And &H7C) * &H200
                 Background(3).Size = Value And 3
             Case &H210B 'CHR Address
-                Background(0).CHR_Address = (Value And 7) << 13
-                Background(1).CHR_Address = (Value >> 4) << 13
+                Background(0).CHR_Address = (Value And 7) * &H2000
+                Background(1).CHR_Address = (Value >> 4) * &H2000
             Case &H210C
-                Background(2).CHR_Address = (Value And 7) << 13
-                Background(3).CHR_Address = (Value >> 4) << 13
+                Background(2).CHR_Address = (Value And 7) * &H2000
+                Background(3).CHR_Address = (Value >> 4) * &H2000
             Case &H210D
                 With Background(0)
                     If .H_Low_High_Toggle Then
@@ -168,13 +168,13 @@ Module PPU
                 VRAM(((VRAM_Address << 1) + 1) And &HFFFF) = Value
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
-            Case &H2121 : Pal_Address = Value << 1
+            Case &H2121 : Pal_Address = Value * 2
             Case &H2122
                 CGRAM(Pal_Address And &H1FF) = Value
                 Dim Palette_Value As Integer = CGRAM(Pal_Address And &H1FE) + (CGRAM((Pal_Address And &H1FE) + 1) * &H100)
-                Palette((Pal_Address / 2) And &HFF).R = (Palette_Value And &H1F) * 8
-                Palette((Pal_Address / 2) And &HFF).G = ((Palette_Value >> 5) And &H1F) * 8
-                Palette((Pal_Address / 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF).R = (Palette_Value And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF).G = ((Palette_Value >> 5) And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
                 Pal_Address += 1
             Case &H212C : Bg_Main_Enabled = Value
             Case &H212D : Bg_Sub_Enabled = Value
@@ -251,7 +251,7 @@ Module PPU
                             Dim Tile_Offset As Integer = .Address + Character_Number
 
                             For Scroll_Y As Integer = 0 To 1
-                                For Scroll_X = 0 To 1
+                                For Scroll_X As Integer = 0 To 1
                                     Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
                                     Dim Tile_Number As Integer = Tile_Data And &H3FF
                                     Dim Pal_Num As Integer = (Tile_Data And &H1C00) >> 10
@@ -265,7 +265,7 @@ Module PPU
                                             Dim Byte_0, Byte_1, Byte_2, Byte_3, Byte_4, Byte_5, Byte_6, Byte_7 As Byte
                                             Byte_0 = VRAM(Base_Tile + (Tile_Y * 2))
                                             Byte_1 = VRAM(Base_Tile + (Tile_Y * 2) + 1)
-                                            If BPP = 4 Then
+                                            If BPP = 4 Or BPP = 8 Then
                                                 Byte_2 = VRAM(Base_Tile + (Tile_Y * 2) + 16)
                                                 Byte_3 = VRAM(Base_Tile + (Tile_Y * 2) + 17)
                                                 If BPP = 8 Then
@@ -280,7 +280,7 @@ Module PPU
                                                 Dim Bit_To_Test As Integer = Power_Of_2(If(H_Flip, Tile_X, 7 - Tile_X))
                                                 If Byte_0 And Bit_To_Test Then Pixel_Color += 1
                                                 If Byte_1 And Bit_To_Test Then Pixel_Color += 2
-                                                If BPP = 4 Then
+                                                If BPP = 4 Or BPP = 8 Then
                                                     If Byte_2 And Bit_To_Test Then Pixel_Color += 4
                                                     If Byte_3 And Bit_To_Test Then Pixel_Color += 8
                                                     If BPP = 8 Then
@@ -315,7 +315,7 @@ Module PPU
         End If
     End Sub
     Private Sub Draw_Pixel(X As Integer, Y As Integer, Color_Index As Byte)
-        If (X > 0 And X < 256) And (Y > 0 And Y < 224) Then
+        If (X >= 0 And X < 256) And (Y >= 0 And Y < 224) Then
             Video_Buffer(X + (Y * 256)) = _
                 Palette(Color_Index).B + _
                 (Palette(Color_Index).G * &H100) + _
