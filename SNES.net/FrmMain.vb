@@ -3,7 +3,7 @@
         Init_PPU()
         Init_IO()
         Show()
-        Load_Rom("D:\smw.smc")
+        Load_Rom("D:\zelda.smc")
         Reset_65816()
         SNES_On = True
         Main_Loop()
