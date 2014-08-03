@@ -243,12 +243,11 @@ Module PPU
 
             If BPP <> 0 Then
                 With Background(Layer)
-                    'If Layer = 0 Then FrmMain.Text = (.V_Scroll) & " - " & .V_Scroll Mod 256
+                    'If .H_Scroll > 0 Then FrmMain.Text = (.H_Scroll) & " - " & .H_Scroll Mod 256
                     For Y As Integer = 0 To 31
                         For X As Integer = 0 To 31
-                            Dim Character_Number = (Y * 64) + (X * 2)
+                            Dim Character_Number As Integer = (Y * 64) + (X * 2)
                             'Dim Tile_Offset As Integer = ((.Address >> 1) + ((.V_Scroll >> 3) << 5) + (((.H_Scroll >> 3) And 31) >> 1)) + Character_Number
-                            Dim Tile_Offset As Integer = .Address + Character_Number
 
                             For Scroll_Y As Integer = 0 To 1
                                 For Scroll_X As Integer = 0 To 1
@@ -256,6 +255,13 @@ Module PPU
                                     Dim Temp_Y As Integer = ((Y * 8) + 7) + (Scroll_Y * 256) - (.V_Scroll Mod 256)
 
                                     If (Temp_X >= 0 And Temp_X < 256) And (Temp_Y >= 0 And Temp_Y < 224) Then
+                                        Dim Tile_Offset As Integer = .Address + Character_Number
+                                        Select Case .Size
+                                            Case 1 : Tile_Offset += (2048 * Scroll_X)
+                                            Case 2 : Tile_Offset += (2048 * Scroll_Y)
+                                            Case 3 : Tile_Offset += (2048 * (Scroll_Y * 2)) + (2048 * Scroll_X)
+                                        End Select
+
                                         Dim Tile_Data As Integer = VRAM(Tile_Offset) + (VRAM(Tile_Offset + 1) * &H100)
                                         Dim Tile_Number As Integer = Tile_Data And &H3FF
                                         Dim Pal_Num As Integer = (Tile_Data And &H1C00) >> 10
@@ -309,8 +315,6 @@ Module PPU
                                             Next
                                         End If
                                     End If
-
-                                    Tile_Offset += 2048
                                 Next
                             Next
                         Next
