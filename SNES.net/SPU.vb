@@ -3,7 +3,7 @@
     Dim SPU_Pos As Integer
     Dim Temp As Integer
 
-    Public Old_Cycles As Integer
+    Dim Old_Cycles As Integer
     Public Sub Write_SPU(Address As Integer, Value As Byte)
         SPU_Memory(&HF4 + (Address And 3)) = Value
     End Sub

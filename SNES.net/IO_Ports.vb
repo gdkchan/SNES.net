@@ -25,7 +25,7 @@
     Dim Multiplicand, Multiplier, Divisor, Dividend As Integer
     Dim Mult_Result, Div_Result As Integer
 
-    Public vertcomp As Integer
+    Public H_Count, V_Count As Integer
     Public Sub Init_IO()
         For Channel = 0 To 7
             ReDim HDMA_Channels(Channel).Data(3)
@@ -74,7 +74,7 @@
         Select Case Address And &H1FF
             Case &H0
                 NMI_Enable = Value And &H80
-                INT_Enable = Value And &H30
+                INT_Enable = (Value And &H30) >> 4
             Case &H2 : Multiplicand = Value
             Case &H3
                 Multiplier = Value
@@ -90,8 +90,10 @@
                     Div_Result = Dividend / Divisor
                     Mult_Result = Dividend Mod Divisor
                 End If
-            Case &H9 : vertcomp = (vertcomp And &HFF00) Or Value
-            Case &HA : vertcomp = (vertcomp And &HFF) Or (Value << 8)
+            Case &H7 : H_Count = Value + (H_Count And &HFF00)
+            Case &H8 : H_Count = (Value * &H100) + (H_Count And &HFF)
+            Case &H9 : V_Count = Value + (V_Count And &HFF00)
+            Case &HA : V_Count = (Value * &H100) + (V_Count And &HFF)
             Case &HB 'Transferência de DMA
                 For Channel As Byte = 0 To 7
                     If Value And (1 << Channel) Then 'Verifica se deve transferir

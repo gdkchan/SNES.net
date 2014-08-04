@@ -34,27 +34,20 @@ Module PPU
     Public VRAM(&HFFFF) As Byte
     Dim CGRAM(&H1FF) As Byte
 
+    Dim Screen_Enabled As Boolean
+
     Public Video_Buffer((256 * 224) - 1) As Integer
-    Public Color_LookUp(65536 * 8 - 1) As Byte
     Public Power_Of_2(31) As Integer
+
+    Public Take_Screenshot As Boolean
     Public Sub Init_PPU()
-        Dim c As Integer
-
-        For b1 As Integer = 0 To 255
-            For b2 As Integer = 0 To 255
-                For X As Integer = 0 To 7
-                    If b1 And (1 << X) Then c = 1 Else c = 0
-                    If b2 And (1 << X) Then c = c + 2
-                    Color_LookUp(b1 * 2048 + b2 * 8 + X) = c
-                Next X
-        Next b2, b1
-
         For i As Integer = 0 To 30
             Power_Of_2(i) = 2 ^ i
         Next
     End Sub
     Public Sub Write_PPU(Address As Integer, Value As Byte)
         Select Case Address
+            Case &H2100 : Screen_Enabled = Not (Value And &H80)
             Case &H2101
                 Obj_Chr_Offset = (Value And 3) * &H4000
                 Obj_Name = ((Value >> 3) And 3) << 13
@@ -189,12 +182,10 @@ Module PPU
                 VRAM_Address = (Value * &H100) + (VRAM_Address And &HFF)
                 First_Read_VRAM = True
             Case &H2118
-                'If (VRAM_Address << 1) < &H4000 Then WriteLine(1, "VRAM Write -> " & Hex(VRAM_Address << 1) & " -> " & Hex(Value))
                 VRAM((VRAM_Address << 1) And &HFFFF) = Value
                 If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
             Case &H2119
-                'If (VRAM_Address << 1) < &H4000 Then WriteLine(1, "VRAM Write -> " & Hex(VRAM_Address << 1) & " -> " & Hex(Value))
                 VRAM(((VRAM_Address << 1) + 1) And &HFFFF) = Value
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
@@ -208,7 +199,6 @@ Module PPU
                 Pal_Address += 1
             Case &H212C : Bg_Main_Enabled = Value
             Case &H212D : Bg_Sub_Enabled = Value
-            Case &H2140 To &H217F : Write_SPU(Address, Value)
         End Select
     End Sub
     Public Function Read_PPU(Address As Integer) As Byte
@@ -237,32 +227,30 @@ Module PPU
                 Dim Value As Byte = VRAM(((VRAM_Address << 1) - 1) And &HFFFF)
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 Return Value
-            Case &H213F : Old_Cycles = Cycles
-            Case &H2140 To &H217F
-                Dim Temp As Byte = Read_SPU(Address)
-                Return Temp
         End Select
 
         Return Nothing 'Nunca deve acontecer
     End Function
-    Public Sub Render_Background()
-        Render_Bg_Layer(3, False)
-        Render_Bg_Layer(2, False)
-        Draw_Sprites(0)
+    Public Sub Render()
+        If Screen_Enabled Then
+            Render_Bg_Layer(3, False)
+            Render_Bg_Layer(2, False)
+            Draw_Sprites(0)
 
-        Render_Bg_Layer(3, True)
-        Render_Bg_Layer(2, True)
-        Draw_Sprites(1)
+            Render_Bg_Layer(3, True)
+            Render_Bg_Layer(2, True)
+            Draw_Sprites(1)
 
-        Render_Bg_Layer(1, False)
-        Render_Bg_Layer(0, False)
-        Draw_Sprites(2)
+            Render_Bg_Layer(1, False)
+            Render_Bg_Layer(0, False)
+            Draw_Sprites(2)
 
-        Render_Bg_Layer(1, True)
-        Render_Bg_Layer(0, True)
-        Draw_Sprites(3)
+            Render_Bg_Layer(1, True)
+            Render_Bg_Layer(0, True)
+            Draw_Sprites(3)
 
-        Render_Bg_Layer(2, True)
+            Render_Bg_Layer(2, True)
+        End If
     End Sub
     Private Sub Render_Bg_Layer(Layer As Integer, Foreground As Boolean)
         If (Bg_Main_Enabled Or Bg_Sub_Enabled) And Power_Of_2(Layer) Then
@@ -366,24 +354,25 @@ Module PPU
         End If
     End Sub
     Private Sub Draw_Sprites(Priority As Integer)
-        Dim Tbl_2_Byte As Integer, Tbl_2_Shift As Integer = 1
-        Dim Temp As Integer
+        If (Bg_Main_Enabled Or Bg_Sub_Enabled) And &H10 Then
+            Dim Tbl_2_Byte As Integer, Tbl_2_Shift As Integer = 1
+            Dim Temp As Integer
 
-        For Offset As Integer = 0 To &H1FF Step 4
-            Dim Temp_X As Byte = Obj_RAM(Offset)
-            Dim X As Integer = Temp_X
-            Dim Y As Integer = Obj_RAM(Offset + 1)
-            Dim Tile_Number As Integer = Obj_RAM(Offset + 2)
+            For Offset As Integer = 0 To &H1FF Step 4
+                Dim Temp_X As Integer = Obj_RAM(Offset)
+                Dim Y As Integer = Obj_RAM(Offset + 1)
+                Dim Tile_Number As Integer = Obj_RAM(Offset + 2)
 
-            Dim Attributes As Byte = Obj_RAM(Offset + 3)
-            If Attributes And 1 Then Tile_Number = Tile_Number And &H100
-            Dim Pal_Num As Integer = (Attributes And &HE) >> 1
-            Dim Obj_Priority As Integer = (Attributes And &H30) >> 4
-            Dim H_Flip As Boolean = Attributes And &H40
-            Dim V_Flip As Boolean = Attributes And &H80
+                Dim Attributes As Byte = Obj_RAM(Offset + 3)
+                If Attributes And 1 Then Tile_Number = Tile_Number Or &H100
+                Dim Pal_Num As Integer = (Attributes And &HE) >> 1
+                Dim Obj_Priority As Integer = (Attributes And &H30) >> 4
+                Dim H_Flip As Boolean = Attributes And &H40
+                Dim V_Flip As Boolean = Attributes And &H80
 
-            Dim Tbl_2_Data As Byte = Obj_RAM(&H200 + Tbl_2_Byte)
-            If (Tbl_2_Data And Power_Of_2(Tbl_2_Shift - 1)) = 0 Then 'Coloca fora da tela, creio que desabilite
+                Dim Tbl_2_Data As Byte = Obj_RAM(&H200 + Tbl_2_Byte)
+                If Tbl_2_Data And Power_Of_2(Tbl_2_Shift - 1) Then Temp_X = Temp_X Or &H100
+                Dim X As Integer = Temp_X
                 Dim Tile_Size As Boolean = Tbl_2_Data And Power_Of_2(Tbl_2_Shift)
                 Dim TX, TY As Integer
                 Select Case Obj_Size
@@ -396,6 +385,7 @@ Module PPU
                 End Select
 
                 If Obj_Priority = Priority Then
+                    If V_Flip Then Y += (8 * TY)
                     For Tile_Num_Y As Integer = 0 To TY
                         If H_Flip Then X += (8 * TX)
                         For Tile_Num_X As Integer = 0 To TX
@@ -422,24 +412,24 @@ Module PPU
                                     End If
                                 Next
                             Next
-                            If H_Flip Then X -= (8 * TX) Else X += (8 * TX)
+                            If H_Flip Then X -= 8 Else X += 8
                         Next
 
                         X = Temp_X
-                        If V_Flip Then Y -= (8 * TY) Else Y += (8 * TY)
+                        If V_Flip Then Y -= 8 Else Y += 8
                     Next
                 End If
-            End If
 
-            If Temp < 3 Then
-                Temp += 1
-                Tbl_2_Shift += 2
-            Else
-                Temp = 0
-                Tbl_2_Byte += 1
-                Tbl_2_Shift = 1
-            End If
-        Next
+                If Temp < 3 Then
+                    Temp += 1
+                    Tbl_2_Shift += 2
+                Else
+                    Temp = 0
+                    Tbl_2_Byte += 1
+                    Tbl_2_Shift = 1
+                End If
+            Next
+        End If
     End Sub
     Private Sub Draw_Pixel(X As Integer, Y As Integer, Color_Index As Byte)
         If (X >= 0 And X < 256) And (Y >= 0 And Y < 224) Then
@@ -455,5 +445,20 @@ Module PPU
         Img.UnlockBits(BitmapData1)
         FrmMain.PicScreen.Image = Img
         Array.Clear(Video_Buffer, 0, Video_Buffer.Length)
+    End Sub
+    Public Sub Screenshot()
+        Take_Screenshot = False
+        Dim Img As New Bitmap(256, 224, Imaging.PixelFormat.Format32bppRgb)
+        Dim BitmapData1 As Imaging.BitmapData
+        BitmapData1 = Img.LockBits(New Rectangle(0, 0, 256, 224), Imaging.ImageLockMode.WriteOnly, Imaging.PixelFormat.Format32bppRgb)
+        Dim Scan0 As IntPtr = BitmapData1.Scan0
+        Runtime.InteropServices.Marshal.Copy(Video_Buffer, 0, Scan0, 256 * 224)
+        Img.UnlockBits(BitmapData1)
+        Dim Save_Dlg As New SaveFileDialog
+        Save_Dlg.Title = "Salvar Screenshot"
+        Save_Dlg.Filter = "Imagem|*.png"
+        Save_Dlg.FileName = Header.Name
+        Save_Dlg.ShowDialog()
+        If Save_Dlg.FileName <> Nothing Then Img.Save(Save_Dlg.FileName)
     End Sub
 End Module

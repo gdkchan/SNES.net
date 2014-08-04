@@ -30,35 +30,35 @@ Module _65816
     Public STP_Disable As Boolean
     Dim WAI_Disable As Boolean
 
-    Public debug As Boolean
-
-    Public Memory(&H1FFFF)
-
-    Public dbglist(100) As String
+    Public Memory(&H1FFFF) As Byte 'WRAM de 128kb
+    Dim WRAM_Address As Integer
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
-        Try
-            Bank = Bank And &H7F
-            If Bank < &H60 Then
-                Select Case Address
-                    Case 0 To &H1FFF : Return Memory(Address)
-                    Case &H2000 To &H2FFF : Return Read_PPU(Address)
-                    Case &H4000 To &H4FFF : Return Read_IO(Address)
-                    Case &H8000 To &HFFFF : Return ROM_Data(Bank, Address And &H7FFF)
-                End Select
-            End If
+        Bank = Bank And &H7F
+        If Bank < &H70 Then
+            Select Case Address
+                Case 0 To &H1FFF : Return Memory(Address)
+                Case &H2000 To &H213F : Return Read_PPU(Address)
+                Case &H2140 To &H217F : Return Read_SPU(Address)
+                Case &H2180
+                    Dim Value As Byte = Memory(WRAM_Address)
+                    WRAM_Address = (WRAM_Address + 1) And &H1FFFF
+                    Return Value
+                Case &H4000 To &H4FFF : Return Read_IO(Address)
+                Case &H8000 To &HFFFF
+                    If Bank < &H40 Then
+                        Return ROM_Data(Bank, Address And &H7FFF)
+                    Else '???
+                        Return ROM_Data(Bank And &H3F, Address And &H7FFF)
+                    End If
+            End Select
+        End If
 
-            If Bank = &H7E Then Return Memory(Address)
-            If Bank = &H7F Then Return Memory(Address + &H10000)
+        If Bank = &H7E Then Return Memory(Address)
+        If Bank = &H7F Then Return Memory(Address + &H10000)
 
-            Return Nothing 'Nunca deve acontecer
-        Catch
-            For i As Integer = 0 To 100
-                WriteLine(1, dbglist(i))
-            Next
-            MsgBox(Hex(Bank) & ":" & Hex(Address))
-        End Try
+        Return Nothing 'Nunca deve acontecer
     End Function
     Public Function Read_Memory_16(Bank As Integer, Address As Integer) As Integer
         Return Read_Memory(Bank, Address) + _
@@ -74,8 +74,15 @@ Module _65816
         If Bank < &H60 Then
             Select Case Address
                 Case 0 To &H1FFF : Memory(Address) = Value
+                Case &H2000 To &H213F : Write_PPU(Address, Value)
+                Case &H2140 To &H217F : Write_SPU(Address, Value)
+                Case &H2180
+                    Memory(WRAM_Address) = Value
+                    WRAM_Address = (WRAM_Address + 1) And &H1FFFF
+                Case &H2181 : WRAM_Address = Value + (WRAM_Address And &H1FF00)
+                Case &H2182 : WRAM_Address = (Value * &H100) + (WRAM_Address And &H100FF)
+                Case &H2183 : If Value And 1 Then WRAM_Address = WRAM_Address Or &H10000 Else WRAM_Address = WRAM_Address And Not &H10000
                 Case &H4000 To &H4FFF : Write_IO(Address, Value)
-                Case &H2000 To &H2FFF : Write_PPU(Address, Value)
             End Select
         End If
 
@@ -95,8 +102,6 @@ Module _65816
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
-        FileOpen(1, "D:\tempdbg.txt", OpenMode.Output)
-
         Registers.A = 0
         Registers.X = 0
         Registers.Y = 0
@@ -114,15 +119,7 @@ Module _65816
     Public Sub Execute_65816(Target_Cycles As Double)
         While Cycles < Target_Cycles
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
-            'If debug Then WriteLine(1, "PC: " & Hex(Registers.Program_Counter) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " -- OP: " & Hex(Opcode))
-            If debug Then
-                For j As Integer = 0 To 99
-                    dbglist(j) = dbglist(j + 1)
-                Next
-                dbglist(100) = "PC: " & Hex(Registers.Program_Counter) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " P: " & Hex(Registers.P) & " -- OP: " & Hex(Opcode)
-            End If
             Registers.Program_Counter += 1
-
             Page_Crossed = False
 
             Select Case Opcode
@@ -1999,19 +1996,20 @@ Module _65816
     Public Sub Main_Loop()
         While SNES_On
             For Scanline As Integer = 0 To 261
-                If Scanline = vertcomp And (INT_Enable And &H20) Then IRQ()
+                If (Scanline = V_Count And (INT_Enable >= 2)) Or INT_Enable = 1 Then IRQ()
                 If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
                 If Scanline < 224 Then
-                    'Render_Scanline(Scanline)
                     H_Blank_DMA(Scanline) 'H-Blank
                 Else 'V-Blank
                     If Scanline = 224 And NMI_Enable Then NMI() 'Nota: Lembrar de adc o NMI enable!!!
                 End If
             Next
-            Render_Background()
+            Render()
+            If Take_Screenshot Then Screenshot()
             Blit()
+            If Limit_FPS Then Lock_Framerate(60)
 
-            FrmMain.Text = Get_FPS()
+            FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While

@@ -8,6 +8,8 @@
     Private Milliseconds As Integer
     Private Get_Frames_Per_Second As Integer
     Private Frame_Count As Integer
+
+    Public Limit_FPS As Boolean
     Public Function Hi_Res_Timer_Initialize() As Boolean
         If QueryPerformanceFrequency(Ticks_Per_Second) = 0 Then
             Hi_Res_Timer_Initialize = False
@@ -32,7 +34,7 @@
         Get_Elapsed_Time_Per_Frame = Convert.ToSingle((Current_Time - Last_Time) / Ticks_Per_Second)
         QueryPerformanceCounter(Last_Time)
     End Function
-    Private Sub Lock_Framerate(ByVal Target_FPS As Long)
+    Public Sub Lock_Framerate(ByVal Target_FPS As Long)
         Static Last_Time As Long
         Dim Current_Time As Long
         Dim FPS As Single
