@@ -47,7 +47,7 @@ Module PPU
     End Sub
     Public Sub Write_PPU(Address As Integer, Value As Byte)
         Select Case Address
-            Case &H2100 : Screen_Enabled = Not (Value And &H80)
+            Case &H2100 : Screen_Enabled = If(Value And &H80, False, True)
             Case &H2101
                 Obj_Chr_Offset = (Value And 3) * &H4000
                 Obj_Name = ((Value >> 3) And 3) << 13
