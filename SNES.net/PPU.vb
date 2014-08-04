@@ -24,7 +24,7 @@ Module PPU
 
     Dim Obj_Size, Obj_Name, Obj_Chr_Offset As Integer
     Dim Obj_RAM_Address As Integer
-    Dim Obj_RAM(&H3FF) As Byte
+    Public Obj_RAM(&H21F) As Byte
     Dim Obj_Low_High_Toggle, First_Read_Obj As Boolean
 
     Dim VRAM_Address, VRAM_Increment As Integer
@@ -68,7 +68,7 @@ Module PPU
                 End If
                 Obj_Low_High_Toggle = True
             Case &H2104
-                If Obj_RAM_Address > &H10F Then
+                If Obj_RAM_Address > &H21F Then
                     Obj_RAM_Address = 0
                     Obj_Low_High_Toggle = True
                 End If
@@ -366,12 +366,12 @@ Module PPU
         End If
     End Sub
     Private Sub Draw_Sprites(Priority As Integer)
-        Dim Tbl_2_Byte, Tbl_2_Shift As Integer
+        Dim Tbl_2_Byte As Integer, Tbl_2_Shift As Integer = 1
         Dim Temp As Integer
 
         For Offset As Integer = 0 To &H1FF Step 4
             Dim Temp_X As Byte = Obj_RAM(Offset)
-            Dim X As Integer = Temp_X
+
             Dim Y As Integer = Obj_RAM(Offset + 1)
             Dim Tile_Number As Integer = Obj_RAM(Offset + 2)
 
@@ -382,48 +382,62 @@ Module PPU
             Dim H_Flip As Boolean = Attributes And &H40
             Dim V_Flip As Boolean = Attributes And &H80
 
-            Dim Tbl_2_Data As Byte = Obj_RAM(&H200 + Tbl_2_Byte) >> Tbl_2_Shift 'TBD
+            Dim Tbl_2_Data As Byte = Obj_RAM(&H200 + Tbl_2_Byte)
+            If Tbl_2_Data And Power_Of_2(Tbl_2_Shift - 1) Then Temp_X = Temp_X And &H100
+            Dim X As Integer = Temp_X
+            Dim Tile_Size As Boolean = Tbl_2_Data And Power_Of_2(Tbl_2_Shift)
+            Dim TX, TY As Integer
+            Select Case Obj_Size
+                Case 0 : If Tile_Size Then TX = 1 : TY = 1 Else TX = 0 : TY = 0 '8x8/16x16
+                Case 1 : If Tile_Size Then TX = 3 : TY = 3 Else TX = 0 : TY = 0 '8x8/32x32
+                Case 2 : If Tile_Size Then TX = 7 : TY = 7 Else TX = 0 : TY = 0 '8x8/64x64
+                Case 3 : If Tile_Size Then TX = 3 : TY = 3 Else TX = 1 : TY = 1 '16x16/32x32
+                Case 4 : If Tile_Size Then TX = 7 : TY = 7 Else TX = 1 : TY = 1 '16x16/64x64
+                Case 5 : If Tile_Size Then TX = 7 : TY = 7 Else TX = 3 : TY = 3 '32x32/64x64
+            End Select
 
-            For Tile_Num_Y As Integer = 0 To 1
-                If H_Flip Then X += 8
-                For Tile_Num_X As Integer = 0 To 1
-                    For Tile_Y As Integer = 0 To 7
-                        Dim Byte_0, Byte_1, Byte_2, Byte_3 As Byte
-                        Byte_0 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32))
-                        Byte_1 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 1)
-                        Byte_2 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 16)
-                        Byte_3 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 17)
+            If Obj_Priority = Priority Then
+                For Tile_Num_Y As Integer = 0 To TY
+                    If H_Flip Then X += (8 * TX)
+                    For Tile_Num_X As Integer = 0 To TX
+                        For Tile_Y As Integer = 0 To 7
+                            Dim Byte_0, Byte_1, Byte_2, Byte_3 As Byte
+                            Byte_0 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32))
+                            Byte_1 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 1)
+                            Byte_2 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 16)
+                            Byte_3 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 17)
 
-                        For Tile_X As Integer = 0 To 7
-                            Dim Pixel_Color As Integer = 0
-                            Dim Bit_To_Test As Integer = Power_Of_2(If(H_Flip, Tile_X, 7 - Tile_X))
-                            If Byte_0 And Bit_To_Test Then Pixel_Color += 1
-                            If Byte_1 And Bit_To_Test Then Pixel_Color += 2
-                            If Byte_2 And Bit_To_Test Then Pixel_Color += 4
-                            If Byte_3 And Bit_To_Test Then Pixel_Color += 8
-                            If Pixel_Color <> 0 Then
-                                If V_Flip Then
-                                    Draw_Pixel(X + Tile_X, Y + (7 - Tile_Y), 128 + (Pal_Num * 16) + Pixel_Color)
-                                Else
-                                    Draw_Pixel(X + Tile_X, Y + Tile_Y, 128 + (Pal_Num * 16) + Pixel_Color)
+                            For Tile_X As Integer = 0 To 7
+                                Dim Pixel_Color As Integer = 0
+                                Dim Bit_To_Test As Integer = Power_Of_2(If(H_Flip, Tile_X, 7 - Tile_X))
+                                If Byte_0 And Bit_To_Test Then Pixel_Color += 1
+                                If Byte_1 And Bit_To_Test Then Pixel_Color += 2
+                                If Byte_2 And Bit_To_Test Then Pixel_Color += 4
+                                If Byte_3 And Bit_To_Test Then Pixel_Color += 8
+                                If Pixel_Color <> 0 Then
+                                    If V_Flip Then
+                                        Draw_Pixel(X + Tile_X, Y + (7 - Tile_Y), 128 + (Pal_Num * 16) + Pixel_Color)
+                                    Else
+                                        Draw_Pixel(X + Tile_X, Y + Tile_Y, 128 + (Pal_Num * 16) + Pixel_Color)
+                                    End If
                                 End If
-                            End If
+                            Next
                         Next
+                        If H_Flip Then X -= (8 * TX) Else X += (8 * TX)
                     Next
-                    If H_Flip Then X -= 8 Else X += 8
+
+                    X = Temp_X
+                    If V_Flip Then Y -= (8 * TY) Else Y += (8 * TY)
                 Next
+            End If
 
-                X = Temp_X
-                If V_Flip Then Y -= 8 Else Y += 8
-            Next
-
-            If Temp < 4 Then
+            If Temp < 3 Then
                 Temp += 1
                 Tbl_2_Shift += 2
             Else
                 Temp = 0
                 Tbl_2_Byte += 1
-                Tbl_2_Shift = 0
+                Tbl_2_Shift = 1
             End If
         Next
     End Sub
