@@ -61,7 +61,7 @@ Module PPU
                 End If
                 Obj_Low_High_Toggle = True
             Case &H2104
-                If Obj_RAM_Address > &H21F Then
+                If Obj_RAM_Address > &H10F Then
                     Obj_RAM_Address = 0
                     Obj_Low_High_Toggle = True
                 End If
