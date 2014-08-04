@@ -31,7 +31,7 @@ Partial Class FrmMain
         'PicScreen
         '
         Me.PicScreen.BackColor = System.Drawing.Color.Black
-        Me.PicScreen.Location = New System.Drawing.Point(12, 12)
+        Me.PicScreen.Location = New System.Drawing.Point(12, 41)
         Me.PicScreen.Name = "PicScreen"
         Me.PicScreen.Size = New System.Drawing.Size(256, 224)
         Me.PicScreen.TabIndex = 0
@@ -39,18 +39,18 @@ Partial Class FrmMain
         '
         'Button1
         '
-        Me.Button1.Location = New System.Drawing.Point(12, 242)
+        Me.Button1.Location = New System.Drawing.Point(12, 12)
         Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(138, 48)
+        Me.Button1.Size = New System.Drawing.Size(138, 23)
         Me.Button1.TabIndex = 1
         Me.Button1.Text = "Dump VRAM"
         Me.Button1.UseVisualStyleBackColor = True
         '
         'Button2
         '
-        Me.Button2.Location = New System.Drawing.Point(284, 12)
+        Me.Button2.Location = New System.Drawing.Point(156, 12)
         Me.Button2.Name = "Button2"
-        Me.Button2.Size = New System.Drawing.Size(141, 62)
+        Me.Button2.Size = New System.Drawing.Size(138, 23)
         Me.Button2.TabIndex = 2
         Me.Button2.Text = "Start LOG"
         Me.Button2.UseVisualStyleBackColor = True
@@ -59,12 +59,14 @@ Partial Class FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(521, 398)
+        Me.ClientSize = New System.Drawing.Size(311, 283)
         Me.Controls.Add(Me.Button2)
         Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.PicScreen)
+        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.MaximizeBox = False
         Me.Name = "FrmMain"
-        Me.Text = "Form1"
+        Me.Text = "SNES.net"
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 

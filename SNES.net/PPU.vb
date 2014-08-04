@@ -14,13 +14,18 @@ Module PPU
         Dim H_Scroll, V_Scroll As Integer
         Dim H_Low_High_Toggle, V_Low_High_Toggle As Boolean
     End Structure
-    Dim Palette(255) As Color_Palette
+    Dim Palette(255) As Integer
     Dim Background(3) As PPU_Background
     Dim Bg_Main_Enabled As Byte
     Dim Bg_Sub_Enabled As Byte
     Dim Pal_Address As Integer
     Dim PPU_Mode As Byte
     Dim BG3_Priority As Boolean
+
+    Dim Obj_Size, Obj_Name, Obj_Chr_Offset As Integer
+    Dim Obj_RAM_Address As Integer
+    Dim Obj_RAM(&H3FF) As Byte
+    Dim Obj_Low_High_Toggle, First_Read_Obj As Boolean
 
     Dim VRAM_Address, VRAM_Increment As Integer
     Dim Increment_2119_213A As Boolean
@@ -50,6 +55,31 @@ Module PPU
     End Sub
     Public Sub Write_PPU(Address As Integer, Value As Byte)
         Select Case Address
+            Case &H2101
+                Obj_Chr_Offset = (Value And 3) << 14
+                Obj_Name = ((Value >> 3) And 3) << 13
+                Obj_Size = (Value >> 5) << 1
+            Case &H2102 : Obj_RAM_Address = Value + (Obj_RAM_Address And &H100)
+            Case &H2103
+                If Value And 1 Then
+                    Obj_RAM_Address = Obj_RAM_Address Or &H100
+                Else
+                    Obj_RAM_Address = Obj_RAM_Address And &HFE
+                End If
+                Obj_Low_High_Toggle = True
+            Case &H2104
+                If Obj_RAM_Address > &H10F Then
+                    Obj_RAM_Address = 0
+                    Obj_Low_High_Toggle = True
+                End If
+
+                If Obj_Low_High_Toggle Then
+                    Obj_RAM(Obj_RAM_Address << 1) = Value
+                Else
+                    Obj_RAM((Obj_RAM_Address << 1) + 1) = Value
+                    Obj_RAM_Address += 1
+                End If
+                Obj_Low_High_Toggle = Not Obj_Low_High_Toggle
             Case &H2105
                 PPU_Mode = Value And 7
                 BG3_Priority = Value And 4
@@ -172,9 +202,9 @@ Module PPU
             Case &H2122
                 CGRAM(Pal_Address And &H1FF) = Value
                 Dim Palette_Value As Integer = CGRAM(Pal_Address And &H1FE) + (CGRAM((Pal_Address And &H1FE) + 1) * &H100)
-                Palette((Pal_Address \ 2) And &HFF).R = (Palette_Value And &H1F) * 8
-                Palette((Pal_Address \ 2) And &HFF).G = ((Palette_Value >> 5) And &H1F) * 8
-                Palette((Pal_Address \ 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF) = ((Palette_Value And &H1F) * 8) * &H10000
+                Palette((Pal_Address \ 2) And &HFF) += (((Palette_Value >> 5) And &H1F) * 8) * &H100
+                Palette((Pal_Address \ 2) And &HFF) += ((Palette_Value >> 10) And &H1F) * 8
                 Pal_Address += 1
             Case &H212C : Bg_Main_Enabled = Value
             Case &H212D : Bg_Sub_Enabled = Value
@@ -183,6 +213,14 @@ Module PPU
     End Sub
     Public Function Read_PPU(Address As Integer) As Byte
         Select Case Address
+            Case &H2138
+                If First_Read_Obj Then
+                    First_Read_Obj = False
+                    Return Obj_RAM(Obj_RAM_Address << 1)
+                End If
+                Dim Value As Byte = Obj_RAM((Obj_RAM_Address << 1) + 1)
+                Obj_RAM_Address = (Obj_RAM_Address + 1) And &H10F
+                Return Value
             Case &H2139
                 If First_Read_VRAM Then
                     First_Read_VRAM = False
@@ -210,15 +248,19 @@ Module PPU
     Public Sub Render_Background()
         Render_Bg_Layer(3, False)
         Render_Bg_Layer(2, False)
+        Draw_Sprites(0)
 
         Render_Bg_Layer(3, True)
         Render_Bg_Layer(2, True)
+        Draw_Sprites(1)
 
         Render_Bg_Layer(1, False)
         Render_Bg_Layer(0, False)
+        Draw_Sprites(2)
 
         Render_Bg_Layer(1, True)
         Render_Bg_Layer(0, True)
+        Draw_Sprites(3)
 
         Render_Bg_Layer(2, True)
     End Sub
@@ -251,10 +293,10 @@ Module PPU
                             Dim Character_Number As Integer = (Y * 64) + (X * 2)
                             For Scroll_Y As Integer = 0 To 1
                                 For Scroll_X As Integer = 0 To 1
-                                    Dim Temp_X As Integer = (((X * 8) + 7) + (Scroll_X * 256) - (.H_Scroll Mod 256))
-                                    Dim Temp_Y As Integer = ((Y * 8) + 7) + (Scroll_Y * 256) - (.V_Scroll Mod 256)
+                                    Dim Temp_X As Integer = ((X * 8) + (Scroll_X * 256) - (.H_Scroll Mod 256))
+                                    Dim Temp_Y As Integer = (Y * 8) + (Scroll_Y * 256) - (.V_Scroll Mod 256)
 
-                                    If (Temp_X >= 0 And Temp_X < 256) And (Temp_Y >= 0 And Temp_Y < 224) Then
+                                    If (Temp_X > -8 And Temp_X < 256) And (Temp_Y > -8 And Temp_Y < 224) Then
                                         Dim Tile_Offset As Integer = .Address + Character_Number
                                         Select Case .Size
                                             Case 1 : Tile_Offset += (2048 * If(Reverse_X, Scroll_X, 1 - Scroll_X))
@@ -323,12 +365,71 @@ Module PPU
             End If
         End If
     End Sub
+    Private Sub Draw_Sprites(Priority As Integer)
+        Dim Tbl_2_Byte, Tbl_2_Shift As Integer
+        Dim Temp As Integer
+
+        For Offset As Integer = 0 To &H1FF Step 4
+            Dim Temp_X As Byte = Obj_RAM(Offset)
+            Dim X As Integer = Temp_X
+            Dim Y As Integer = Obj_RAM(Offset + 1)
+            Dim Tile_Number As Integer = Obj_RAM(Offset + 2)
+
+            Dim Attributes As Byte = Obj_RAM(Offset + 3)
+            If Attributes And 1 Then Tile_Number = Tile_Number And &H100
+            Dim Pal_Num As Integer = (Attributes And &HE) >> 1
+            Dim Obj_Priority As Integer = (Attributes And &H30) >> 4
+            Dim H_Flip As Boolean = Attributes And &H40
+            Dim V_Flip As Boolean = Attributes And &H80
+
+            Dim Tbl_2_Data As Byte = Obj_RAM(&H200 + Tbl_2_Byte) >> Tbl_2_Shift 'TBD
+
+            For Tile_Num_Y As Integer = 0 To 1
+                If H_Flip Then X += 8
+                For Tile_Num_X As Integer = 0 To 1
+                    For Tile_Y As Integer = 0 To 7
+                        Dim Byte_0, Byte_1, Byte_2, Byte_3 As Byte
+                        Byte_0 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32))
+                        Byte_1 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 1)
+                        Byte_2 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 16)
+                        Byte_3 = VRAM(Obj_Chr_Offset + (Tile_Y * 2) + ((Tile_Number + (Tile_Num_Y * 16) + Tile_Num_X) * 32) + 17)
+
+                        For Tile_X As Integer = 0 To 7
+                            Dim Pixel_Color As Integer = 0
+                            Dim Bit_To_Test As Integer = Power_Of_2(If(H_Flip, Tile_X, 7 - Tile_X))
+                            If Byte_0 And Bit_To_Test Then Pixel_Color += 1
+                            If Byte_1 And Bit_To_Test Then Pixel_Color += 2
+                            If Byte_2 And Bit_To_Test Then Pixel_Color += 4
+                            If Byte_3 And Bit_To_Test Then Pixel_Color += 8
+                            If Pixel_Color <> 0 Then
+                                If V_Flip Then
+                                    Draw_Pixel(X + Tile_X, Y + (7 - Tile_Y), 128 + (Pal_Num * 16) + Pixel_Color)
+                                Else
+                                    Draw_Pixel(X + Tile_X, Y + Tile_Y, 128 + (Pal_Num * 16) + Pixel_Color)
+                                End If
+                            End If
+                        Next
+                    Next
+                    If H_Flip Then X -= 8 Else X += 8
+                Next
+
+                X = Temp_X
+                If V_Flip Then Y -= 8 Else Y += 8
+            Next
+
+            If Temp < 4 Then
+                Temp += 1
+                Tbl_2_Shift += 2
+            Else
+                Temp = 0
+                Tbl_2_Byte += 1
+                Tbl_2_Shift = 0
+            End If
+        Next
+    End Sub
     Private Sub Draw_Pixel(X As Integer, Y As Integer, Color_Index As Byte)
         If (X >= 0 And X < 256) And (Y >= 0 And Y < 224) Then
-            Video_Buffer(X + (Y * 256)) = _
-                Palette(Color_Index).B + _
-                (Palette(Color_Index).G * &H100) + _
-                (Palette(Color_Index).R * &H10000)
+            Video_Buffer(X + (Y * 256)) = Palette(Color_Index)
         End If
     End Sub
     Public Sub Blit()

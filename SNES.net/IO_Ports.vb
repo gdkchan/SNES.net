@@ -1,4 +1,6 @@
 ﻿Module IO_Ports
+    Private Declare Function GetKeyState Lib "USER32" Alias "GetKeyState" (ByVal nVirtKey As Integer) As Short
+
     Private Structure DMA_Channel
         Dim Control As Byte
         Dim Dest As Byte
@@ -29,8 +31,29 @@
             ReDim HDMA_Channels(Channel).Data(3)
         Next
     End Sub
+    Private Function Key_Pressed(Key As Integer) As Boolean
+        Return GetKeyState(Key) < 0
+    End Function
     Public Function Read_IO(Address As Integer) As Byte
         Select Case Address
+            Case &H4218
+                Dim Value As Byte
+                If Key_Pressed(Keys.Return) Then Value = Value Or &H80 'Start
+                If Key_Pressed(Keys.Control) Then Value = Value Or &H40 'Select
+                If Key_Pressed(Keys.Q) Then Value = Value Or &H20 'L
+                If Key_Pressed(Keys.W) Then Value = Value Or &H10 'R
+                Return Value
+            Case &H4219
+                Dim Value As Byte
+                If Key_Pressed(Keys.X) Then Value = Value Or &H80
+                If Key_Pressed(Keys.Z) Then Value = Value Or &H40
+                If Key_Pressed(Keys.S) Then Value = Value Or &H20
+                If Key_Pressed(Keys.A) Then Value = Value Or &H10
+                If Key_Pressed(Keys.Up) Then Value = Value Or &H8
+                If Key_Pressed(Keys.Down) Then Value = Value Or &H4
+                If Key_Pressed(Keys.Left) Then Value = Value Or &H2
+                If Key_Pressed(Keys.Right) Then Value = Value Or &H1
+                Return Value
             Case &H4214 : Return Div_Result And &HFF
             Case &H4215 : Return (Div_Result And &HFF00) / &H100
             Case &H4216 : Return Mult_Result And &HFF

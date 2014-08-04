@@ -2011,7 +2011,7 @@ Module _65816
             Render_Background()
             Blit()
 
-            'FrmMain.Text = Get_FPS()
+            FrmMain.Text = Get_FPS()
 
             Application.DoEvents()
         End While
