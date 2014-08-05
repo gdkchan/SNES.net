@@ -31,4 +31,8 @@ Public Class FrmMain
         Limit_FPS = Not Limit_FPS
         LimitarFPSToolStripMenuItem.Checked = Limit_FPS
     End Sub
+    Private Sub DebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DebugToolStripMenuItem.Click
+        Debug = Not Debug
+        DebugToolStripMenuItem.Checked = Debug
+    End Sub
 End Class

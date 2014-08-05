@@ -33,6 +33,8 @@ Module _65816
     Public Memory(&H1FFFF) As Byte 'WRAM de 128kb
     Dim WRAM_Address As Integer
 
+    Public Debug As Boolean
+
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
         Bank = Bank And &H7F
@@ -102,6 +104,8 @@ Module _65816
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
+        'FileOpen(1, "D:\Gabriel\SNES.Net Debug.txt", FileMode.Create)
+
         Registers.A = 0
         Registers.X = 0
         Registers.Y = 0
@@ -119,6 +123,11 @@ Module _65816
     Public Sub Execute_65816(Target_Cycles As Double)
         While Cycles < Target_Cycles
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
+
+            If Debug Then
+                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " -- OP: " & Hex(Opcode))
+            End If
+
             Registers.Program_Counter += 1
             Page_Crossed = False
 
@@ -1860,7 +1869,7 @@ Module _65816
         Registers.Stack_Pointer = Registers.A
     End Sub
     Private Sub Transfer_DP_To_Accumulator() 'TDC
-        Registers.A = Registers.Direct_Page + (Registers.A And &HFF00)
+        Registers.A = Registers.Direct_Page
     End Sub
     Private Sub Test_And_Reset_Bit() 'TRB (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)

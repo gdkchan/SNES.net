@@ -38,17 +38,17 @@
         Select Case Address
             Case &H4218
                 Dim Value As Byte
-                If Key_Pressed(Keys.Return) Then Value = Value Or &H80 'Start
-                If Key_Pressed(Keys.Control) Then Value = Value Or &H40 'Select
+                If Key_Pressed(Keys.A) Then Value = Value Or &H80 'A
+                If Key_Pressed(Keys.S) Then Value = Value Or &H40 'X
                 If Key_Pressed(Keys.Q) Then Value = Value Or &H20 'L
                 If Key_Pressed(Keys.W) Then Value = Value Or &H10 'R
                 Return Value
             Case &H4219
                 Dim Value As Byte
-                If Key_Pressed(Keys.X) Then Value = Value Or &H80
-                If Key_Pressed(Keys.Z) Then Value = Value Or &H40
-                If Key_Pressed(Keys.S) Then Value = Value Or &H20
-                If Key_Pressed(Keys.A) Then Value = Value Or &H10
+                If Key_Pressed(Keys.Z) Then Value = Value Or &H80 'B
+                If Key_Pressed(Keys.X) Then Value = Value Or &H40 'Y
+                If Key_Pressed(Keys.Tab) Then Value = Value Or &H20 'Select
+                If Key_Pressed(Keys.Return) Then Value = Value Or &H10 'Start
                 If Key_Pressed(Keys.Up) Then Value = Value Or &H8
                 If Key_Pressed(Keys.Down) Then Value = Value Or &H4
                 If Key_Pressed(Keys.Left) Then Value = Value Or &H2

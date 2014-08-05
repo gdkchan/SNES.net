@@ -51,7 +51,7 @@ Module PPU
             Case &H2101
                 Obj_Chr_Offset = (Value And 3) * &H4000
                 Obj_Name = ((Value >> 3) And 3) << 13
-                Obj_Size = (Value >> 5) << 1
+                Obj_Size = (Value / &H20) * 2
             Case &H2102 : Obj_RAM_Address = Value + (Obj_RAM_Address And &H100)
             Case &H2103
                 If Value And 1 Then
