@@ -4,7 +4,6 @@ Public Class FrmMain
         Menu.Renderer = New Custom_Menu
 
         Init_PPU()
-        Init_IO()
         Hi_Res_Timer_Initialize()
 
         Show()
@@ -17,6 +16,7 @@ Public Class FrmMain
         If File.Exists(Open_Dlg.FileName) Then
             Load_Rom(Open_Dlg.FileName)
             Reset_65816()
+            Reset_IO()
             SNES_On = True
             Main_Loop()
         End If

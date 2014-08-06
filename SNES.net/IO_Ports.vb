@@ -32,28 +32,40 @@
             ReDim HDMA_Channels(Channel).Data(3)
         Next
     End Sub
+    Public Sub Reset_IO()
+        Array.Clear(DMA_Channels, 0, DMA_Channels.Length)
+        Array.Clear(HDMA_Channels, 0, HDMA_Channels.Length)
+        Init_IO()
+        HDMA_Enabled = 0
+
+        NMI_Enable = False
+        INT_Enable = 0
+
+        V_Blank = False
+        Controller_Ready = 0
+    End Sub
     Private Function Key_Pressed(Key As Integer) As Boolean
         Return GetKeyState(Key) < 0
     End Function
     Public Function Read_IO(Address As Integer) As Byte
         Select Case Address
-            'Case &H4210
-            'If V_Blank Then
-            'V_Blank = False
-            'Return &H80
-            'Else
-            'Return 0
-            'End If
+            Case &H4210
+                If V_Blank Then
+                    V_Blank = False
+                    Return &H80
+                Else
+                    Return 0
+                End If
             Case &H4211
-                'If IRQ_Ocurred Then
-                'IRQ_Ocurred = False
-                'Return &H80
-                'Else
-                'Return 0
-                'End If
+                If IRQ_Ocurred Then
+                    IRQ_Ocurred = False
+                    'Return &H80
+                Else
+                    Return 0
+                End If
             Case &H4212
                 Dim Value As Byte = Controller_Ready
-                If Controller_Ready = 0 Then Controller_Ready = Controller_Ready And Not &H41
+                Controller_Ready = Controller_Ready And Not &H41
                 If V_Blank Then Value = Value Or &H80
                 Return Value
             Case &H4218
