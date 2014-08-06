@@ -31,6 +31,8 @@ Module PPU
     Dim Increment_2119_213A As Boolean
     Dim First_Read_VRAM As Boolean
 
+    Dim V_Latch As Integer
+
     Public VRAM(&HFFFF) As Byte
     Dim CGRAM(&H1FF) As Byte
 
@@ -51,7 +53,7 @@ Module PPU
             Case &H2101
                 Obj_Chr_Offset = (Value And 3) * &H4000
                 Obj_Name = ((Value >> 3) And 3) << 13
-                Obj_Size = (Value / &H20) * 2
+                Obj_Size = Value / &H20
             Case &H2102 : Obj_RAM_Address = Value + (Obj_RAM_Address And &H100)
             Case &H2103
                 If Value And 1 Then
@@ -203,12 +205,13 @@ Module PPU
     End Sub
     Public Function Read_PPU(Address As Integer) As Byte
         Select Case Address
+            Case &H2137 : V_Latch = Current_Line
             Case &H2138
                 If First_Read_Obj Then
                     First_Read_Obj = False
                     Return Obj_RAM(Obj_RAM_Address << 1)
                 End If
-                Dim Value As Byte = Obj_RAM((Obj_RAM_Address << 1) + 1)
+                Dim Value As Byte = Obj_RAM(((Obj_RAM_Address << 1) + 1) And &H10F)
                 Obj_RAM_Address = (Obj_RAM_Address + 1) And &H10F
                 Return Value
             Case &H2139
@@ -227,9 +230,13 @@ Module PPU
                 Dim Value As Byte = VRAM(((VRAM_Address << 1) - 1) And &HFFFF)
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 Return Value
+            Case &H213D
+                Dim Value As Byte = V_Latch And &HFF
+                V_Latch >>= 8
+                Return Value
         End Select
 
-        Return Nothing 'Nunca deve acontecer
+        Return 0
     End Function
     Public Sub Render()
         If Screen_Enabled Then

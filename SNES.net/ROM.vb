@@ -12,9 +12,9 @@ Module ROM
     Public ROM_Data(0, &H7FFF) 'As ROMs são mapeadas em bancos de 32kb
     Public Sub Load_Rom(File_Name As String)
         Dim Data() As Byte = File.ReadAllBytes(File_Name)
-        Dim BankNum As Integer = Data.Length / &H8000
-        ReDim ROM_Data(BankNum - 1, &H7FFF)
-        For Bank As Integer = 0 To BankNum - 1
+        Dim Banks As Integer = Data.Length / &H8000
+        ReDim ROM_Data(Banks - 1, &H7FFF)
+        For Bank As Integer = 0 To Banks - 1
             For Offset As Integer = 0 To &H7FFF
                 ROM_Data(Bank, Offset) = Data((Bank * &H8000) + Offset)
             Next
@@ -27,7 +27,7 @@ Module ROM
         Header.Name = Header.Name.Trim
         Header.Hi_ROM = ROM_Data(0, &H7FD5) And 1
         Header.Type = ROM_Data(0, &H7FD6)
-        Header.Banks = ROM_Data(0, &H7FD7) '!
+        Header.Banks = Banks
         Header.SRAM_Size = ROM_Data(0, &H7FD8)
     End Sub
 End Module

@@ -31,7 +31,11 @@ Module _65816
     Dim WAI_Disable As Boolean
 
     Public Memory(&H1FFFF) As Byte 'WRAM de 128kb
+    Public Save_RAM(7, &H7FFF) As Byte
     Dim WRAM_Address As Integer
+
+    Public IRQ_Ocurred, V_Blank As Boolean
+    Public Current_Line As Integer
 
     Public Debug As Boolean
 
@@ -57,6 +61,7 @@ Module _65816
             End Select
         End If
 
+        If Bank >= &H70 And Bank <= &H77 Then Return Save_RAM(Bank And 7, Address)
         If Bank = &H7E Then Return Memory(Address)
         If Bank = &H7F Then Return Memory(Address + &H10000)
 
@@ -73,7 +78,7 @@ Module _65816
     End Function
     Public Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
         Bank = Bank And &H7F
-        If Bank < &H60 Then
+        If Bank < &H70 Then
             Select Case Address
                 Case 0 To &H1FFF : Memory(Address) = Value
                 Case &H2000 To &H213F : Write_PPU(Address, Value)
@@ -88,6 +93,7 @@ Module _65816
             End Select
         End If
 
+        If Bank >= &H70 And Bank <= &H77 Then Save_RAM(Bank And 7, Address) = Value
         If Bank = &H7E Then Memory(Address) = Value
         If Bank = &H7F Then Memory(Address + &H10000) = Value
     End Sub
@@ -104,7 +110,7 @@ Module _65816
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
-        'FileOpen(1, "D:\Gabriel\SNES.Net Debug.txt", FileMode.Create)
+        FileOpen(1, "D:\Gabriel\SNES.Net Debug.txt", FileMode.Create)
 
         Registers.A = 0
         Registers.X = 0
@@ -1953,11 +1959,13 @@ Module _65816
 
 #Region "Interrupts"
     Public Sub IRQ()
-        If Registers.P And Interrupt_Flag Then
-            If WAI_Disable Then Registers.Program_Counter += 1
+        If Registers.P And Interrupt_Flag Then Exit Sub
+        If WAI_Disable Then
             WAI_Disable = False
-            Exit Sub
+            Registers.Program_Counter += 1
         End If
+
+        IRQ_Ocurred = True
 
         If Emulate_6502 Then
             Push_16(Registers.Program_Counter)
@@ -2004,13 +2012,18 @@ Module _65816
 #Region "Main Loop"
     Public Sub Main_Loop()
         While SNES_On
+            V_Blank = False
             For Scanline As Integer = 0 To 261
+                Current_Line = Scanline
                 If (Scanline = V_Count And (INT_Enable >= 2)) Or INT_Enable = 1 Then IRQ()
                 If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
                 If Scanline < 224 Then
                     H_Blank_DMA(Scanline) 'H-Blank
                 Else 'V-Blank
-                    If Scanline = 224 And NMI_Enable Then NMI() 'Nota: Lembrar de adc o NMI enable!!!
+                    If Scanline = 224 Then
+                        V_Blank = True
+                        If NMI_Enable Then NMI()
+                    End If
                 End If
             Next
             Render()
@@ -2018,7 +2031,7 @@ Module _65816
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
 
-            FrmMain.Text = Header.Name & " @ " & Get_FPS()
+            'FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While

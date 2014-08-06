@@ -25,6 +25,7 @@
     Dim Multiplicand, Multiplier, Divisor, Dividend As Integer
     Dim Mult_Result, Div_Result As Integer
 
+    Dim Controller_Ready As Byte
     Public H_Count, V_Count As Integer
     Public Sub Init_IO()
         For Channel = 0 To 7
@@ -36,6 +37,25 @@
     End Function
     Public Function Read_IO(Address As Integer) As Byte
         Select Case Address
+            'Case &H4210
+            'If V_Blank Then
+            'V_Blank = False
+            'Return &H80
+            'Else
+            'Return 0
+            'End If
+            Case &H4211
+                'If IRQ_Ocurred Then
+                'IRQ_Ocurred = False
+                'Return &H80
+                'Else
+                'Return 0
+                'End If
+            Case &H4212
+                Dim Value As Byte = Controller_Ready
+                If Controller_Ready = 0 Then Controller_Ready = Controller_Ready And Not &H41
+                If V_Blank Then Value = Value Or &H80
+                Return Value
             Case &H4218
                 Dim Value As Byte
                 If Key_Pressed(Keys.A) Then Value = Value Or &H80 'A
@@ -65,12 +85,14 @@
             Case &H4304, &H4314, &H4324, &H4334, &H4344, &H4354, &H4364, &H4374 : Return DMA_Channels((Address And &HF0) / &H10).Source_Bank
             Case &H4305, &H4315, &H4325, &H4335, &H4345, &H4355, &H4365, &H4375 : Return DMA_Channels((Address And &HF0) / &H10).Size And &HFF
             Case &H4306, &H4316, &H4326, &H4336, &H4346, &H4356, &H4366, &H4376 : Return (DMA_Channels((Address And &HF0) / &H10).Size >> 8) And &HFF
+
+                'Case Else : FrmMain.Text = (Hex(Address))
+                'Case Else : MsgBox(Hex(Address))
         End Select
 
         Return Nothing 'Nunca deve acontecer
     End Function
     Public Sub Write_IO(Address As Integer, Value As Byte)
-        'WriteLine(1, "DEBUG IO Write - " & Hex(Address) & " -> " & Hex(Value))
         Select Case Address And &H1FF
             Case &H0
                 NMI_Enable = Value And &H80
@@ -120,6 +142,7 @@
                     End If
                 Next
             Case &HC : HDMA_Enabled = Value
+            Case &H11 : IRQ_Ocurred = False
             Case &H100, &H110, &H120, &H130, &H140, &H150, &H160, &H170 : DMA_Channels((Address And &HF0) / &H10).Control = Value
             Case &H101, &H111, &H121, &H131, &H141, &H151, &H161, &H171 : DMA_Channels((Address And &HF0) / &H10).Dest = Value
             Case &H102, &H112, &H122, &H132, &H142, &H152, &H162, &H172 'High Byte de leitura
