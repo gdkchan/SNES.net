@@ -280,6 +280,10 @@ Module PPU
 
             If BPP <> 0 Then
                 With Background(Layer)
+                    'Dim Y, Tile_Y As Integer
+                    'Y = Scanline \ 8
+                    'Tile_Y = Scanline - (Y * 8)
+
                     Dim Reverse_X, Reverse_Y As Boolean
                     Reverse_X = If((.H_Scroll \ 256) Mod 2, False, True)
                     Reverse_Y = If((.V_Scroll \ 256) Mod 2, False, True)

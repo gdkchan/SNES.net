@@ -141,6 +141,7 @@
                                 Else
                                     Write_Memory(0, &H2100 Or .Dest, Read_Memory(.Source_Bank, .Source))
                                 End If
+
                                 Select Case .Control And &HF
                                     Case 0, 2 : If .Control And &H10 Then .Source -= 1 Else .Source += 1
                                     Case 1

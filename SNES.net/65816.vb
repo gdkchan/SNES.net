@@ -61,7 +61,7 @@ Module _65816
             End Select
         End If
 
-        If Bank >= &H70 And Bank <= &H77 Then Return Save_RAM(Bank And 7, Address)
+        If Bank >= &H70 And Bank <= &H77 Then Return Save_RAM(Bank And 7, Address And &H1FFF)
         If Bank = &H7E Then Return Memory(Address)
         If Bank = &H7F Then Return Memory(Address + &H10000)
 
@@ -93,7 +93,7 @@ Module _65816
             End Select
         End If
 
-        If Bank >= &H70 And Bank <= &H77 Then Save_RAM(Bank And 7, Address) = Value
+        If Bank >= &H70 And Bank <= &H77 Then Save_RAM(Bank And 7, Address And &H1FFF) = Value
         If Bank = &H7E Then Memory(Address) = Value
         If Bank = &H7F Then Memory(Address + &H10000) = Value
     End Sub
@@ -2018,6 +2018,7 @@ Module _65816
                 If (Scanline = V_Count And (INT_Enable >= 2)) Or INT_Enable = 1 Then IRQ()
                 If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
                 If Scanline < 224 Then
+                    'Render_Scanline(Scanline)
                     H_Blank_DMA(Scanline) 'H-Blank
                 Else 'V-Blank
                     If Scanline = 224 Then
@@ -2031,7 +2032,7 @@ Module _65816
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
 
-            'FrmMain.Text = Header.Name & " @ " & Get_FPS()
+            FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While
