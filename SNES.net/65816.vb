@@ -110,7 +110,7 @@ Module _65816
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
-        FileOpen(1, "D:\Gabriel\SNES.Net Debug.txt", FileMode.Create)
+        'FileOpen(1, "D:\Gabriel\SNES.Net Debug.txt", FileMode.Create)
 
         Registers.A = 0
         Registers.X = 0
