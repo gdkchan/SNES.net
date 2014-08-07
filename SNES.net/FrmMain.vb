@@ -35,4 +35,7 @@ Public Class FrmMain
         Debug = Not Debug
         DebugToolStripMenuItem.Checked = Debug
     End Sub
+    Private Sub DumpVRAMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpVRAMToolStripMenuItem.Click
+        System.IO.File.WriteAllBytes("D:\Gabriel\VRAM.BIN", VRAM)
+    End Sub
 End Class

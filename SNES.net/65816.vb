@@ -2032,7 +2032,7 @@ Module _65816
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
 
-            FrmMain.Text = Header.Name & " @ " & Get_FPS()
+            'FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While

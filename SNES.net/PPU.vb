@@ -14,13 +14,18 @@ Module PPU
         Dim H_Scroll, V_Scroll As Integer
         Dim H_Low_High_Toggle, V_Low_High_Toggle As Boolean
     End Structure
-    Dim Palette(255) As Integer
+    Dim Palette(255) As Color_Palette
     Dim Background(3) As PPU_Background
     Dim Bg_Main_Enabled As Byte
     Dim Bg_Sub_Enabled As Byte
     Dim Pal_Address As Integer
     Dim PPU_Mode As Byte
     Dim BG3_Priority As Boolean
+
+    Dim Color_Math_Add_Sub As Boolean
+    Dim Color_Math_Div_2 As Boolean
+    Dim Color_Math_BGs As Byte
+    Dim Fixed_Color As Color_Palette
 
     Dim Obj_Size, Obj_Name, Obj_Chr_Offset As Integer
     Dim Obj_RAM_Address As Integer
@@ -77,7 +82,7 @@ Module PPU
                 Obj_Low_High_Toggle = Not Obj_Low_High_Toggle
             Case &H2105
                 PPU_Mode = Value And 7
-                BG3_Priority = Value And 4
+                BG3_Priority = Value And 8
             Case &H2106 'Mosaico
             Case &H2107 'Address
                 Background(0).Address = (Value And &H7C) * &H200
@@ -195,12 +200,20 @@ Module PPU
             Case &H2122
                 CGRAM(Pal_Address And &H1FF) = Value
                 Dim Palette_Value As Integer = CGRAM(Pal_Address And &H1FE) + (CGRAM((Pal_Address And &H1FE) + 1) * &H100)
-                Palette((Pal_Address \ 2) And &HFF) = ((Palette_Value And &H1F) * 8) * &H10000
-                Palette((Pal_Address \ 2) And &HFF) += (((Palette_Value >> 5) And &H1F) * 8) * &H100
-                Palette((Pal_Address \ 2) And &HFF) += ((Palette_Value >> 10) And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF).R = (Palette_Value And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF).G = ((Palette_Value >> 5) And &H1F) * 8
+                Palette((Pal_Address \ 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
                 Pal_Address += 1
             Case &H212C : Bg_Main_Enabled = Value
             Case &H212D : Bg_Sub_Enabled = Value
+            Case &H2131
+                Color_Math_Add_Sub = Value And &H80
+                Color_Math_Div_2 = Value And &H40
+                Color_Math_BGs = Value And &H3F
+            Case &H2132
+                If Value And &H20 Then Fixed_Color.R = (Value And &H1F) * 8
+                If Value And &H40 Then Fixed_Color.G = (Value And &H1F) * 8
+                If Value And &H80 Then Fixed_Color.B = (Value And &H1F) * 8
         End Select
     End Sub
     Public Function Read_PPU(Address As Integer) As Byte
@@ -244,23 +257,38 @@ Module PPU
             Render_Bg_Layer(2, False)
             Draw_Sprites(0)
 
-            Render_Bg_Layer(3, True)
-            Render_Bg_Layer(2, True)
-            Draw_Sprites(1)
+            If BG3_Priority Then
+                Render_Bg_Layer(3, True)
+                Draw_Sprites(1)
 
-            Render_Bg_Layer(1, False)
-            Render_Bg_Layer(0, False)
-            Draw_Sprites(2)
+                Render_Bg_Layer(1, False)
+                Render_Bg_Layer(0, False) ''
+                Render_Bg_Layer(1, True)
+                Draw_Sprites(2)
 
-            Render_Bg_Layer(1, True)
-            Render_Bg_Layer(0, True)
-            Draw_Sprites(3)
+                Render_Bg_Layer(0, True)
+                Draw_Sprites(3)
 
-            Render_Bg_Layer(2, True)
+                Render_Bg_Layer(2, True)
+            Else
+                Render_Bg_Layer(3, True)
+                Render_Bg_Layer(2, True)
+                Draw_Sprites(1)
+
+                Render_Bg_Layer(1, False)
+                Render_Bg_Layer(0, False)
+                Draw_Sprites(2)
+
+                Render_Bg_Layer(1, True)
+                Render_Bg_Layer(0, True)
+                Draw_Sprites(3)
+            End If
         End If
     End Sub
     Private Sub Render_Bg_Layer(Layer As Integer, Foreground As Boolean)
         If (Bg_Main_Enabled Or Bg_Sub_Enabled) And Power_Of_2(Layer) Then
+            Dim Color_Math As Boolean = Color_Math_BGs And Power_Of_2(Layer)
+            If (Color_Math_BGs And &H20) And Layer = 1 Then Color_Math = True
             Dim BPP As Integer = 0
             Select Case Layer
                 Case 0
@@ -341,15 +369,16 @@ Module PPU
                                                             If Byte_7 And Bit_To_Test Then Pixel_Color += 128
                                                         End If
                                                     End If
-                                                    If Pixel_Color <> 0 Then
+                                                    'If Layer = 0 And Priority = False And Int(Rnd() * 100) > 60 Then FrmMain.Text = Hex(Pal_Num) & " - " & Hex(Pixel_Color)
+                                                    If Pixel_Color <> 0 Or Layer = 1 Then
                                                         If V_Flip Then
                                                             Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
                                                                 ((Y * 8) + (7 - Tile_Y)) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
-                                                                (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                                (Pal_Num * Power_Of_2(BPP)) + Pixel_Color, Color_Math, Pixel_Color = 0)
                                                         Else
                                                             Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
                                                                 ((Y * 8) + Tile_Y) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
-                                                                (Pal_Num * Power_Of_2(BPP)) + Pixel_Color)
+                                                                (Pal_Num * Power_Of_2(BPP)) + Pixel_Color, Color_Math, Pixel_Color = 0)
                                                         End If
                                                     End If
                                                 Next
@@ -442,11 +471,48 @@ Module PPU
             Next
         End If
     End Sub
-    Private Sub Draw_Pixel(X As Integer, Y As Integer, Color_Index As Byte)
+    Private Sub Draw_Pixel(X As Integer, Y As Integer, Color_Index As Byte, Optional Color_Math As Boolean = False, Optional Transparent As Boolean = False)
         If (X >= 0 And X < 256) And (Y >= 0 And Y < 224) Then
-            Video_Buffer(X + (Y * 256)) = Palette(Color_Index)
+            Dim Color As Color_Palette = Palette(Color_Index)
+            With Color
+                If Color_Math And Transparent Then
+                    If Color_Math_Add_Sub Then
+                        .R = Sub_Color(.R, Fixed_Color.R)
+                        .G = Sub_Color(.G, Fixed_Color.G)
+                        .B = Sub_Color(.B, Fixed_Color.B)
+                    Else
+                        .R = Add_Color(.R, Fixed_Color.R)
+                        .G = Add_Color(.G, Fixed_Color.G)
+                        .B = Add_Color(.B, Fixed_Color.B)
+                    End If
+
+                    If Color_Math_Div_2 Then
+                        .R /= 2
+                        .G /= 2
+                        .B /= 2
+                    End If
+                End If
+
+                Video_Buffer(X + (Y * 256)) = (.R * &H10000) + (.G * &H100) + .B
+            End With
         End If
     End Sub
+    Private Function Add_Color(Val1 As Integer, Val2 As Integer)
+        Dim Result As Integer = Val1 + Val2
+        If Result > &HFF Then
+            Return &HFF
+        Else
+            Return Result
+        End If
+    End Function
+    Private Function Sub_Color(Val1 As Integer, Val2 As Integer)
+        Dim Result As Integer = Val1 - Val2
+        If Result < 0 Then
+            Return 0
+        Else
+            Return Result
+        End If
+    End Function
     Public Sub Blit()
         Dim Img As New Bitmap(256, 224, Imaging.PixelFormat.Format32bppRgb)
         Dim BitmapData1 As Imaging.BitmapData
@@ -455,6 +521,8 @@ Module PPU
         Runtime.InteropServices.Marshal.Copy(Video_Buffer, 0, Scan0, 256 * 224)
         Img.UnlockBits(BitmapData1)
         FrmMain.PicScreen.Image = Img
+
+        'Limpa a tela
         Array.Clear(Video_Buffer, 0, Video_Buffer.Length)
     End Sub
     Public Sub Screenshot()
