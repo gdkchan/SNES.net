@@ -212,7 +212,6 @@ Module PPU
                 Color_Math_Add_Sub = Value And &H80
                 Color_Math_Div_2 = Value And &H40
                 Color_Math_BGs = Value And &H3F
-                FrmMain.Text = Hex(Color_Math_BGs)
             Case &H2132
                 If Value And &H20 Then Fixed_Color.R = (Value And &H1F) * 8
                 If Value And &H40 Then Fixed_Color.G = (Value And &H1F) * 8
@@ -294,9 +293,9 @@ Module PPU
             If Color_Math_Enable Then
                 If Bg_Main_Enabled And Power_Of_2(Layer) Then
                     Color_Math = Color_Math_BGs And Power_Of_2(Layer)
-                    If ((Color_Math_BGs And &H20) And (Layer = 1 And Foreground = False)) Then Color_Math = True
                 End If
                 If Color_Math_BGs And &H10 Then Color_Math = True
+                If ((Color_Math_BGs And &H20) And (Layer = 1 And Foreground = False)) Then Color_Math = True
             End If
             Dim BPP As Integer = 0
             Select Case Layer
