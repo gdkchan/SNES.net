@@ -26,6 +26,7 @@
     Dim Mult_Result, Div_Result As Integer
 
     Dim Controller_Ready As Byte
+    Dim Controller_Read_Position As Integer
     Public H_Count, V_Count As Integer
     Public Sub Init_IO()
         For Channel = 0 To 7
@@ -59,15 +60,33 @@
             Case &H4211
                 If IRQ_Ocurred Then
                     IRQ_Ocurred = False
-                    'Return &H80
+                    Return &H80
                 Else
                     Return 0
                 End If
             Case &H4212
-                Dim Value As Byte = Controller_Ready
-                Controller_Ready = Controller_Ready And Not &H41
+                Dim Value As Byte = &H40 Or Controller_Ready
+                Controller_Ready = Controller_Ready And Not 1
                 If V_Blank Then Value = Value Or &H80
                 Return Value
+            Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
+                Dim Temp As Integer = Controller_Read_Position
+                Controller_Read_Position = (Controller_Read_Position + 1) And &HF
+                Select Case Temp
+                    Case 0 : If Key_Pressed(Keys.Z) Then Return 1
+                    Case 1 : If Key_Pressed(Keys.X) Then Return 1
+                    Case 2 : If Key_Pressed(Keys.Tab) Then Return 1
+                    Case 3 : If Key_Pressed(Keys.Return) Then Return 1
+                    Case 4 : If Key_Pressed(Keys.Up) Then Return 1
+                    Case 5 : If Key_Pressed(Keys.Down) Then Return 1
+                    Case 6 : If Key_Pressed(Keys.Left) Then Return 1
+                    Case 7 : If Key_Pressed(Keys.Right) Then Return 1
+                    Case 8 : If Key_Pressed(Keys.A) Then Return 1
+                    Case 9 : If Key_Pressed(Keys.S) Then Return 1
+                    Case 10 : If Key_Pressed(Keys.Q) Then Return 1
+                    Case 11 : If Key_Pressed(Keys.W) Then Return 1
+                End Select
+                Return 0
             Case &H4218
                 Dim Value As Byte
                 If Key_Pressed(Keys.A) Then Value = Value Or &H80 'A
@@ -109,6 +128,7 @@
             Case &H0
                 NMI_Enable = Value And &H80
                 INT_Enable = (Value And &H30) >> 4
+                If INT_Enable = 0 Then IRQ_Ocurred = False
             Case &H2 : Multiplicand = Value
             Case &H3
                 Multiplier = Value

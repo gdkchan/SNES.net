@@ -38,4 +38,10 @@ Public Class FrmMain
     Private Sub DumpVRAMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpVRAMToolStripMenuItem.Click
         System.IO.File.WriteAllBytes("D:\Gabriel\VRAM.BIN", VRAM)
     End Sub
+    Private Sub DumpObjRAMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpObjRAMToolStripMenuItem.Click
+        System.IO.File.WriteAllBytes("D:\Gabriel\ObjRAM.BIN", Obj_RAM)
+    End Sub
+    Private Sub ForçarIRQToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ForçarIRQToolStripMenuItem.Click
+        IRQ()
+    End Sub
 End Class

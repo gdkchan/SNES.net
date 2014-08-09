@@ -37,11 +37,13 @@ Partial Class FrmMain
         Me.SairToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpçõesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DebugToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DumpVRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DumpObjRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem5 = New System.Windows.Forms.ToolStripSeparator()
         Me.LimitarFPSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.DumpVRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ForçarIRQToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Menu.SuspendLayout()
         Me.SuspendLayout()
@@ -129,7 +131,7 @@ Partial Class FrmMain
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.ForçarIRQToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
@@ -137,18 +139,30 @@ Partial Class FrmMain
         'DebugToolStripMenuItem
         '
         Me.DebugToolStripMenuItem.Name = "DebugToolStripMenuItem"
-        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
         Me.DebugToolStripMenuItem.Text = "Debug"
+        '
+        'DumpVRAMToolStripMenuItem
+        '
+        Me.DumpVRAMToolStripMenuItem.Name = "DumpVRAMToolStripMenuItem"
+        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
+        Me.DumpVRAMToolStripMenuItem.Text = "&Dump VRAM"
+        '
+        'DumpObjRAMToolStripMenuItem
+        '
+        Me.DumpObjRAMToolStripMenuItem.Name = "DumpObjRAMToolStripMenuItem"
+        Me.DumpObjRAMToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
+        Me.DumpObjRAMToolStripMenuItem.Text = "Dump ObjRAM"
         '
         'ToolStripMenuItem5
         '
         Me.ToolStripMenuItem5.Name = "ToolStripMenuItem5"
-        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(149, 6)
+        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(152, 6)
         '
         'LimitarFPSToolStripMenuItem
         '
         Me.LimitarFPSToolStripMenuItem.Name = "LimitarFPSToolStripMenuItem"
-        Me.LimitarFPSToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.LimitarFPSToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
         Me.LimitarFPSToolStripMenuItem.Text = "&Limitar FPS"
         '
         'AjudaToolStripMenuItem
@@ -164,11 +178,11 @@ Partial Class FrmMain
         Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
         '
-        'DumpVRAMToolStripMenuItem
+        'ForçarIRQToolStripMenuItem
         '
-        Me.DumpVRAMToolStripMenuItem.Name = "DumpVRAMToolStripMenuItem"
-        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
-        Me.DumpVRAMToolStripMenuItem.Text = "&Dump VRAM"
+        Me.ForçarIRQToolStripMenuItem.Name = "ForçarIRQToolStripMenuItem"
+        Me.ForçarIRQToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
+        Me.ForçarIRQToolStripMenuItem.Text = "&Forçar IRQ"
         '
         'FrmMain
         '
@@ -210,5 +224,7 @@ Partial Class FrmMain
     Friend WithEvents ToolStripMenuItem5 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents LimitarFPSToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents DumpVRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents DumpObjRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ForçarIRQToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

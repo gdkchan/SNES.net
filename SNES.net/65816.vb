@@ -41,30 +41,67 @@ Module _65816
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
-        Bank = Bank And &H7F
-        If Bank < &H70 Then
-            Select Case Address
-                Case 0 To &H1FFF : Return Memory(Address)
-                Case &H2000 To &H213F : Return Read_PPU(Address)
-                Case &H2140 To &H217F : Return Read_SPU(Address)
-                Case &H2180
-                    Dim Value As Byte = Memory(WRAM_Address)
-                    WRAM_Address = (WRAM_Address + 1) And &H1FFFF
-                    Return Value
-                Case &H4000 To &H4FFF : Return Read_IO(Address)
-                Case &H8000 To &HFFFF
-                    If Bank < &H40 Then
-                        Return ROM_Data(Bank, Address And &H7FFF)
-                    Else '???
-                        Return ROM_Data(Bank And &H3F, Address And &H7FFF)
-                    End If
-            End Select
-        End If
+        If Header.Hi_ROM Then
+            If ((Bank And &H7F) < &H40) Then
+                Select Case Address
+                    Case 0 To &H1FFF : Return Memory(Address)
+                    Case &H2000 To &H213F : Return Read_PPU(Address)
+                    Case &H2140 To &H217F : Return Read_SPU(Address)
+                    Case &H2180
+                        Dim Value As Byte = Memory(WRAM_Address)
+                        WRAM_Address = (WRAM_Address + 1) And &H1FFFF
+                        Return Value
+                    Case &H4000 To &H4FFF : Return Read_IO(Address)
+                    Case &H8000 To &HFFFF : Return ROM_Data(((Bank And &H3F) << 1) + 1, Address And &H7FFF)
+                End Select
+            End If
 
-        If Bank >= &H70 And Bank <= &H77 Then Return Save_RAM(Bank And 7, Address And &H1FFF)
+            If ((Bank And &H7F) < &H7E) Then
+                Bank = (Bank And &H3F) << 1
+                If Address And &H8000 Then Bank = Bank Or 1
+                Return ROM_Data(Bank, Address And &H7FFF)
+            End If
+
+            If Bank = &HFE Then
+                If (Address And &H8000) Then
+                    Return ROM_Data(&H7D, Address And &H7FFF)
+                Else
+                    Return ROM_Data(&H7C, Address And &H7FFF)
+                End If
+            End If
+
+            If Bank = &HFF Then
+                If (Address And &H8000) Then
+                    Return ROM_Data(&H7F, Address And &H7FFF)
+                Else
+                    Return ROM_Data(&H7E, Address And &H7FFF)
+                End If
+            End If
+        Else
+            Bank = Bank And &H7F
+            If Bank < &H70 Then
+                Select Case Address
+                    Case 0 To &H1FFF : Return Memory(Address)
+                    Case &H2000 To &H213F : Return Read_PPU(Address)
+                    Case &H2140 To &H217F : Return Read_SPU(Address)
+                    Case &H2180
+                        Dim Value As Byte = Memory(WRAM_Address)
+                        WRAM_Address = (WRAM_Address + 1) And &H1FFFF
+                        Return Value
+                    Case &H4000 To &H4FFF : Return Read_IO(Address)
+                    Case &H8000 To &HFFFF
+                        If Bank < &H40 Then
+                            Return ROM_Data(Bank, Address And &H7FFF)
+                        Else '???
+                            Return ROM_Data(Bank And &H3F, Address And &H7FFF)
+                        End If
+                End Select
+            End If
+
+            If Bank >= &H70 And Bank <= &H77 Then Return Save_RAM(Bank And 7, Address And &H1FFF)
+        End If
         If Bank = &H7E Then Return Memory(Address)
         If Bank = &H7F Then Return Memory(Address + &H10000)
-
         Return Nothing 'Nunca deve acontecer
     End Function
     Public Function Read_Memory_16(Bank As Integer, Address As Integer) As Integer
@@ -2018,10 +2055,10 @@ Module _65816
                 If (Scanline = V_Count And (INT_Enable >= 2)) Or INT_Enable = 1 Then IRQ()
                 If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
                 If Scanline < 224 Then
-                    'Render_Scanline(Scanline)
                     H_Blank_DMA(Scanline) 'H-Blank
                 Else 'V-Blank
                     If Scanline = 224 Then
+                        Obj_RAM_Address = 0
                         V_Blank = True
                         If NMI_Enable Then NMI()
                     End If
