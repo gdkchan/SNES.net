@@ -1304,18 +1304,56 @@ Module _65816
 
 #Region "Instructions"
     Private Sub Add_With_Carry() 'ADC (8 bits)
+        If (Registers.P And Decimal_Flag) = 0 Then
+            Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
+            Dim Result As Integer = (Registers.A And &HFF) + Value + (Registers.P And Carry_Flag)
+            Test_Flag(Result > &HFF, Carry_Flag)
+            Test_Flag(((Not ((Registers.A And &HFF) Xor Value)) And ((Registers.A And &HFF) Xor Result) And &H80), Overflow_Flag)
+            Registers.A = (Result And &HFF) + (Registers.A And &HFF00)
+            Set_Zero_Negative_Flag(Registers.A And &HFF)
+        Else
+            Add_With_Carry_BCD()
+        End If
+    End Sub
+    Private Sub Add_With_Carry_BCD() 'ADC (BCD) (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
-        Dim Result As Integer = (Registers.A And &HFF) + Value + (Registers.P And Carry_Flag)
-        Test_Flag(Result > &HFF, Carry_Flag)
+        Dim Result As Integer = (Registers.A And &HF) + (Value And &HF) + (Registers.P And Carry_Flag)
+        If Result > 9 Then Result += 6
+        Test_Flag(Result > &HF, Carry_Flag)
+        Result = (Registers.A And &HF0) + (Value And &HF0) + (Result And &HF) + ((Registers.P And Carry_Flag) * &H10)
         Test_Flag(((Not ((Registers.A And &HFF) Xor Value)) And ((Registers.A And &HFF) Xor Result) And &H80), Overflow_Flag)
+        If Result > &H9F Then Result += &H60
+        Test_Flag(Result > &HFF, Carry_Flag)
         Registers.A = (Result And &HFF) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Add_With_Carry_16() 'ADC (16 bits)
+        If (Registers.P And Decimal_Flag) = 0 Then
+            Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
+            Dim Result As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
+            Test_Flag(Result > &HFFFF, Carry_Flag)
+            Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Result) And &H8000), Overflow_Flag)
+            Registers.A = Result And &HFFFF
+            Set_Zero_Negative_Flag_16(Registers.A)
+        Else
+            Add_With_Carry_BCD_16()
+        End If
+    End Sub
+    Private Sub Add_With_Carry_BCD_16() 'ADC (BCD) (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
-        Dim Result As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
-        Test_Flag(Result > &HFFFF, Carry_Flag)
+        Dim Result As Integer = (Registers.A And &HF) + (Value And &HF) + (Registers.P And Carry_Flag)
+        If Result > 9 Then Result += 6
+        Test_Flag(Result > &HF, Carry_Flag)
+        Result = (Registers.A And &HF0) + (Value And &HF0) + (Result And &HF) + ((Registers.P And Carry_Flag) * &H10)
+        If Result > &H9F Then Result += &H60
+        Test_Flag(Result > &HFF, Carry_Flag)
+        Result = (Registers.A And &HF00) + (Value And &HF00) + (Result And &HFF) + ((Registers.P And Carry_Flag) * &H100)
+        If Result > &H9FF Then Result += &H600
+        Test_Flag(Result > &HFFF, Carry_Flag)
+        Result = (Registers.A And &HF000) + (Value And &HF000) + (Result And &HFFF) + ((Registers.P And Carry_Flag) * &H1000)
         Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Result) And &H8000), Overflow_Flag)
+        If Result > &H9FFF Then Result += &H6000
+        Test_Flag(Result > &HFFFF, Carry_Flag)
         Registers.A = Result And &HFFFF
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
@@ -1833,18 +1871,56 @@ Module _65816
         Registers.Program_Counter += 1
     End Sub
     Private Sub Subtract_With_Carry() 'SBC (8 bits)
+        If (Registers.P And Decimal_Flag) = 0 Then
+            Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) Xor &HFF
+            Dim Result As Integer = (Registers.A And &HFF) + Value + (Registers.P And Carry_Flag)
+            Test_Flag(Result > &HFF, Carry_Flag)
+            Test_Flag(((Not ((Registers.A And &HFF) Xor Value)) And ((Registers.A And &HFF) Xor Result) And &H80), Overflow_Flag)
+            Registers.A = (Result And &HFF) + (Registers.A And &HFF00)
+            Set_Zero_Negative_Flag(Registers.A And &HFF)
+        Else
+            Subtract_With_Carry_BCD()
+        End If
+    End Sub
+    Private Sub Subtract_With_Carry_BCD() 'SBC (BCD) (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) Xor &HFF
-        Dim Result As Integer = (Registers.A And &HFF) + Value + (Registers.P And Carry_Flag)
-        Test_Flag(Result > &HFF, Carry_Flag)
+        Dim Result As Integer = (Registers.A And &HF) + (Value And &HF) + (Registers.P And Carry_Flag)
+        If Result < &H10 Then Result -= 6
+        Test_Flag(Result > &HF, Carry_Flag)
+        Result = (Registers.A And &HF0) + (Value And &HF0) + (Result And &HF) + ((Registers.P And Carry_Flag) * &H10)
         Test_Flag(((Not ((Registers.A And &HFF) Xor Value)) And ((Registers.A And &HFF) Xor Result) And &H80), Overflow_Flag)
+        If Result < &H100 Then Result -= &H60
+        Test_Flag(Result > &HFF, Carry_Flag)
         Registers.A = (Result And &HFF) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Subtract_With_Carry_16() 'SBC (16 bits)
+        If (Registers.P And Decimal_Flag) = 0 Then
+            Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) Xor &HFFFF
+            Dim Result As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
+            Test_Flag(Result > &HFFFF, Carry_Flag)
+            Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Result) And &H8000), Overflow_Flag)
+            Registers.A = Result And &HFFFF
+            Set_Zero_Negative_Flag_16(Registers.A)
+        Else
+            Subtract_With_Carry_BCD_16()
+        End If
+    End Sub
+    Private Sub Subtract_With_Carry_BCD_16() 'SBC (BCD) (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF) Xor &HFFFF
-        Dim Result As Integer = Registers.A + Value + (Registers.P And Carry_Flag)
-        Test_Flag(Result > &HFFFF, Carry_Flag)
+        Dim Result As Integer = (Registers.A And &HF) + (Value And &HF) + (Registers.P And Carry_Flag)
+        If Result < &H10 Then Result -= 6
+        Test_Flag(Result > &HF, Carry_Flag)
+        Result = (Registers.A And &HF0) + (Value And &HF0) + (Result And &HF) + ((Registers.P And Carry_Flag) * &H10)
+        If Result < &H100 Then Result -= &H60
+        Test_Flag(Result > &HFF, Carry_Flag)
+        Result = (Registers.A And &HF00) + (Value And &HF00) + (Result And &HFF) + ((Registers.P And Carry_Flag) * &H100)
+        If Result < &H1000 Then Result -= &H600
+        Test_Flag(Result > &HFFF, Carry_Flag)
+        Result = (Registers.A And &HF000) + (Value And &HF000) + (Result And &HFFF) + ((Registers.P And Carry_Flag) * &H1000)
         Test_Flag(((Not (Registers.A Xor Value)) And (Registers.A Xor Result) And &H8000), Overflow_Flag)
+        If Result < &H10000 Then Result -= &H6000
+        Test_Flag(Result > &HFFFF, Carry_Flag)
         Registers.A = Result And &HFFFF
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub

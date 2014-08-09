@@ -26,6 +26,7 @@
     Dim Mult_Result, Div_Result As Integer
 
     Dim Controller_Ready As Byte
+    Dim Joypad_Enable As Boolean
     Dim Controller_Read_Position As Integer
     Public H_Count, V_Count As Integer
     Public Sub Init_IO()
@@ -65,8 +66,11 @@
                     Return 0
                 End If
             Case &H4212
-                Dim Value As Byte = &H40 Or Controller_Ready
-                Controller_Ready = Controller_Ready And Not 1
+                Dim Value As Byte = &H40
+                If Joypad_Enable Then
+                    Value = Value Or Controller_Ready
+                    Controller_Ready = Controller_Ready And Not 1
+                End If
                 If V_Blank Then Value = Value Or &H80
                 Return Value
             Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
@@ -116,9 +120,6 @@
             Case &H4304, &H4314, &H4324, &H4334, &H4344, &H4354, &H4364, &H4374 : Return DMA_Channels((Address And &HF0) / &H10).Source_Bank
             Case &H4305, &H4315, &H4325, &H4335, &H4345, &H4355, &H4365, &H4375 : Return DMA_Channels((Address And &HF0) / &H10).Size And &HFF
             Case &H4306, &H4316, &H4326, &H4336, &H4346, &H4356, &H4366, &H4376 : Return (DMA_Channels((Address And &HF0) / &H10).Size >> 8) And &HFF
-
-                'Case Else : FrmMain.Text = (Hex(Address))
-                'Case Else : MsgBox(Hex(Address))
         End Select
 
         Return Nothing 'Nunca deve acontecer
@@ -128,6 +129,7 @@
             Case &H0
                 NMI_Enable = Value And &H80
                 INT_Enable = (Value And &H30) >> 4
+                Joypad_Enable = Value And &H1
                 If INT_Enable = 0 Then IRQ_Ocurred = False
             Case &H2 : Multiplicand = Value
             Case &H3
