@@ -34,7 +34,7 @@ Module _65816
     Public Save_RAM(7, &H7FFF) As Byte
     Dim WRAM_Address As Integer
 
-    Public IRQ_Ocurred, V_Blank As Boolean
+    Public IRQ_Ocurred, V_Blank, H_Blank As Boolean
     Public Current_Line As Integer
 
     Public Debug As Boolean
@@ -1212,7 +1212,7 @@ Module _65816
     End Function
 
     Private Sub Update_Mode()
-        If Registers.P And Index_8_Bits_Flag Or Emulate_6502 Then 'Remove High Byte
+        If (Registers.P And Index_8_Bits_Flag) Or Emulate_6502 Then 'Remove High Byte
             Registers.X = Registers.X And &HFF
             Registers.Y = Registers.Y And &HFF
         End If
@@ -2139,15 +2139,27 @@ Module _65816
             V_Blank = False
             For Scanline As Integer = 0 To 261
                 Current_Line = Scanline
-                If (Scanline = V_Count And (INT_Enable >= 2)) Or INT_Enable = 1 Then IRQ()
-                If (Not WAI_Disable) And (Not STP_Disable) Then Execute_65816(256)
+                H_Blank = False
+                If (Not WAI_Disable) And (Not STP_Disable) Then
+                    Execute_65816(256)
+                    'H-Blank
+                    H_Blank = True
+                    H_Blank_DMA(Scanline)
+                    If (IRQ_Enable = 2 And Current_Line = V_Count) Then IRQ()
+                    Execute_65816(84)
+                    If (IRQ_Enable = 3 And Current_Line = V_Count) Or (IRQ_Enable = 1) Then IRQ()
+                End If
+
                 If Scanline < 224 Then
-                    H_Blank_DMA(Scanline) 'H-Blank
+                    'Dummy placeholder
                 Else 'V-Blank
                     If Scanline = 224 Then
+                        Controller_Ready = True
                         Obj_RAM_Address = Obj_RAM_First_Address
                         V_Blank = True
                         If NMI_Enable Then NMI()
+                    ElseIf Scanline = 227 Then
+                        Controller_Ready = False
                     End If
                 End If
             Next
@@ -2156,7 +2168,7 @@ Module _65816
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
 
-            'FrmMain.Text = Header.Name & " @ " & Get_FPS()
+            FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While

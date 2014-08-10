@@ -21,11 +21,11 @@
     Dim HDMA_Enabled As Byte 'Canais ativados para transferência de DMA
 
     Public NMI_Enable As Boolean
-    Public INT_Enable As Byte
+    Public IRQ_Enable As Byte
     Dim Multiplicand, Multiplier, Divisor, Dividend As Integer
     Dim Mult_Result, Div_Result As Integer
 
-    Dim Controller_And_H_Blank As Byte
+    Public Controller_Ready As Boolean
     Dim Controller_Read_Position As Integer
     Public H_Count, V_Count As Integer
     Public Sub Init_IO()
@@ -40,10 +40,10 @@
         HDMA_Enabled = 0
 
         NMI_Enable = False
-        INT_Enable = 0
+        IRQ_Enable = 0
 
         V_Blank = False
-        Controller_And_H_Blank = 0
+        Controller_Ready = False
     End Sub
     Private Function Key_Pressed(Key As Integer) As Boolean
         Return GetKeyState(Key) < 0
@@ -65,8 +65,9 @@
                     Return 0
                 End If
             Case &H4212
-                Dim Value As Byte = Controller_And_H_Blank
-                Controller_And_H_Blank = Controller_And_H_Blank Xor &H41
+                Dim Value As Byte
+                If Controller_Ready Then Value = Value Or &H1
+                If H_Blank Then Value = Value Or &H40
                 If V_Blank Then Value = Value Or &H80
                 Return Value
             Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
@@ -85,8 +86,8 @@
                     Case 9 : If Key_Pressed(Keys.S) Then Return 1
                     Case 10 : If Key_Pressed(Keys.Q) Then Return 1
                     Case 11 : If Key_Pressed(Keys.W) Then Return 1
+                    Case Else : Return 1
                 End Select
-                Return 0
             Case &H4218
                 Dim Value As Byte
                 If Key_Pressed(Keys.A) Then Value = Value Or &H80 'A
@@ -124,8 +125,8 @@
         Select Case Address
             Case &H4200
                 NMI_Enable = Value And &H80
-                INT_Enable = (Value And &H30) >> 4
-                If INT_Enable = 0 Then IRQ_Ocurred = False
+                IRQ_Enable = (Value And &H30) / &H10
+                If IRQ_Enable = 0 Then IRQ_Ocurred = False
             Case &H4202 : Multiplicand = Value
             Case &H4203
                 Multiplier = Value
@@ -144,7 +145,7 @@
             Case &H4207 : H_Count = Value + (H_Count And &HFF00)
             Case &H4208 : H_Count = (Value * &H100) + (H_Count And &HFF)
             Case &H4209 : V_Count = Value + (V_Count And &HFF00)
-            Case &H420A : V_Count = (Value * &H100) + (V_Count And &HFF)
+            Case &H420A : V_Count = (Value * &H100) + (V_Count And &HFF) : IRQ_Ocurred = False
             Case &H420B 'Transferência de DMA
                 For Channel As Byte = 0 To 7
                     If Value And (1 << Channel) Then 'Verifica se deve transferir
@@ -172,7 +173,7 @@
                     End If
                 Next
             Case &H420C : HDMA_Enabled = Value
-            Case &H4211 : IRQ_Ocurred = False
+                'Case &H4211 : IRQ_Ocurred = False
             Case &H4300, &H4310, &H4320, &H4330, &H4340, &H4350, &H4360, &H4370 : DMA_Channels((Address And &HF0) / &H10).Control = Value
             Case &H4301, &H4311, &H4321, &H4331, &H4341, &H4351, &H4361, &H4371 : DMA_Channels((Address And &HF0) / &H10).Dest = Value
             Case &H4302, &H4312, &H4322, &H4332, &H4342, &H4352, &H4362, &H4372 'High Byte de leitura
