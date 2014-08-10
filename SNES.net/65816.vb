@@ -52,14 +52,17 @@ Module _65816
                         WRAM_Address = (WRAM_Address + 1) And &H1FFFF
                         Return Value
                     Case &H4000 To &H4FFF : Return Read_IO(Address)
-                    Case &H8000 To &HFFFF : Return ROM_Data(((Bank And &H3F) << 1) + 1, Address And &H7FFF)
+                    Case &H6000 To &H7FFF : Return Save_RAM(0, Address And &H1FFF)
+                    Case &H8000 To &HFFFF : Return ROM_Data(((Bank And &H3F) * 2) + 1, Address And &H7FFF)
                 End Select
             End If
 
             If ((Bank And &H7F) < &H7E) Then
-                Bank = (Bank And &H3F) << 1
-                If Address And &H8000 Then Bank = Bank Or 1
-                Return ROM_Data(Bank, Address And &H7FFF)
+                If Address And &H8000 Then
+                    Return ROM_Data(((Bank And &H3F) * 2) + 1, Address And &H7FFF)
+                Else
+                    Return ROM_Data((Bank And &H3F) * 2, Address And &H7FFF)
+                End If
             End If
 
             If Bank = &HFE Then
@@ -90,10 +93,16 @@ Module _65816
                         Return Value
                     Case &H4000 To &H4FFF : Return Read_IO(Address)
                     Case &H8000 To &HFFFF
-                        If Bank < &H40 Then
-                            Return ROM_Data(Bank, Address And &H7FFF)
-                        Else '???
-                            Return ROM_Data(Bank And &H3F, Address And &H7FFF)
+                        If Header.Banks <= &H10 Then '???
+                            Return ROM_Data(Bank And &HF, Address And &H7FFF)
+                        ElseIf Header.Banks <= &H20 Then '???
+                            Return ROM_Data(Bank And &H1F, Address And &H7FFF)
+                        Else
+                            If Bank < &H40 Then
+                                Return ROM_Data(Bank, Address And &H7FFF)
+                            Else '???
+                                Return ROM_Data(Bank And &H3F, Address And &H7FFF)
+                            End If
                         End If
                 End Select
             End If
@@ -128,6 +137,7 @@ Module _65816
                 Case &H2182 : WRAM_Address = (Value * &H100) + (WRAM_Address And &H100FF)
                 Case &H2183 : If Value And 1 Then WRAM_Address = WRAM_Address Or &H10000 Else WRAM_Address = WRAM_Address And Not &H10000
                 Case &H4000 To &H4FFF : Write_IO(Address, Value)
+                Case &H6000 To &H7FFF : If Header.Hi_ROM Then Save_RAM(0, Address And &H1FFF) = Value
             End Select
         End If
 
@@ -169,7 +179,7 @@ Module _65816
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
 
             If Debug Then
-                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " -- OP: " & Hex(Opcode))
+                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " P: " & Hex(Registers.P) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " -- OP: " & Hex(Opcode))
             End If
 
             Registers.Program_Counter += 1
