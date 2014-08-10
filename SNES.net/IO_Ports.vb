@@ -25,8 +25,7 @@
     Dim Multiplicand, Multiplier, Divisor, Dividend As Integer
     Dim Mult_Result, Div_Result As Integer
 
-    Dim Controller_Ready As Byte
-    Dim Joypad_Enable As Boolean
+    Dim Controller_And_H_Blank As Byte
     Dim Controller_Read_Position As Integer
     Public H_Count, V_Count As Integer
     Public Sub Init_IO()
@@ -44,7 +43,7 @@
         INT_Enable = 0
 
         V_Blank = False
-        Controller_Ready = 0
+        Controller_And_H_Blank = 0
     End Sub
     Private Function Key_Pressed(Key As Integer) As Boolean
         Return GetKeyState(Key) < 0
@@ -66,11 +65,8 @@
                     Return 0
                 End If
             Case &H4212
-                Dim Value As Byte = &H40
-                If Joypad_Enable Then
-                    Value = Value Or Controller_Ready
-                    Controller_Ready = Controller_Ready And Not 1
-                End If
+                Dim Value As Byte = Controller_And_H_Blank
+                Controller_And_H_Blank = Controller_And_H_Blank Xor &H41
                 If V_Blank Then Value = Value Or &H80
                 Return Value
             Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
@@ -125,19 +121,18 @@
         Return Nothing 'Nunca deve acontecer
     End Function
     Public Sub Write_IO(Address As Integer, Value As Byte)
-        Select Case Address And &H1FF
-            Case &H0
+        Select Case Address
+            Case &H4200
                 NMI_Enable = Value And &H80
                 INT_Enable = (Value And &H30) >> 4
-                Joypad_Enable = Value And &H1
                 If INT_Enable = 0 Then IRQ_Ocurred = False
-            Case &H2 : Multiplicand = Value
-            Case &H3
+            Case &H4202 : Multiplicand = Value
+            Case &H4203
                 Multiplier = Value
                 Mult_Result = Multiplicand * Multiplier
-            Case &H4 : Dividend = Value + (Dividend And &HFF00)
-            Case &H5 : Dividend = (Value * &H100) + (Dividend And &HFF)
-            Case &H6
+            Case &H4204 : Dividend = Value + (Dividend And &HFF00)
+            Case &H4205 : Dividend = (Value * &H100) + (Dividend And &HFF)
+            Case &H4206
                 Divisor = Value
                 If Not Dividend Or Not Divisor Then
                     Div_Result = &HFFFF
@@ -146,11 +141,11 @@
                     Div_Result = Dividend / Divisor
                     Mult_Result = Dividend Mod Divisor
                 End If
-            Case &H7 : H_Count = Value + (H_Count And &HFF00)
-            Case &H8 : H_Count = (Value * &H100) + (H_Count And &HFF)
-            Case &H9 : V_Count = Value + (V_Count And &HFF00)
-            Case &HA : V_Count = (Value * &H100) + (V_Count And &HFF)
-            Case &HB 'Transferência de DMA
+            Case &H4207 : H_Count = Value + (H_Count And &HFF00)
+            Case &H4208 : H_Count = (Value * &H100) + (H_Count And &HFF)
+            Case &H4209 : V_Count = Value + (V_Count And &HFF00)
+            Case &H420A : V_Count = (Value * &H100) + (V_Count And &HFF)
+            Case &H420B 'Transferência de DMA
                 For Channel As Byte = 0 To 7
                     If Value And (1 << Channel) Then 'Verifica se deve transferir
                         With DMA_Channels(Channel)
@@ -176,28 +171,28 @@
                         End With
                     End If
                 Next
-            Case &HC : HDMA_Enabled = Value
-            Case &H11 : IRQ_Ocurred = False
-            Case &H100, &H110, &H120, &H130, &H140, &H150, &H160, &H170 : DMA_Channels((Address And &HF0) / &H10).Control = Value
-            Case &H101, &H111, &H121, &H131, &H141, &H151, &H161, &H171 : DMA_Channels((Address And &HF0) / &H10).Dest = Value
-            Case &H102, &H112, &H122, &H132, &H142, &H152, &H162, &H172 'High Byte de leitura
+            Case &H420C : HDMA_Enabled = Value
+            Case &H4211 : IRQ_Ocurred = False
+            Case &H4300, &H4310, &H4320, &H4330, &H4340, &H4350, &H4360, &H4370 : DMA_Channels((Address And &HF0) / &H10).Control = Value
+            Case &H4301, &H4311, &H4321, &H4331, &H4341, &H4351, &H4361, &H4371 : DMA_Channels((Address And &HF0) / &H10).Dest = Value
+            Case &H4302, &H4312, &H4322, &H4332, &H4342, &H4352, &H4362, &H4372 'High Byte de leitura
                 With DMA_Channels((Address And &HF0) / &H10)
                     .Source = Value + (.Source And &HFF00)
                 End With
-            Case &H103, &H113, &H123, &H133, &H143, &H153, &H163, &H173 'Low Byte de leitura
+            Case &H4303, &H4313, &H4323, &H4333, &H4343, &H4353, &H4363, &H4373 'Low Byte de leitura
                 With DMA_Channels((Address And &HF0) / &H10)
                     .Source = (Value * &H100) + (.Source And &HFF)
                 End With
-            Case &H104, &H114, &H124, &H134, &H144, &H154, &H164, &H174 : DMA_Channels((Address >> 4) And 7).Source_Bank = Value
-            Case &H105, &H115, &H125, &H135, &H145, &H155, &H165, &H175 'High Byte do tamanho
+            Case &H4304, &H4314, &H4324, &H4334, &H4344, &H4354, &H4364, &H4374 : DMA_Channels((Address >> 4) And 7).Source_Bank = Value
+            Case &H4305, &H4315, &H4325, &H4335, &H4345, &H4355, &H4365, &H4375 'High Byte do tamanho
                 With DMA_Channels((Address And &HF0) / &H10)
                     .Size = Value + (.Size And &HFF00)
                 End With
-            Case &H106, &H116, &H126, &H136, &H146, &H156, &H166, &H176 'Low Byte do tamanho
+            Case &H4306, &H4316, &H4326, &H4336, &H4346, &H4356, &H4366, &H4376 'Low Byte do tamanho
                 With DMA_Channels((Address And &HF0) / &H10)
                     .Size = (Value * &H100) + (.Size And &HFF)
                 End With
-            Case &H107, &H117, &H127, &H137, &H147, &H157, &H167, &H177 : DMA_Channels((Address And &HF0) / &H10).HDMA_Bank = Value
+            Case &H4307, &H4317, &H4327, &H4337, &H4347, &H4357, &H4367, &H4377 : DMA_Channels((Address And &HF0) / &H10).HDMA_Bank = Value
         End Select
     End Sub
     Public Sub H_Blank_DMA(Scanline As Integer)

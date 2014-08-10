@@ -115,6 +115,7 @@ Module _65816
     End Function
     Public Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
         Bank = Bank And &H7F
+        Address = Address And &HFFFF
         If Bank < &H70 Then
             Select Case Address
                 Case 0 To &H1FFF : Memory(Address) = Value
@@ -2134,7 +2135,7 @@ Module _65816
                     H_Blank_DMA(Scanline) 'H-Blank
                 Else 'V-Blank
                     If Scanline = 224 Then
-                        Obj_RAM_Address = 0
+                        Obj_RAM_Address = Obj_RAM_First_Address
                         V_Blank = True
                         If NMI_Enable Then NMI()
                     End If
@@ -2145,7 +2146,7 @@ Module _65816
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
 
-            FrmMain.Text = Header.Name & " @ " & Get_FPS()
+            'FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While

@@ -30,7 +30,7 @@ Module PPU
     Dim Fixed_Color As Color_Palette
 
     Dim Obj_Size, Obj_Name, Obj_Chr_Offset As Integer
-    Public Obj_RAM_Address As Integer
+    Public Obj_RAM_Address, Obj_RAM_First_Address As Integer
     Public Obj_RAM(&H21F) As Byte
     Dim Obj_Low_High_Toggle, First_Read_Obj As Boolean
 
@@ -65,14 +65,17 @@ Module PPU
             Case &H2101
                 Obj_Chr_Offset = (Value And 3) * &H4000
                 Obj_Name = ((Value >> 3) And 3) << 13
-                Obj_Size = (Value / &H20) * 2
-            Case &H2102 : Obj_RAM_Address = Value + (Obj_RAM_Address And &H100)
+                Obj_Size = Value / &H20
+            Case &H2102
+                Obj_RAM_Address = Value + (Obj_RAM_Address And &H100)
+                Obj_RAM_First_Address = Obj_RAM_Address
             Case &H2103
                 If Value And 1 Then
                     Obj_RAM_Address = Obj_RAM_Address Or &H100
                 Else
                     Obj_RAM_Address = Obj_RAM_Address And Not &H100
                 End If
+                Obj_RAM_First_Address = Obj_RAM_Address
                 Obj_Low_High_Toggle = True
             Case &H2104
                 If Obj_RAM_Address > &H10F Then
@@ -222,7 +225,8 @@ Module PPU
                 Palette((Pal_Address \ 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
                 Pal_Address += 1
             Case &H212C : Bg_Main_Enabled = Value
-            Case &H212D : Bg_Sub_Enabled = Value
+            Case &H212D
+                Bg_Sub_Enabled = Value
             Case &H2130
                 Color_Math_Obj = Value And &H2
                 Color_Math_Enable = (Value And &H30) / &H10
@@ -307,7 +311,7 @@ Module PPU
             Dim Color_Math As Boolean
             If Color_Math_Enable Then
                 Color_Math = Color_Math_BGs And Power_Of_2(Layer)
-                If ((Color_Math_BGs And &H20) And (Layer = 1 And Foreground = False)) Then Color_Math = True
+                If ((Color_Math_BGs And &H20) And Layer = 1) Then Color_Math = True
             End If
 
             Dim BPP As Integer = 0
@@ -390,20 +394,36 @@ Module PPU
 
                                                     Dim Color As Byte = (Pal_Num * Power_Of_2(BPP)) + Pixel_Color
 
-                                                    If V_Flip Then
-                                                        Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
-                                                            ((Y * 8) + (7 - Tile_Y)) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
-                                                            Color, _
-                                                            Color_Math, _
-                                                            Pixel_Color = 0)
-                                                    Else
-                                                        Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
-                                                            ((Y * 8) + Tile_Y) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
-                                                            Color, _
-                                                            Color_Math, _
-                                                            Pixel_Color = 0)
+                                                    If Bg_Main_Enabled And Power_Of_2(Layer) Then
+                                                        If V_Flip Then
+                                                            Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
+                                                                ((Y * 8) + (7 - Tile_Y)) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
+                                                                Color, _
+                                                                Color_Math, _
+                                                                Pixel_Color = 0)
+                                                        Else
+                                                            Draw_Pixel(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
+                                                                ((Y * 8) + Tile_Y) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
+                                                                Color, _
+                                                                Color_Math, _
+                                                                Pixel_Color = 0)
+                                                        End If
                                                     End If
-
+                                                    If Bg_Sub_Enabled And Power_Of_2(Layer) Then
+                                                        If V_Flip Then
+                                                            Draw_Pixel_Sub(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
+                                                                ((Y * 8) + (7 - Tile_Y)) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
+                                                                Color, _
+                                                                Color_Math, _
+                                                                Pixel_Color = 0)
+                                                        Else
+                                                            Draw_Pixel_Sub(((X * 8) + Tile_X) + (Scroll_X * 256) - (.H_Scroll Mod 256), _
+                                                                ((Y * 8) + Tile_Y) + (Scroll_Y * 256) - (.V_Scroll Mod 256), _
+                                                                Color, _
+                                                                Color_Math, _
+                                                                Pixel_Color = 0)
+                                                        End If
+                                                    End If
                                                 Next
                                             Next
                                         End If
@@ -463,10 +483,11 @@ Module PPU
                                     If Byte_2 And Bit_To_Test Then Pixel_Color += 4
                                     If Byte_3 And Bit_To_Test Then Pixel_Color += 8
                                     If Pixel_Color <> 0 Then
+                                        Dim Color_Math As Boolean = Color_Math_Obj And (Color_Math_BGs And &H20)
                                         If V_Flip Then
-                                            Draw_Pixel(X + Tile_X, Y + (7 - Tile_Y), 128 + (Pal_Num * 16) + Pixel_Color, Color_Math_Obj And (Color_Math_BGs And &H20))
+                                            Draw_Pixel(X + Tile_X, Y + (7 - Tile_Y), 128 + (Pal_Num * 16) + Pixel_Color, Color_Math)
                                         Else
-                                            Draw_Pixel(X + Tile_X, Y + Tile_Y, 128 + (Pal_Num * 16) + Pixel_Color, Color_Math_Obj And (Color_Math_BGs And &H20))
+                                            Draw_Pixel(X + Tile_X, Y + Tile_Y, 128 + (Pal_Num * 16) + Pixel_Color, Color_Math)
                                         End If
                                     End If
                                 Next
