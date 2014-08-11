@@ -2141,7 +2141,7 @@ Module _65816
                 Current_Line = Scanline
                 H_Blank = False
                 If (Not WAI_Disable) And (Not STP_Disable) Then
-                    Execute_65816(256)
+                    Execute_65816(172)
                     'H-Blank
                     H_Blank = True
                     H_Blank_DMA(Scanline)
