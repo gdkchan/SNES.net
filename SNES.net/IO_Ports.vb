@@ -69,6 +69,7 @@
                 If V_Blank Then Value = Value Or &H80
                 Return Value
             Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
+                Return &HFF
                 Dim Temp As Integer = Controller_Read_Position
                 Controller_Read_Position = (Controller_Read_Position + 1) And &HF
                 Select Case Temp
@@ -84,7 +85,6 @@
                     Case 9 : If Key_Pressed(Keys.S) Then Return 1
                     Case 10 : If Key_Pressed(Keys.Q) Then Return 1
                     Case 11 : If Key_Pressed(Keys.W) Then Return 1
-                    Case Else : Return 1
                 End Select
             Case &H4218
                 Dim Value As Byte
