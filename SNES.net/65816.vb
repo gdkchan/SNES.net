@@ -2151,7 +2151,7 @@ Module _65816
                 End If
 
                 If Scanline < 224 Then
-                    'Dummy placeholder
+                    Render_Scanline(Scanline)
                 Else 'V-Blank
                     If Scanline = 224 Then
                         Controller_Ready = True
@@ -2163,7 +2163,6 @@ Module _65816
                     End If
                 End If
             Next
-            Render()
             If Take_Screenshot Then Screenshot()
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
