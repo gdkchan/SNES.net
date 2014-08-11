@@ -43,7 +43,6 @@ Partial Class FrmMain
         Me.LimitarFPSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ForçarIRQToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Menu.SuspendLayout()
         Me.SuspendLayout()
@@ -76,62 +75,62 @@ Partial Class FrmMain
         'AbrirROMToolStripMenuItem
         '
         Me.AbrirROMToolStripMenuItem.Name = "AbrirROMToolStripMenuItem"
-        Me.AbrirROMToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.AbrirROMToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.AbrirROMToolStripMenuItem.Text = "&Abrir ROM"
         '
         'ToolStripMenuItem1
         '
         Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
-        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(143, 6)
+        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(149, 6)
         '
         'SalvarJogoToolStripMenuItem
         '
         Me.SalvarJogoToolStripMenuItem.Name = "SalvarJogoToolStripMenuItem"
-        Me.SalvarJogoToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.SalvarJogoToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.SalvarJogoToolStripMenuItem.Text = "&Salvar jogo"
         '
         'CarregarJogoToolStripMenuItem
         '
         Me.CarregarJogoToolStripMenuItem.Name = "CarregarJogoToolStripMenuItem"
-        Me.CarregarJogoToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.CarregarJogoToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.CarregarJogoToolStripMenuItem.Text = "&Carregar jogo"
         '
         'ToolStripMenuItem2
         '
         Me.ToolStripMenuItem2.Name = "ToolStripMenuItem2"
-        Me.ToolStripMenuItem2.Size = New System.Drawing.Size(143, 6)
+        Me.ToolStripMenuItem2.Size = New System.Drawing.Size(149, 6)
         '
         'SlotToolStripMenuItem
         '
         Me.SlotToolStripMenuItem.Name = "SlotToolStripMenuItem"
-        Me.SlotToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.SlotToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.SlotToolStripMenuItem.Text = "&Slot"
         '
         'ToolStripMenuItem3
         '
         Me.ToolStripMenuItem3.Name = "ToolStripMenuItem3"
-        Me.ToolStripMenuItem3.Size = New System.Drawing.Size(143, 6)
+        Me.ToolStripMenuItem3.Size = New System.Drawing.Size(149, 6)
         '
         'ScreenshotToolStripMenuItem
         '
         Me.ScreenshotToolStripMenuItem.Name = "ScreenshotToolStripMenuItem"
-        Me.ScreenshotToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.ScreenshotToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.ScreenshotToolStripMenuItem.Text = "&Screenshot"
         '
         'ToolStripMenuItem4
         '
         Me.ToolStripMenuItem4.Name = "ToolStripMenuItem4"
-        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(143, 6)
+        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(149, 6)
         '
         'SairToolStripMenuItem
         '
         Me.SairToolStripMenuItem.Name = "SairToolStripMenuItem"
-        Me.SairToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.SairToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.SairToolStripMenuItem.Text = "&Sair"
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.ForçarIRQToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
@@ -178,12 +177,6 @@ Partial Class FrmMain
         Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
         '
-        'ForçarIRQToolStripMenuItem
-        '
-        Me.ForçarIRQToolStripMenuItem.Name = "ForçarIRQToolStripMenuItem"
-        Me.ForçarIRQToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
-        Me.ForçarIRQToolStripMenuItem.Text = "&Forçar IRQ"
-        '
         'FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -225,6 +218,5 @@ Partial Class FrmMain
     Friend WithEvents LimitarFPSToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents DumpVRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents DumpObjRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents ForçarIRQToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

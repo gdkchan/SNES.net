@@ -37,10 +37,14 @@ Module _65816
     Public IRQ_Ocurred, V_Blank, H_Blank As Boolean
     Public Current_Line As Integer
 
+    Const Cycles_Per_Scanline As Double = 0.0000635 / (1 / 3580000.0)
+    Const H_Blank_Cycles As Double = (Cycles_Per_Scanline / 340) * 84
+
     Public Debug As Boolean
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
+        Address = Address And &HFFFF
         If Header.Hi_ROM Then
             If ((Bank And &H7F) < &H40) Then
                 Select Case Address
@@ -51,7 +55,8 @@ Module _65816
                         Dim Value As Byte = Memory(WRAM_Address)
                         WRAM_Address = (WRAM_Address + 1) And &H1FFFF
                         Return Value
-                    Case &H4000 To &H4FFF : Return Read_IO(Address)
+                    Case &H4000 To &H41FF : Return Read_IO(Address)
+                    Case &H4200 To &H43FF : Return Read_IO(Address)
                     Case &H6000 To &H7FFF : Return Save_RAM(0, Address And &H1FFF)
                     Case &H8000 To &HFFFF : Return ROM_Data(((Bank And &H3F) * 2) + 1, Address And &H7FFF)
                 End Select
@@ -91,7 +96,8 @@ Module _65816
                         Dim Value As Byte = Memory(WRAM_Address)
                         WRAM_Address = (WRAM_Address + 1) And &H1FFFF
                         Return Value
-                    Case &H4000 To &H4FFF : Return Read_IO(Address)
+                    Case &H4000 To &H41FF : Return Read_IO(Address)
+                    Case &H4200 To &H43FF : Return Read_IO(Address)
                     Case &H8000 To &HFFFF
                         If Header.Banks <= &H10 Then '???
                             Return ROM_Data(Bank And &HF, Address And &H7FFF)
@@ -124,7 +130,7 @@ Module _65816
     End Function
     Public Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
         Bank = Bank And &H7F
-        Address = Address And &HFFFF
+        'Address = Address And &HFFFF
         If Bank < &H70 Then
             Select Case Address
                 Case 0 To &H1FFF : Memory(Address) = Value
@@ -136,8 +142,9 @@ Module _65816
                 Case &H2181 : WRAM_Address = Value + (WRAM_Address And &H1FF00)
                 Case &H2182 : WRAM_Address = (Value * &H100) + (WRAM_Address And &H100FF)
                 Case &H2183 : If Value And 1 Then WRAM_Address = WRAM_Address Or &H10000 Else WRAM_Address = WRAM_Address And Not &H10000
-                Case &H4000 To &H4FFF : Write_IO(Address, Value)
-                Case &H6000 To &H7FFF : If Header.Hi_ROM Then Save_RAM(0, Address And &H1FFF) = Value
+                Case &H4000 To &H41FF : Write_IO(Address, Value)
+                Case &H4200 To &H43FF : Write_IO(Address, Value)
+                Case &H6000 To &H7FFF : If Header.Hi_ROM And (Bank > &H2F And Bank < &H40) Then Save_RAM(0, Address And &H1FFF) = Value
             End Select
         End If
 
@@ -1512,7 +1519,6 @@ Module _65816
         Registers.Program_Bank = 0
         Registers.Program_Counter = Read_Memory_16(0, &HFFE4)
         Set_Flag(Interrupt_Flag)
-        Cycles += 8
     End Sub
     Private Sub Compare_With_X() 'CPX (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -2083,10 +2089,9 @@ Module _65816
 
 #Region "Interrupts"
     Public Sub IRQ()
-        If Registers.P And Interrupt_Flag Then Exit Sub
-        If WAI_Disable Then
+        If Registers.P And Interrupt_Flag Then
+            If WAI_Disable Then Registers.Program_Counter += 1
             WAI_Disable = False
-            Registers.Program_Counter += 1
         End If
 
         IRQ_Ocurred = True
@@ -2141,18 +2146,24 @@ Module _65816
                 Current_Line = Scanline
                 H_Blank = False
                 If (Not WAI_Disable) And (Not STP_Disable) Then
-                    Execute_65816(172)
-                    'H-Blank
+                    If (IRQ_Enable = 2 And Scanline = V_Count) Then IRQ()
+                    Execute_65816(Cycles_Per_Scanline - H_Blank_Cycles)
+
+                    '+=========+
+                    '| H-Blank |
+                    '+=========+
                     H_Blank = True
                     H_Blank_DMA(Scanline)
-                    If (IRQ_Enable = 2 And Current_Line = V_Count) Then IRQ()
-                    Execute_65816(84)
-                    If (IRQ_Enable = 3 And Current_Line = V_Count) Or (IRQ_Enable = 1) Then IRQ()
+                    If (IRQ_Enable = 3 And Scanline = V_Count) Or (IRQ_Enable = 1) Then IRQ()
+                    Execute_65816(H_Blank_Cycles)
                 End If
 
                 If Scanline < 224 Then
                     Render_Scanline(Scanline)
-                Else 'V-Blank
+                Else
+                    '+=========+
+                    '| V-Blank |
+                    '+=========+
                     If Scanline = 224 Then
                         Controller_Ready = True
                         Obj_RAM_Address = Obj_RAM_First_Address

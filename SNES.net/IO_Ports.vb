@@ -28,15 +28,13 @@
     Public Controller_Ready As Boolean
     Dim Controller_Read_Position As Integer
     Public H_Count, V_Count As Integer
-    Public Sub Init_IO()
-        For Channel = 0 To 7
-            ReDim HDMA_Channels(Channel).Data(3)
-        Next
-    End Sub
+    Public Fast_ROM As Boolean
     Public Sub Reset_IO()
         Array.Clear(DMA_Channels, 0, DMA_Channels.Length)
         Array.Clear(HDMA_Channels, 0, HDMA_Channels.Length)
-        Init_IO()
+        For Channel = 0 To 7
+            ReDim HDMA_Channels(Channel).Data(3)
+        Next
         HDMA_Enabled = 0
 
         NMI_Enable = False
@@ -160,6 +158,8 @@
                                     Write_Memory(0, &H2100 Or .Dest, Read_Memory(.Source_Bank, .Source))
                                 End If
 
+                                Cycles += 1
+
                                 Select Case .Control And &HF
                                     Case 0, 2 : If .Control And &H10 Then .Source -= 1 Else .Source += 1
                                     Case 1
@@ -173,6 +173,7 @@
                     End If
                 Next
             Case &H420C : HDMA_Enabled = Value
+            Case &H420D : Fast_ROM = Value And &H1
                 'Case &H4211 : IRQ_Ocurred = False
             Case &H4300, &H4310, &H4320, &H4330, &H4340, &H4350, &H4360, &H4370 : DMA_Channels((Address And &HF0) / &H10).Control = Value
             Case &H4301, &H4311, &H4321, &H4331, &H4341, &H4351, &H4361, &H4371 : DMA_Channels((Address And &HF0) / &H10).Dest = Value
@@ -206,7 +207,6 @@
                 End If
 
                 If HDMA_Enabled And (1 << Channel) Then 'Verifica se deve transferir
-                    'MsgBox("DMA Ocurred!")
                     '+===========================+
                     '| Carrega valores da tabela |
                     '+===========================+

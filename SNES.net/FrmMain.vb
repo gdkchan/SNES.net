@@ -2,8 +2,6 @@
 Public Class FrmMain
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Menu.Renderer = New Custom_Menu
-
-        Init_PPU()
         Hi_Res_Timer_Initialize()
 
         Show()
@@ -16,6 +14,7 @@ Public Class FrmMain
         If File.Exists(Open_Dlg.FileName) Then
             Load_Rom(Open_Dlg.FileName)
             Reset_65816()
+            Reset_PPU()
             Reset_IO()
             SNES_On = True
             Main_Loop()
@@ -40,8 +39,5 @@ Public Class FrmMain
     End Sub
     Private Sub DumpObjRAMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpObjRAMToolStripMenuItem.Click
         System.IO.File.WriteAllBytes("D:\Gabriel\ObjRAM.BIN", Obj_RAM)
-    End Sub
-    Private Sub ForçarIRQToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ForçarIRQToolStripMenuItem.Click
-        IRQ()
     End Sub
 End Class
