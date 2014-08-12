@@ -99,11 +99,7 @@ Module _65816
                     Case &H4200 To &H43FF : Return Read_IO(Address)
                     Case &H8000 To &HFFFF
                         If Header.Banks <= &H10 Then '???
-                            Try
-                                Return ROM_Data(Bank And &HF, Address And &H7FFF)
-                            Catch
-                                MsgBox(Hex(Bank) & " - " & Hex(Address))
-                            End Try
+                            Return ROM_Data(Bank And &HF, Address And &H7FFF)
                         ElseIf Header.Banks <= &H20 Then '???
                             Return ROM_Data(Bank And &H1F, Address And &H7FFF)
                         Else
