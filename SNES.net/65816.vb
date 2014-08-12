@@ -44,7 +44,6 @@ Module _65816
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
-        Address = Address And &HFFFF
         If Header.Hi_ROM Then
             If ((Bank And &H7F) < &H40) Then
                 Select Case Address
@@ -100,7 +99,11 @@ Module _65816
                     Case &H4200 To &H43FF : Return Read_IO(Address)
                     Case &H8000 To &HFFFF
                         If Header.Banks <= &H10 Then '???
-                            Return ROM_Data(Bank And &HF, Address And &H7FFF)
+                            Try
+                                Return ROM_Data(Bank And &HF, Address And &H7FFF)
+                            Catch
+                                MsgBox(Hex(Bank) & " - " & Hex(Address))
+                            End Try
                         ElseIf Header.Banks <= &H20 Then '???
                             Return ROM_Data(Bank And &H1F, Address And &H7FFF)
                         Else
@@ -117,7 +120,8 @@ Module _65816
         End If
         If Bank = &H7E Then Return Memory(Address)
         If Bank = &H7F Then Return Memory(Address + &H10000)
-        Return Nothing 'Nunca deve acontecer
+
+        Return 0 'Nunca deve acontecer
     End Function
     Public Function Read_Memory_16(Bank As Integer, Address As Integer) As Integer
         Return Read_Memory(Bank, Address) + _
@@ -130,7 +134,6 @@ Module _65816
     End Function
     Public Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
         Bank = Bank And &H7F
-        'Address = Address And &HFFFF
         If Bank < &H70 Then
             Select Case Address
                 Case 0 To &H1FFF : Memory(Address) = Value
@@ -165,8 +168,6 @@ Module _65816
 
 #Region "CPU Reset/Execute"
     Public Sub Reset_65816()
-        'FileOpen(1, "D:\Gabriel\SNES.Net Debug.txt", FileMode.Create)
-
         Registers.A = 0
         Registers.X = 0
         Registers.Y = 0
@@ -186,7 +187,7 @@ Module _65816
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
 
             If Debug Then
-                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " P: " & Hex(Registers.P) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " -- OP: " & Hex(Opcode))
+                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " P: " & Hex(Registers.P) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & "EA OLD: " & Effective_Address & " -- OP: " & Hex(Opcode))
             End If
 
             Registers.Program_Counter += 1
@@ -1388,25 +1389,25 @@ Module _65816
     Private Sub Arithmetic_Shift_Left() 'ASL (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Test_Flag(Value And &H80, Carry_Flag)
-        Value <<= 1
+        Value = (Value << 1) And &HFF
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag(Value)
     End Sub
     Private Sub Arithmetic_Shift_Left_A() 'ASL_A (8 bits)
         Test_Flag((Registers.A And &HFF) And &H80, Carry_Flag)
-        Registers.A = ((Registers.A And &HFF) << 1) + (Registers.A And &HFF00)
+        Registers.A = (((Registers.A And &HFF) << 1) And &HFF) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Arithmetic_Shift_Left_16() 'ASL (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Test_Flag(Value And &H8000, Carry_Flag)
-        Value <<= 1
+        Value = (Value << 1) And &HFFFF
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag_16(Value)
     End Sub
     Private Sub Arithmetic_Shift_Left_A_16() 'ASL_A (16 bits)
         Test_Flag(Registers.A And &H8000, Carry_Flag)
-        Registers.A <<= 1
+        Registers.A = (Registers.A << 1) And &HFFFF
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Branch_On_Carry_Clear() 'BCC
@@ -1660,25 +1661,25 @@ Module _65816
     Private Sub Logical_Shift_Right() 'LSR (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Test_Flag(Value And &H1, Carry_Flag)
-        Value >>= 1
+        Value = (Value >> 1) And &HFF
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag(Value)
     End Sub
     Private Sub Logical_Shift_Right_A() 'LSR_A (8 bits)
         Test_Flag((Registers.A And &HFF) And &H1, Carry_Flag)
-        Registers.A = ((Registers.A And &HFF) >> 1) + (Registers.A And &HFF00)
+        Registers.A = (((Registers.A And &HFF) >> 1) And &HFF) + (Registers.A And &HFF00)
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
     Private Sub Logical_Shift_Right_16() 'LSR (16 bits)
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         Test_Flag(Value And &H1, Carry_Flag)
-        Value >>= 1
+        Value = (Value >> 1) And &HFFFF
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag_16(Value)
     End Sub
     Private Sub Logical_Shift_Right_A_16() 'LSR_A (16 bits)
         Test_Flag(Registers.A And &H1, Carry_Flag)
-        Registers.A >>= 1
+        Registers.A = (Registers.A >> 1) And &HFFFF
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Block_Move_Negative() 'MVN
@@ -1789,10 +1790,10 @@ Module _65816
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Value And &H80, Carry_Flag)
-            Value = (Value << 1) Or &H1
+            Value = ((Value << 1) And &HFF) Or &H1
         Else
             Test_Flag(Value And &H80, Carry_Flag)
-            Value <<= 1
+            Value = (Value << 1) And &HFF
         End If
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag(Value)
@@ -1800,10 +1801,10 @@ Module _65816
     Private Sub Rotate_Left_A() 'ROL (8 bits)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Registers.A And &H80, Carry_Flag)
-            Registers.A = (((Registers.A And &HFF) << 1) Or &H1) + (Registers.A And &HFF00)
+            Registers.A = ((((Registers.A And &HFF) << 1) And &HFF) Or &H1) + (Registers.A And &HFF00)
         Else
             Test_Flag(Registers.A And &H80, Carry_Flag)
-            Registers.A = ((Registers.A And &HFF) << 1) + (Registers.A And &HFF00)
+            Registers.A = (((Registers.A And &HFF) << 1) And &HFF) + (Registers.A And &HFF00)
         End If
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
@@ -1811,10 +1812,10 @@ Module _65816
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Value And &H8000, Carry_Flag)
-            Value = (Value << 1) Or &H1
+            Value = ((Value << 1) And &HFFFF) Or &H1
         Else
             Test_Flag(Value And &H8000, Carry_Flag)
-            Value <<= 1
+            Value = (Value << 1) And &HFFFF
         End If
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag_16(Value)
@@ -1822,10 +1823,10 @@ Module _65816
     Private Sub Rotate_Left_A_16() 'ROL (16 bits)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Registers.A And &H8000, Carry_Flag)
-            Registers.A = (Registers.A << 1) Or &H1
+            Registers.A = ((Registers.A << 1) And &HFFFF) Or &H1
         Else
             Test_Flag(Registers.A And &H8000, Carry_Flag)
-            Registers.A <<= 1
+            Registers.A = (Registers.A << 1) And &HFFFF
         End If
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
@@ -1833,10 +1834,10 @@ Module _65816
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Value And &H1, Carry_Flag)
-            Value = (Value >> 1) Or &H80
+            Value = ((Value >> 1) And &HFF) Or &H80
         Else
             Test_Flag(Value And &H1, Carry_Flag)
-            Value >>= 1
+            Value = (Value >> 1) And &HFF
         End If
         Write_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag(Value)
@@ -1844,10 +1845,10 @@ Module _65816
     Private Sub Rotate_Right_A() 'ROR (8 bits)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Registers.A And &H1, Carry_Flag)
-            Registers.A = (((Registers.A And &HFF) >> 1) Or &H80) + (Registers.A And &HFF00)
+            Registers.A = ((((Registers.A And &HFF) >> 1) And &HFF) Or &H80) + (Registers.A And &HFF00)
         Else
             Test_Flag(Registers.A And &H1, Carry_Flag)
-            Registers.A = ((Registers.A And &HFF) >> 1) + (Registers.A And &HFF00)
+            Registers.A = (((Registers.A And &HFF) >> 1) And &HFF) + (Registers.A And &HFF00)
         End If
         Set_Zero_Negative_Flag(Registers.A And &HFF)
     End Sub
@@ -1855,10 +1856,10 @@ Module _65816
         Dim Value As Integer = Read_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Value And &H1, Carry_Flag)
-            Value = (Value >> 1) Or &H8000
+            Value = ((Value >> 1) And &HFFFF) Or &H8000
         Else
             Test_Flag(Value And &H1, Carry_Flag)
-            Value >>= 1
+            Value = (Value >> 1) And &HFFFF
         End If
         Write_Memory_16((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF, Value)
         Set_Zero_Negative_Flag_16(Value)
@@ -1866,10 +1867,10 @@ Module _65816
     Private Sub Rotate_Right_A_16() 'ROR (16 bits)
         If (Registers.P And Carry_Flag) Then
             Test_Flag(Registers.A And &H1, Carry_Flag)
-            Registers.A = (Registers.A >> 1) Or &H8000
+            Registers.A = ((Registers.A >> 1) And &HFFFF) Or &H8000
         Else
             Test_Flag(Registers.A And &H1, Carry_Flag)
-            Registers.A >>= 1
+            Registers.A = (Registers.A >> 1) And &HFFFF
         End If
         Set_Zero_Negative_Flag_16(Registers.A)
     End Sub

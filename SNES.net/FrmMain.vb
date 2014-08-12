@@ -4,6 +4,8 @@ Public Class FrmMain
         Menu.Renderer = New Custom_Menu
         Hi_Res_Timer_Initialize()
 
+        FileOpen(1, Application.StartupPath & "\SNES.Net Debug.txt", FileMode.Create)
+
         Show()
     End Sub
     Private Sub AbrirROMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AbrirROMToolStripMenuItem.Click

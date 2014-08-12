@@ -370,12 +370,12 @@ Module PPU
                     If Scanline >= (256 - (.V_Scroll Mod 256)) Then Scroll_Y = 1
 
                     If .Tile_16x16 Then
-                        Dim Base_Char_Num As Integer = ((((Scanline + (.V_Scroll Mod 8)) \ 16) + ((.V_Scroll Mod 256) \ 16)) Mod 16) * 64
+                        Dim Base_Char_Num As Integer = ((((Scanline + (.V_Scroll Mod 16)) \ 16) + ((.V_Scroll Mod 256) \ 16)) Mod 16) * 64
                         For X As Integer = 0 To 15
                             Dim Character_Number As Integer = Base_Char_Num + (X * 2)
                             For Scroll_X As Integer = 0 To 1
-                                Dim Temp_X As Integer = ((X * 8) + (Scroll_X * 256) - (.H_Scroll Mod 256))
-                                If (Temp_X > -8 And Temp_X < 256) Then
+                                Dim Temp_X As Integer = ((X * 16) + (Scroll_X * 256) - (.H_Scroll Mod 256))
+                                If (Temp_X > -16 And Temp_X < 256) Then
                                     Dim Tile_Offset As Integer = .Address + Character_Number
                                     Select Case .Size
                                         Case 1 : Tile_Offset += (512 * If(Reverse_X, Scroll_X, 1 - Scroll_X))
@@ -390,14 +390,15 @@ Module PPU
                                     Dim H_Flip As Boolean = Tile_Data And &H4000
                                     Dim V_Flip As Boolean = Tile_Data And &H8000
                                     If V_Flip Then
-                                        If ((Scanline + (.V_Scroll Mod 8)) Mod 16) < 8 Then Tile_Number += 16
+                                        If ((Scanline + (.V_Scroll Mod 16)) Mod 16) < 8 Then Tile_Number += 16
                                     Else
-                                        If ((Scanline + (.V_Scroll Mod 8)) Mod 16) > 7 Then Tile_Number += 16
+                                        If ((Scanline + (.V_Scroll Mod 16)) Mod 16) > 7 Then Tile_Number += 16
                                     End If
                                     If Priority = Foreground Then
                                         For TX = 0 To 1
                                             Dim Base_Tile As Integer = .CHR_Address + (Tile_Number * (BPP * 8))
-                                            Dim Temp As Integer = (Scanline + (.V_Scroll Mod 8)) Mod 8
+                                            Dim Temp As Integer = (Scanline + (.V_Scroll Mod 16)) Mod 16
+                                            If Temp > 7 Then Temp -= 8
                                             Base_Tile += If(V_Flip, (7 - Temp) * 2, Temp * 2)
                                             Dim Byte_0, Byte_1, Byte_2, Byte_3, Byte_4, Byte_5, Byte_6, Byte_7 As Byte
                                             Byte_0 = VRAM(Base_Tile)
@@ -613,9 +614,9 @@ Module PPU
                 End If
                 If Not Transparent Or Color_Math Then Video_Buffer(Buffer_Position) = (.R * &H10000) + (.G * &H100) + .B
             End With
-
         End If
     End Sub
+    'Color Math (Note to Mike: this is not working right, so I disabled for now...)
     Private Sub Draw_Pixel_CM(X As Integer, Y As Integer, _
         Color_Index As Byte, _
         Optional Color_Math As Boolean = False, _
@@ -627,7 +628,7 @@ Module PPU
             If Color_Math Then Do_Color_Math(Buffer_Position)
         End If
     End Sub
-    Private Sub Draw_Pixel_Sub(X As Integer, Y As Integer, _
+    Private Sub Draw_Pixel_CM_Sub(X As Integer, Y As Integer, _
         Color_Index As Byte, _
         Optional Color_Math As Boolean = False, _
         Optional Transparent As Boolean = False)

@@ -33,6 +33,10 @@ Module ROM
             .Name = Header.Name.Trim
             .Hi_ROM = Header_Bank
             If Not .Hi_ROM Then
+                'Note to Mike: This should be used to load Interleaved Hi-ROMs
+                'but even LoRom was loading with this -> .Hi_ROM = ROM_Data(0, &H7FD5) And 1,
+                'so i Disabled for now...
+
                 '.Hi_ROM = ROM_Data(0, &H7FD5) And 1
                 If .Hi_ROM Then
                     Dim Read_Position As Integer

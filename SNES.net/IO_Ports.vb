@@ -69,6 +69,8 @@
                 If V_Blank Then Value = Value Or &H80
                 Return Value
             Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
+                'Note to Mike: On some games the controller don't work properly when reading
+                'this address (from what I understood, this is latched from 4018/4019)
                 Return &HFF
                 Dim Temp As Integer = Controller_Read_Position
                 Controller_Read_Position = (Controller_Read_Position + 1) And &HF
@@ -117,7 +119,7 @@
             Case &H4306, &H4316, &H4326, &H4336, &H4346, &H4356, &H4366, &H4376 : Return (DMA_Channels((Address And &HF0) / &H10).Size >> 8) And &HFF
         End Select
 
-        Return Nothing 'Nunca deve acontecer
+        Return 0 'Nunca deve acontecer
     End Function
     Public Sub Write_IO(Address As Integer, Value As Byte)
         Select Case Address
@@ -174,7 +176,6 @@
                 Next
             Case &H420C : HDMA_Enabled = Value
             Case &H420D : Fast_ROM = Value And &H1
-                'Case &H4211 : IRQ_Ocurred = False
             Case &H4300, &H4310, &H4320, &H4330, &H4340, &H4350, &H4360, &H4370 : DMA_Channels((Address And &HF0) / &H10).Control = Value
             Case &H4301, &H4311, &H4321, &H4331, &H4341, &H4351, &H4361, &H4371 : DMA_Channels((Address And &HF0) / &H10).Dest = Value
             Case &H4302, &H4312, &H4322, &H4332, &H4342, &H4352, &H4362, &H4372 'High Byte de leitura
