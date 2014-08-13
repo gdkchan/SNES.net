@@ -75,57 +75,57 @@ Partial Class FrmMain
         'AbrirROMToolStripMenuItem
         '
         Me.AbrirROMToolStripMenuItem.Name = "AbrirROMToolStripMenuItem"
-        Me.AbrirROMToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.AbrirROMToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.AbrirROMToolStripMenuItem.Text = "&Abrir ROM"
         '
         'ToolStripMenuItem1
         '
         Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
-        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(149, 6)
+        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(143, 6)
         '
         'SalvarJogoToolStripMenuItem
         '
         Me.SalvarJogoToolStripMenuItem.Name = "SalvarJogoToolStripMenuItem"
-        Me.SalvarJogoToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SalvarJogoToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.SalvarJogoToolStripMenuItem.Text = "&Salvar jogo"
         '
         'CarregarJogoToolStripMenuItem
         '
         Me.CarregarJogoToolStripMenuItem.Name = "CarregarJogoToolStripMenuItem"
-        Me.CarregarJogoToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.CarregarJogoToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.CarregarJogoToolStripMenuItem.Text = "&Carregar jogo"
         '
         'ToolStripMenuItem2
         '
         Me.ToolStripMenuItem2.Name = "ToolStripMenuItem2"
-        Me.ToolStripMenuItem2.Size = New System.Drawing.Size(149, 6)
+        Me.ToolStripMenuItem2.Size = New System.Drawing.Size(143, 6)
         '
         'SlotToolStripMenuItem
         '
         Me.SlotToolStripMenuItem.Name = "SlotToolStripMenuItem"
-        Me.SlotToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SlotToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.SlotToolStripMenuItem.Text = "&Slot"
         '
         'ToolStripMenuItem3
         '
         Me.ToolStripMenuItem3.Name = "ToolStripMenuItem3"
-        Me.ToolStripMenuItem3.Size = New System.Drawing.Size(149, 6)
+        Me.ToolStripMenuItem3.Size = New System.Drawing.Size(143, 6)
         '
         'ScreenshotToolStripMenuItem
         '
         Me.ScreenshotToolStripMenuItem.Name = "ScreenshotToolStripMenuItem"
-        Me.ScreenshotToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.ScreenshotToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.ScreenshotToolStripMenuItem.Text = "&Screenshot"
         '
         'ToolStripMenuItem4
         '
         Me.ToolStripMenuItem4.Name = "ToolStripMenuItem4"
-        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(149, 6)
+        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(143, 6)
         '
         'SairToolStripMenuItem
         '
         Me.SairToolStripMenuItem.Name = "SairToolStripMenuItem"
-        Me.SairToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SairToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.SairToolStripMenuItem.Text = "&Sair"
         '
         'OpçõesToolStripMenuItem

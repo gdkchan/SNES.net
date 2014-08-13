@@ -14,6 +14,7 @@ Module PPU
         Dim Tile_16x16 As Boolean
         Dim H_Scroll, V_Scroll As Integer
         Dim H_Low_High_Toggle, V_Low_High_Toggle As Boolean
+        Dim Mosaic As Boolean
     End Structure
     Dim Palette(255) As Color_Palette
     Dim Background(3) As PPU_Background
@@ -45,6 +46,8 @@ Module PPU
     Dim Mode_7_C, Mode_7_D, Mode_7_X, Mode_7_Y As Byte
     Dim Mode_7_Low_High As Boolean
     Dim Mult_Result As Integer
+
+    Dim Mosaic_Size As Byte
 
     Public VRAM(&HFFFF) As Byte
     Dim CGRAM(&H1FF) As Byte
@@ -119,6 +122,11 @@ Module PPU
                 Background(2).Tile_16x16 = Value And &H40
                 Background(3).Tile_16x16 = Value And &H80
             Case &H2106 'Mosaico
+                Mosaic_Size = (Value And &HF0) >> 4
+                Background(0).Mosaic = Value And &H1
+                Background(1).Mosaic = Value And &H2
+                Background(2).Mosaic = Value And &H4
+                Background(3).Mosaic = Value And &H8
             Case &H2107 'Address
                 Background(0).Address = (Value And &H7C) * &H200
                 Background(0).Size = Value And 3
@@ -370,7 +378,7 @@ Module PPU
                 Dim Scroll_Y As Integer = 0
                 If Scanline >= (256 - (.V_Scroll Mod 256)) Then Scroll_Y = 1
 
-                If PPU_Mode = 7 Then
+                If PPU_Mode = 7 And Layer = 0 Then
                     'Mode 7
                     Dim Base_Char_Num As Integer = ((((Scanline + (.V_Scroll Mod 8)) \ 8) + ((.V_Scroll Mod 1024) \ 8)) Mod 128) * 256
                     Dim Temp As Integer = (Scanline + (.V_Scroll Mod 8)) Mod 8
@@ -538,6 +546,8 @@ Module PPU
 
                     End If
                 End If
+
+                If .Mosaic And Mosaic_Size Then Apply_Mosaic(Scanline)
             End With
         End If
     End Sub
@@ -641,6 +651,16 @@ Module PPU
                 If Not Transparent Or Color_Math Then Video_Buffer(Buffer_Position) = (.R * &H10000) + (.G * &H100) + .B
             End With
         End If
+    End Sub
+    Private Sub Apply_Mosaic(Scanline As Integer)
+        Dim Src_Y As Integer = (Scanline \ Mosaic_Size) * Mosaic_Size
+        For X As Integer = 0 To 255 Step Mosaic_Size
+            If X + Mosaic_Size > 255 Then Exit Sub
+            Dim Src_Color As Integer = Video_Buffer(X + (Src_Y * 256))
+            For Copy_X As Integer = 0 To Mosaic_Size - 1
+                Video_Buffer((X + Copy_X) + (Scanline * 256)) = Src_Color
+            Next
+        Next
     End Sub
     'Color Math (Note to Mike: this is not working right, so I disabled for now...)
     Private Sub Draw_Pixel_CM(X As Integer, Y As Integer, _
