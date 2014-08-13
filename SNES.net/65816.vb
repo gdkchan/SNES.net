@@ -176,6 +176,12 @@ Module _65816
         Set_Flag(Accumulator_8_Bits_Flag)
         Set_Flag(Index_8_Bits_Flag) 'Processador inicia no modo 8 bits
 
+        Emulate_6502 = True
+        STP_Disable = False
+        WAI_Disable = False
+
+        Cycles = 0
+
         Registers.Program_Counter = Read_Memory_16(0, &HFFFC)
     End Sub
     Public Sub Execute_65816(Target_Cycles As Double)
