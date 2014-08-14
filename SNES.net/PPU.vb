@@ -653,12 +653,13 @@ Module PPU
         End If
     End Sub
     Private Sub Apply_Mosaic(Scanline As Integer)
-        Dim Src_Y As Integer = (Scanline \ Mosaic_Size) * Mosaic_Size
+        Dim Src_Y As Integer = Scanline - (Scanline Mod Mosaic_Size)
         For X As Integer = 0 To 255 Step Mosaic_Size
-            If X + Mosaic_Size > 255 Then Exit Sub
             Dim Src_Color As Integer = Video_Buffer(X + (Src_Y * 256))
             For Copy_X As Integer = 0 To Mosaic_Size - 1
-                Video_Buffer((X + Copy_X) + (Scanline * 256)) = Src_Color
+                If X + Copy_X >= 0 And X + Copy_X < 256 Then
+                    Video_Buffer((X + Copy_X) + (Scanline * 256)) = Src_Color
+                End If
             Next
         Next
     End Sub
