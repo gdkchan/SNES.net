@@ -2003,12 +2003,14 @@ Module _65816
     End Sub
     Private Sub Transfer_Accumulator_To_DP() 'TCD
         Registers.Direct_Page = Registers.A
+        Set_Zero_Negative_Flag_16(Registers.Direct_Page)
     End Sub
     Private Sub Transfer_Accumulator_To_SP() 'TCS
         Registers.Stack_Pointer = Registers.A
     End Sub
     Private Sub Transfer_DP_To_Accumulator() 'TDC
         Registers.A = Registers.Direct_Page
+        Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Test_And_Reset_Bit() 'TRB (8 bits)
         Dim Value As Byte = Read_Memory((Effective_Address And &HFF0000) / &H10000, Effective_Address And &HFFFF)
@@ -2036,9 +2038,11 @@ Module _65816
     End Sub
     Private Sub Transfer_SP_To_Accumulator() 'TSC
         Registers.A = Registers.Stack_Pointer
+        Set_Zero_Negative_Flag_16(Registers.A)
     End Sub
     Private Sub Transfer_SP_To_X() 'TSX
         Registers.X = Registers.Stack_Pointer
+        Set_Zero_Negative_Flag_16(Registers.X)
     End Sub
     Private Sub Transfer_X_To_Accumulator() 'TXA (8 bits)
         Registers.A = (Registers.X And &HFF) + (Registers.A And &HFF00)
