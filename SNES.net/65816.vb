@@ -189,7 +189,7 @@ Module _65816
             Dim Opcode As Byte = Read_Memory(Registers.Program_Bank, Registers.Program_Counter)
 
             If Debug Then
-                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " P: " & Hex(Registers.P) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & "EA OLD: " & Effective_Address & " -- OP: " & Hex(Opcode))
+                WriteLine(1, "PC: " & Hex(Registers.Program_Bank) & ":" & Hex(Registers.Program_Counter) & " DBR: " & Hex(Registers.Data_Bank) & " D: " & Hex(Registers.Direct_Page) & " SP: " & Hex(Registers.Stack_Pointer) & " P: " & Hex(Registers.P) & " A: " & Hex(Registers.A) & " X: " & Hex(Registers.X) & " Y: " & Hex(Registers.Y) & " EA OLD: " & Hex(Effective_Address) & " -- OP: " & Hex(Opcode))
             End If
 
             Registers.Program_Counter += 1
