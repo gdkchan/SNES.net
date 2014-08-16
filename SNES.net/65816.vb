@@ -153,11 +153,7 @@ Module _65816
 
         If Bank >= &H70 And Bank <= &H77 Then Save_RAM(Bank And 7, Address And &H1FFF) = Value
         If Bank = &H7E Then Memory(Address) = Value
-        Try
-            If Bank = &H7F Then Memory(Address + &H10000) = Value
-        Catch
-            MsgBox(Hex(Address))
-        End Try
+        If Bank = &H7F Then Memory(Address + &H10000) = Value
     End Sub
     Public Sub Write_Memory_16(Bank As Integer, Address As Integer, Value As Integer)
         Write_Memory(Bank, Address, Value And &HFF)
