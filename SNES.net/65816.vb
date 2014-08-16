@@ -44,6 +44,8 @@ Module _65816
 
 #Region "Memory Read/Write"
     Public Function Read_Memory(Bank As Byte, Address As Integer) As Byte
+        If Address > &HFFFF Then Bank += 1
+        Address = Address And &HFFFF
         If Header.Hi_ROM Then
             If ((Bank And &H7F) < &H40) Then
                 Select Case Address
@@ -129,6 +131,8 @@ Module _65816
             (Read_Memory(Bank, Address + 2) * &H10000)
     End Function
     Public Sub Write_Memory(Bank As Integer, Address As Integer, Value As Byte)
+        If Address > &HFFFF Then Bank += 1
+        Address = Address And &HFFFF
         Bank = Bank And &H7F
         If Bank < &H70 Then
             Select Case Address
@@ -149,7 +153,11 @@ Module _65816
 
         If Bank >= &H70 And Bank <= &H77 Then Save_RAM(Bank And 7, Address And &H1FFF) = Value
         If Bank = &H7E Then Memory(Address) = Value
-        If Bank = &H7F Then Memory(Address + &H10000) = Value
+        Try
+            If Bank = &H7F Then Memory(Address + &H10000) = Value
+        Catch
+            MsgBox(Hex(Address))
+        End Try
     End Sub
     Public Sub Write_Memory_16(Bank As Integer, Address As Integer, Value As Integer)
         Write_Memory(Bank, Address, Value And &HFF)
@@ -2185,7 +2193,7 @@ Module _65816
             Blit()
             If Limit_FPS Then Lock_Framerate(60)
 
-            FrmMain.Text = Header.Name & " @ " & Get_FPS()
+            'FrmMain.Text = Header.Name & " @ " & Get_FPS()
 
             Application.DoEvents()
         End While
