@@ -1,10 +1,11 @@
 ﻿Imports System.IO
 Module ROM
+    Public Const Mode_20 As Integer = 0
+    Public Const Mode_21 As Integer = 1
     Public Structure ROMHeader
         Dim Name As String
-        Dim Hi_ROM As Boolean
+        Dim Mapper As Integer
         Dim Type As Byte
-        Dim Banks As Byte
         Dim SRAM_Size As Byte
     End Structure
     Public Header As ROMHeader
@@ -12,10 +13,11 @@ Module ROM
     Public ROM_Data(0, &H7FFF) 'As ROMs são mapeadas em bancos de 32kb
     Public Sub Load_Rom(File_Name As String)
         Dim Data() As Byte = File.ReadAllBytes(File_Name)
-        Dim Banks As Integer = Data.Length / &H8000
-        Dim Banks_Hi_ROM As Integer = Data.Length / &H10000
-        ReDim ROM_Data(Banks - 1, &H7FFF)
-        For Bank As Integer = 0 To Banks - 1
+        Dim Banks_32kb As Integer = Data.Length / &H8000
+        Dim Banks_64kb As Integer = Data.Length / &H10000
+        ReDim ROM_Data(Banks_32kb - 1, &H7FFF)
+
+        For Bank As Integer = 0 To Banks_32kb - 1
             For Offset As Integer = 0 To &H7FFF
                 ROM_Data(Bank, Offset) = Data((Bank * &H8000) + Offset)
             Next
@@ -31,33 +33,26 @@ Module ROM
                 .Name &= Chr(ROM_Data(Header_Bank, &H7FC0 + Offset))
             Next
             .Name = Header.Name.Trim
-            .Hi_ROM = Header_Bank
-            If Not .Hi_ROM Then
-                'Note to Mike: This should be used to load Interleaved Hi-ROMs
-                'but even LoRom was loading with this -> .Hi_ROM = ROM_Data(0, &H7FD5) And 1,
-                'so i Disabled for now...
 
-                '.Hi_ROM = ROM_Data(0, &H7FD5) And 1
-                If .Hi_ROM Then
-                    Dim Read_Position As Integer
-                    ReDim ROM_Data((Banks * 2) - 1, &H7FFF)
-                    For Bank As Integer = 0 To Banks_Hi_ROM - 1
-                        For Offset As Integer = 0 To &H7FFF
-                            ROM_Data((Bank * 2) + 1, Offset) = Data(Read_Position + Offset)
-                        Next
-                        Read_Position += &H8000
+            .Mapper = ROM_Data(Header_Bank, &H7FD5) And 1
+            If .Mapper = Mode_21 And Header_Bank = 0 Then
+                Dim Read_Position As Integer
+                ReDim ROM_Data((Banks_32kb * 2) - 1, &H7FFF)
+                For Bank As Integer = 0 To Banks_64kb - 1
+                    For Offset As Integer = 0 To &H7FFF
+                        ROM_Data((Bank * 2) + 1, Offset) = Data(Read_Position + Offset)
                     Next
-                    For Bank As Integer = 0 To Banks_Hi_ROM - 1
-                        For Offset As Integer = 0 To &H7FFF
-                            ROM_Data(Bank * 2, Offset) = Data(Read_Position + Offset)
-                        Next
-                        Read_Position += &H8000
+                    Read_Position += &H8000
+                Next
+                For Bank As Integer = 0 To Banks_64kb - 1
+                    For Offset As Integer = 0 To &H7FFF
+                        ROM_Data(Bank * 2, Offset) = Data(Read_Position + Offset)
                     Next
-                End If
+                    Read_Position += &H8000
+                Next
             End If
 
             .Type = ROM_Data(Header_Bank, &H7FD6)
-            .Banks = Banks
             .SRAM_Size = ROM_Data(Header_Bank, &H7FD8)
         End With
     End Sub

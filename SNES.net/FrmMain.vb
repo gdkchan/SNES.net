@@ -3,8 +3,7 @@ Public Class FrmMain
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Menu.Renderer = New Custom_Menu
         Hi_Res_Timer_Initialize()
-
-        FileOpen(1, Application.StartupPath & "\SNES.Net Debug.txt", FileMode.Create)
+        FileOpen(1, "D:\SNES_dbg.txt", OpenMode.Output)
 
         Show()
     End Sub
@@ -16,10 +15,11 @@ Public Class FrmMain
         If File.Exists(Open_Dlg.FileName) Then
             Load_Rom(Open_Dlg.FileName)
             Reset_65816()
+            Reset_SPU()
             Reset_PPU()
             Reset_IO()
             SNES_On = True
-            Main_Loop()
+            Start_System()
         End If
     End Sub
     Private Sub ScreenshotToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ScreenshotToolStripMenuItem.Click
@@ -41,5 +41,11 @@ Public Class FrmMain
     End Sub
     Private Sub DumpObjRAMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpObjRAMToolStripMenuItem.Click
         System.IO.File.WriteAllBytes("D:\Gabriel\ObjRAM.BIN", Obj_RAM)
+    End Sub
+
+    Private Sub SwitchToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SwitchToolStripMenuItem.Click
+        Randomize()
+        Custom_Menu.Switch_Theme(Custom_Menu.Background_Color.Black, Color.FromArgb(Int(Rnd() * 255), Int(Rnd() * 255), Int(Rnd() * 255)))
+        Menu.Invalidate()
     End Sub
 End Class

@@ -116,7 +116,9 @@
     </Compile>
     <Compile Include="PPU.vb" />
     <Compile Include="ROM.vb" />
+    <Compile Include="SPC700.vb" />
     <Compile Include="SPU.vb" />
+    <Compile Include="Threads.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="FrmMain.resx">
@@ -140,6 +142,7 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+    <None Include="Resources\spc700.rom" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

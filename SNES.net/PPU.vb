@@ -20,7 +20,6 @@ Module PPU
     Dim Background(3) As PPU_Background
     Dim Bg_Main_Enabled As Byte
     Dim Bg_Sub_Enabled As Byte
-    Dim Pal_Address As Integer
     Dim PPU_Mode As Byte
     Dim BG3_Priority As Boolean
 
@@ -34,29 +33,41 @@ Module PPU
     Dim Obj_Size, Obj_Name, Obj_Chr_Offset As Integer
     Public Obj_RAM_Address, Obj_RAM_First_Address As Integer
     Public Obj_RAM(&H21F) As Byte
-    Dim Obj_Low_High_Toggle, First_Read_Obj As Boolean
+    Dim Obj_Priority_Rotation As Boolean
+    Dim OAM_Buffer As Byte
 
-    Dim VRAM_Address, VRAM_Increment As Integer
+    Dim VRAM_Address As UInt16, VRAM_Increment As Integer
+    Dim Addr_Translation As Boolean
+    Dim Addr_Translation_Count, Addr_Translation_Mask, Addr_Translation_Shift As Integer
     Dim Increment_2119_213A As Boolean
     Dim First_Read_VRAM As Boolean
 
+    Dim Horizontal_Count_Byte_Selector As Boolean
+    Dim Vertical_Count_Byte_Selector As Boolean
+
     Dim V_Latch As Integer
 
-    Dim Mode_7_Multiplicand, Mode_7_Multiplier As Integer
-    Dim Mode_7_C, Mode_7_D, Mode_7_X, Mode_7_Y As Byte
-    Dim Mode_7_Low_High As Boolean
+    Dim Mode_7_Multiplicand, Mode_7_Multiplier As UInt16
+    Dim Mode_7_C, Mode_7_D, Mode_7_X, Mode_7_Y As UInt16
+    Dim Mode_7_Previous_Byte As Byte
+    Dim Mode_7_16x8_Multiply As Boolean
     Dim Mult_Result As Integer
 
     Dim Mosaic_Size As Byte
 
     Public VRAM(&HFFFF) As Byte
-    Dim CGRAM(&H1FF) As Byte
+    Dim CG_Memory(&H1FF) As Byte
+    Dim CG_Memory_Address As Integer
 
     Dim Screen_Enabled As Boolean
 
     Dim Video_Buffer((256 * 224) - 1) As Integer
     Dim Video_Buffer_Sub((256 * 224) - 1) As Integer
     Public Power_Of_2(31) As Integer
+
+    Public Current_Line As Integer
+
+    Dim PPU_Clock_Ticks As Integer
 
     Public Take_Screenshot As Boolean
     Public Sub Reset_PPU()
@@ -78,8 +89,6 @@ Module PPU
         Next
         Obj_RAM_Address = 0
         Obj_RAM_First_Address = 0
-        Obj_Low_High_Toggle = False
-        First_Read_Obj = False
         Array.Clear(Obj_RAM, 0, Obj_RAM.Length)
         Array.Clear(Palette, 0, Palette.Length)
     End Sub
@@ -91,29 +100,20 @@ Module PPU
                 Obj_Name = ((Value >> 3) And 3) << 13
                 Obj_Size = Value / &H20
             Case &H2102
-                Obj_RAM_Address = Value + (Obj_RAM_Address And &H100)
+                Obj_RAM_Address = (Value Or ((Obj_RAM_Address >> 1) And &H100)) << 1
                 Obj_RAM_First_Address = Obj_RAM_Address
             Case &H2103
-                If Value And 1 Then
-                    Obj_RAM_Address = Obj_RAM_Address Or &H100
-                Else
-                    Obj_RAM_Address = Obj_RAM_Address And Not &H100
-                End If
+                Obj_RAM_Address = (((Obj_RAM_Address >> 1) And &HFF) Or ((Value And 1) << 8)) << 1
                 Obj_RAM_First_Address = Obj_RAM_Address
-                Obj_Low_High_Toggle = True
+                Obj_Priority_Rotation = Value And &H80
             Case &H2104
-                If Obj_RAM_Address > &H10F Then
-                    Obj_RAM_Address = 0
-                    Obj_Low_High_Toggle = True
-                End If
-
-                If Obj_Low_High_Toggle Then
-                    Obj_RAM(Obj_RAM_Address * 2) = Value
+                If Obj_RAM_Address And 1 Then
+                    Obj_RAM(Obj_RAM_Address - 1) = OAM_Buffer
+                    Obj_RAM(Obj_RAM_Address) = Value
                 Else
-                    Obj_RAM((Obj_RAM_Address * 2) + 1) = Value
-                    Obj_RAM_Address += 1
+                    OAM_Buffer = Value
                 End If
-                Obj_Low_High_Toggle = Not Obj_Low_High_Toggle
+                Obj_RAM_Address = (Obj_RAM_Address + 1) Mod &H220
             Case &H2105
                 PPU_Mode = Value And &H7
                 BG3_Priority = Value And &H8
@@ -221,46 +221,85 @@ Module PPU
                 Select Case Value And 3
                     Case 0 : VRAM_Increment = 1
                     Case 1 : VRAM_Increment = 32
-                    Case 2 : VRAM_Increment = 128
-                    Case 3 : VRAM_Increment = 256
+                    Case 2, 3 : VRAM_Increment = 128
                 End Select
+
+                Addr_Translation = Value And &HC
+                Select Case (Value And &HC) >> 2
+                    Case 1
+                        Addr_Translation_Count = &H20
+                        Addr_Translation_Mask = &HFF
+                        Addr_Translation_Shift = 5
+                    Case 2
+                        Addr_Translation_Count = &H40
+                        Addr_Translation_Mask = &H1FF
+                        Addr_Translation_Shift = 6
+                    Case 3
+                        Addr_Translation_Count = &H80
+                        Addr_Translation_Mask = &H3FF
+                        Addr_Translation_Shift = 7
+                End Select
+
                 Increment_2119_213A = Value And &H80
             Case &H2116 'VRAM Access
-                VRAM_Address = Value + (VRAM_Address And &HFF00)
+                VRAM_Address = Value Or (VRAM_Address And &HFF00)
                 First_Read_VRAM = True
             Case &H2117
-                VRAM_Address = (Value * &H100) + (VRAM_Address And &HFF)
+                VRAM_Address = (Value * &H100) Or (VRAM_Address And &HFF)
                 First_Read_VRAM = True
             Case &H2118
-                VRAM((VRAM_Address << 1) And &HFFFF) = Value
+                Dim Addr As UInt16
+                If Addr_Translation Then
+                    Addr = VRAM_Address And Addr_Translation_Mask
+                    Addr = (VRAM_Address And Not Addr_Translation_Mask) Or _
+                        (Addr >> Addr_Translation_Shift) Or _
+                        ((Addr And (Addr_Translation_Count - 1)) << 3)
+                Else
+                    Addr = VRAM_Address
+                End If
+                VRAM(Addr << 1) = Value
                 If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
             Case &H2119
-                VRAM(((VRAM_Address << 1) + 1) And &HFFFF) = Value
+                Dim Addr As UInt16
+                If Addr_Translation Then
+                    Addr = VRAM_Address And Addr_Translation_Mask
+                    Addr = (VRAM_Address And Not Addr_Translation_Mask) Or _
+                        (Addr >> Addr_Translation_Shift) Or _
+                        ((Addr And (Addr_Translation_Count - 1)) << 3)
+                Else
+                    Addr = VRAM_Address
+                End If
+                VRAM((Addr << 1) + 1) = Value
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 First_Read_VRAM = True
-            Case &H211B
-                If Mode_7_Low_High Then
-                    Mode_7_Multiplicand = (Value * &H100) + (Mode_7_Multiplicand And &HFF)
-                Else
-                    Mode_7_Multiplicand = Value + (Mode_7_Multiplicand And &HFF00)
-                End If
-                Mode_7_Low_High = Not Mode_7_Low_High
-            Case &H211C
-                Mode_7_Multiplier = Value
-                Mult_Result = Mode_7_Multiplicand * Mode_7_Multiplier
-            Case &H211D : Mode_7_C = Value
-            Case &H211E : Mode_7_D = Value
-            Case &H211F : Mode_7_X = Value
-            Case &H2120 : Mode_7_Y = Value
-            Case &H2121 : Pal_Address = Value * 2
+            Case &H211B To &H2120
+                Dim Final_Value As Integer = Value
+                Final_Value = (Final_Value << 8) Or Mode_7_Previous_Byte
+                Mode_7_Previous_Byte = Value
+
+                Select Case Address
+                    Case &H211B
+                        Mode_7_Multiplicand = Final_Value
+                        Mult_Result = Signed_Short(Mode_7_Multiplicand)
+                        Mult_Result *= Signed_Byte(Mode_7_Multiplier >> 8)
+                    Case &H211C
+                        Mode_7_Multiplier = Final_Value
+                        Mult_Result = Signed_Short(Mode_7_Multiplicand)
+                        Mult_Result *= Signed_Byte(Mode_7_Multiplier >> 8)
+                    Case &H211D : Mode_7_C = Final_Value
+                    Case &H211E : Mode_7_D = Final_Value
+                    Case &H211F : Mode_7_X = Final_Value
+                    Case &H2120 : Mode_7_Y = Final_Value
+                End Select
+            Case &H2121 : CG_Memory_Address = Value * 2
             Case &H2122
-                CGRAM(Pal_Address And &H1FF) = Value
-                Dim Palette_Value As Integer = CGRAM(Pal_Address And &H1FE) + (CGRAM((Pal_Address And &H1FE) + 1) * &H100)
-                Palette((Pal_Address \ 2) And &HFF).R = (Palette_Value And &H1F) * 8
-                Palette((Pal_Address \ 2) And &HFF).G = ((Palette_Value >> 5) And &H1F) * 8
-                Palette((Pal_Address \ 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
-                Pal_Address += 1
+                CG_Memory(CG_Memory_Address And &H1FF) = Value
+                Dim Palette_Value As Integer = CG_Memory(CG_Memory_Address And &H1FE) Or (CG_Memory((CG_Memory_Address And &H1FE) + 1) * &H100)
+                Palette((CG_Memory_Address \ 2) And &HFF).R = (Palette_Value And &H1F) * 8
+                Palette((CG_Memory_Address \ 2) And &HFF).G = ((Palette_Value >> 5) And &H1F) * 8
+                Palette((CG_Memory_Address \ 2) And &HFF).B = ((Palette_Value >> 10) And &H1F) * 8
+                CG_Memory_Address = (CG_Memory_Address + 1) Mod &H200
             Case &H212C : Bg_Main_Enabled = Value
             Case &H212D
                 Bg_Sub_Enabled = Value
@@ -282,34 +321,50 @@ Module PPU
             Case &H2134 : Return Mult_Result And &HFF
             Case &H2135 : Return (Mult_Result And &HFF00) / &H100
             Case &H2136 : Return (Mult_Result And &HFF0000) / &H10000
-            Case &H2137 : V_Latch = Current_Line
+            Case &H2137
+                V_Latch = Current_Line
+                If Light_Gun_Input Then External_Latch = True
             Case &H2138
-                If First_Read_Obj Then
-                    First_Read_Obj = False
-                    Return Obj_RAM(Obj_RAM_Address << 1)
-                End If
-                Dim Value As Byte = Obj_RAM(((Obj_RAM_Address << 1) + 1) And &H10F)
-                Obj_RAM_Address = (Obj_RAM_Address + 1) And &H10F
+                Dim Value As Byte = Obj_RAM(Obj_RAM_Address)
+                Obj_RAM_Address = (Obj_RAM_Address + 1) Mod &H220
                 Return Value
             Case &H2139
+                Dim Value As Byte
                 If First_Read_VRAM Then
                     First_Read_VRAM = False
-                    Return VRAM((VRAM_Address << 1) And &HFFFF)
+                    Value = VRAM((VRAM_Address << 1) And &HFFFF)
+                Else
+                    Value = VRAM(((VRAM_Address << 1) - 2) And &HFFFF)
                 End If
-                Dim Value As Byte = VRAM(((VRAM_Address << 1) - 2) And &HFFFF)
                 If Not Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 Return Value
             Case &H213A
+                Dim Value As Byte
                 If First_Read_VRAM Then
                     First_Read_VRAM = False
-                    Return VRAM(((VRAM_Address << 1) + 1) And &HFFFF)
+                    Value = VRAM(((VRAM_Address << 1) + 1) And &HFFFF)
+                Else
+                    Value = VRAM(((VRAM_Address << 1) - 1) And &HFFFF)
                 End If
-                Dim Value As Byte = VRAM(((VRAM_Address << 1) - 1) And &HFFFF)
                 If Increment_2119_213A Then VRAM_Address += VRAM_Increment
                 Return Value
+            Case &H213B 'Atenção, Open BUS -bbbbbgg gggrrrrr
+                Dim Value As Byte = CG_Memory(CG_Memory_Address)
+                CG_Memory_Address = (CG_Memory_Address + 1) Mod &H200
+                Return Value
+            Case &H213C
+                If Horizontal_Count_Byte_Selector Then Return (Pixel And &H100) >> 8 Else Return Pixel And &HFF
+                Horizontal_Count_Byte_Selector = Not Horizontal_Count_Byte_Selector
             Case &H213D
-                Dim Value As Byte = V_Latch And &HFF
-                V_Latch >>= 8
+                If Vertical_Count_Byte_Selector Then Return (Current_Line And &H100) >> 8 Else Return Current_Line And &HFF
+                Vertical_Count_Byte_Selector = Not Vertical_Count_Byte_Selector
+            Case &H213D
+            Case &H213F
+                Dim Value As Byte
+                Value = Value Or 2 'Versão do chip
+                If External_Latch Then Value = Value Or &H40
+                Horizontal_Count_Byte_Selector = False
+                Vertical_Count_Byte_Selector = False
                 Return Value
         End Select
 

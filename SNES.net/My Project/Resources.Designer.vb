@@ -59,5 +59,15 @@ Namespace My.Resources
                 resourceCulture = value
             End Set
         End Property
+        
+        '''<summary>
+        '''  Consulta um recurso localizado do tipo System.Byte[].
+        '''</summary>
+        Friend ReadOnly Property spc700() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("spc700", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
     End Module
 End Namespace

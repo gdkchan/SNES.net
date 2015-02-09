@@ -120,4 +120,18 @@
   <metadata name="Menu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="AbrirROMToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAGhSURBVDhPYxgcwMVEULIvX72yr0C9Co7z1cC4KVXRF6oMN1jSbNj25eWc/19ezvr/5dnU/58f
+        9/3/dL/t/4fbdf8vbfB/7mYmyARVigmOLXI98PBMxS+I5in/Pz/q/f/pHlDzrbr/76+V/n92POn/pTVu
+        Hy6ucnx/cbnt+wtLLN6fXWD8riBcxhVswIVNEZe/vABqfgrR/PFeK1BzLVBzyf93F7P/vzmT9P/18Yj/
+        Lw74/b+8MfD/naP5YLykSb8BbMC5dUFH39xq+39tR+z/W/uS/9/am/j/5p4EII77f3N3zP+bu6L/39gZ
+        +f/69vD/7+91/f/8dDIY3zmU+enYQsfDDCeWee2+fyzn/5srFf8/3q4nCZ9f63eRYd8c5403d8X8f3s+
+        g2S8c4r5IobNk6yXX9vk8//VIX+S8MuDfv9781QKGFZ1ms69stz8/7OtZiThu+tM/6f5S9oyzK7SnHxt
+        ocr/xyvlScKXF6j+dTQS4GWYVKjSeXue4P8HC3hJwqemK94CR2NbhmLKyamyd05NlSEJb+lS7wEbMMCA
+        gQEAfnXWyxu6oGcAAAAASUVORK5CYII=
+</value>
+  </data>
 </root>

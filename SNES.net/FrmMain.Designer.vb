@@ -22,6 +22,7 @@ Partial Class FrmMain
     'Não o modifique usando o editor de códigos.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FrmMain))
         Me.PicScreen = New System.Windows.Forms.PictureBox()
         Me.Menu = New System.Windows.Forms.MenuStrip()
         Me.ArquivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -43,6 +44,9 @@ Partial Class FrmMain
         Me.LimitarFPSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripMenuItem6 = New System.Windows.Forms.ToolStripSeparator()
+        Me.ThemeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SwitchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Menu.SuspendLayout()
         Me.SuspendLayout()
@@ -74,6 +78,7 @@ Partial Class FrmMain
         '
         'AbrirROMToolStripMenuItem
         '
+        Me.AbrirROMToolStripMenuItem.Image = CType(resources.GetObject("AbrirROMToolStripMenuItem.Image"), System.Drawing.Image)
         Me.AbrirROMToolStripMenuItem.Name = "AbrirROMToolStripMenuItem"
         Me.AbrirROMToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
         Me.AbrirROMToolStripMenuItem.Text = "&Abrir ROM"
@@ -130,7 +135,7 @@ Partial Class FrmMain
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem, Me.ToolStripMenuItem6, Me.ThemeToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
@@ -177,6 +182,24 @@ Partial Class FrmMain
         Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
         '
+        'ToolStripMenuItem6
+        '
+        Me.ToolStripMenuItem6.Name = "ToolStripMenuItem6"
+        Me.ToolStripMenuItem6.Size = New System.Drawing.Size(152, 6)
+        '
+        'ThemeToolStripMenuItem
+        '
+        Me.ThemeToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SwitchToolStripMenuItem})
+        Me.ThemeToolStripMenuItem.Name = "ThemeToolStripMenuItem"
+        Me.ThemeToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
+        Me.ThemeToolStripMenuItem.Text = "Theme"
+        '
+        'SwitchToolStripMenuItem
+        '
+        Me.SwitchToolStripMenuItem.Name = "SwitchToolStripMenuItem"
+        Me.SwitchToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SwitchToolStripMenuItem.Text = "Switch"
+        '
         'FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -218,5 +241,8 @@ Partial Class FrmMain
     Friend WithEvents LimitarFPSToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents DumpVRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents DumpObjRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ToolStripMenuItem6 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents ThemeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents SwitchToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

@@ -10,6 +10,7 @@
         Dim HDMA_Bank As Byte
     End Structure
     Private Structure HDMA_Channel
+        Dim Enabled As Boolean
         Dim Source_Bank As Byte
         Dim Source As Integer
         Dim Count, Repeat As Integer
@@ -21,14 +22,19 @@
     Dim HDMA_Enabled As Byte 'Canais ativados para transferência de DMA
 
     Public NMI_Enable As Boolean
-    Public IRQ_Enable As Byte
+    Public H_IRQ, V_IRQ As Boolean
+    Public H_V_IRQ As Byte
+    Public IRQ_On As Boolean
     Dim Multiplicand, Multiplier, Divisor, Dividend As Integer
     Dim Mult_Result, Div_Result As Integer
 
     Public Controller_Ready As Boolean
     Dim Controller_Read_Position As Integer
+    Public Light_Gun_Input As Boolean
+    Public External_Latch As Boolean
     Public H_Count, V_Count As Integer
     Public Fast_ROM As Boolean
+    Dim Temp_HB As Boolean
     Public Sub Reset_IO()
         Array.Clear(DMA_Channels, 0, DMA_Channels.Length)
         Array.Clear(HDMA_Channels, 0, HDMA_Channels.Length)
@@ -38,10 +44,14 @@
         HDMA_Enabled = 0
 
         NMI_Enable = False
-        IRQ_Enable = 0
+        H_IRQ = False
+        V_IRQ = False
 
         V_Blank = False
         Controller_Ready = False
+
+        Multiplicand = &HFF
+        Dividend = &HFFFF
     End Sub
     Private Function Key_Pressed(Key As Integer) As Boolean
         Return GetKeyState(Key) < 0
@@ -51,22 +61,23 @@
             Case &H4210
                 If V_Blank Then
                     V_Blank = False
-                    Return &H80
+                    Return &H80 Or (Ricoh_5A22_Open_Bus And &H70)
                 Else
-                    Return 0
+                    Return Ricoh_5A22_Open_Bus And &H70
                 End If
             Case &H4211
-                If IRQ_Ocurred Then
-                    IRQ_Ocurred = False
-                    Return &H80
+                If IRQ_On Then
+                    IRQ_On = False
+                    Return &H80 Or (Ricoh_5A22_Open_Bus And &H7F)
                 Else
-                    Return 0
+                    Return Ricoh_5A22_Open_Bus And &H7F
                 End If
             Case &H4212
                 Dim Value As Byte
                 If Controller_Ready Then Value = Value Or &H1
                 If H_Blank Then Value = Value Or &H40
                 If V_Blank Then Value = Value Or &H80
+                Value = Value Or (Ricoh_5A22_Open_Bus And &H3E)
                 Return Value
             Case &H4016 'Input on CPU Pin 32, connected to gameport 1, pin 4 (JOY1) (1=Low)
                 'Note to Mike: On some games the controller don't work properly when reading
@@ -125,34 +136,41 @@
         Select Case Address
             Case &H4200
                 NMI_Enable = Value And &H80
-                IRQ_Enable = (Value And &H30) / &H10
-                If IRQ_Enable = 0 Then IRQ_Ocurred = False
+                H_IRQ = Value And &H10
+                V_IRQ = Value And &H20
+                H_V_IRQ = (Value And &H30) >> 4
+                If H_V_IRQ = 0 Then IRQ_On = False
+            Case &H4201
+                If (Not Light_Gun_Input) And (Value And &H80) Then External_Latch = True
+                Light_Gun_Input = Value And &H80
             Case &H4202 : Multiplicand = Value
             Case &H4203
                 Multiplier = Value
+                Div_Result = (Multiplier << 8) Or Multiplicand
+                Clock_Ticks += 8
                 Mult_Result = Multiplicand * Multiplier
             Case &H4204 : Dividend = Value + (Dividend And &HFF00)
             Case &H4205 : Dividend = (Value * &H100) + (Dividend And &HFF)
             Case &H4206
                 Divisor = Value
-                If Not Dividend Or Not Divisor Then
+                If (Dividend = 0) Or (Divisor = 0) Then
                     Div_Result = &HFFFF
                     Mult_Result = Dividend
                 Else
-                    Div_Result = Dividend / Divisor
+                    Div_Result = Dividend \ Divisor
                     Mult_Result = Dividend Mod Divisor
                 End If
+                Clock_Ticks += 8
             Case &H4207 : H_Count = Value + (H_Count And &HFF00)
             Case &H4208 : H_Count = (Value * &H100) + (H_Count And &HFF)
             Case &H4209 : V_Count = Value + (V_Count And &HFF00)
-            Case &H420A : V_Count = (Value * &H100) + (V_Count And &HFF) : IRQ_Ocurred = False
+            Case &H420A : V_Count = (Value * &H100) + (V_Count And &HFF)
             Case &H420B 'Transferência de DMA
                 For Channel As Byte = 0 To 7
                     If Value And (1 << Channel) Then 'Verifica se deve transferir
                         With DMA_Channels(Channel)
                             Dim Original_Dest As Integer = .Dest
 
-                            If .Size = 0 Then .Size = &H10000
                             While .Size
                                 If .Control And &H80 Then
                                     Write_Memory(.Source_Bank, .Source, Read_Memory(0, &H2100 Or .Dest))
@@ -160,7 +178,7 @@
                                     Write_Memory(0, &H2100 Or .Dest, Read_Memory(.Source_Bank, .Source))
                                 End If
 
-                                Cycles += 1
+                                Clock_Ticks += 8
 
                                 Select Case .Control And &HF
                                     Case 0, 2 : If .Control And &H10 Then .Source -= 1 Else .Source += 1
@@ -201,10 +219,11 @@
     Public Sub H_Blank_DMA(Scanline As Integer)
         For Channel As Integer = 0 To 7
             With HDMA_Channels(Channel)
-                If Scanline = 0 Then 'Novo Frame
+                If Scanline = 224 Then
                     .Source = DMA_Channels(Channel).Source
                     .Source_Bank = DMA_Channels(Channel).Source_Bank
                     .Count = 0
+                    .Enabled = True
                 End If
 
                 If HDMA_Enabled And (1 << Channel) Then 'Verifica se deve transferir
@@ -214,72 +233,75 @@
 
                     If (.Count And &H7F) = 0 Then
                         .Count = Read_Memory(.Source_Bank, .Source)
-                        .Source += 1
-                        .Repeat = .Count And &H80
-                        .Count = .Count And &H7F
+                        If .Count = 0 Then .Enabled = False
+                        If .Enabled Then
+                            .Source += 1
+                            .Repeat = .Count And &H80
+                            .Count = .Count And &H7F
 
-                        Select Case DMA_Channels(Channel).Control And &H47
-                            Case 0 'Modo Normal
-                                .Data(0) = Read_Memory(.Source_Bank, .Source)
-                                .Source += 1
-                            Case 1, 2
-                                .Data(0) = Read_Memory(.Source_Bank, .Source)
-                                .Data(1) = Read_Memory(.Source_Bank, .Source + 1)
-                                .Source += 2
-                            Case 3, 4
-                                .Data(0) = Read_Memory(.Source_Bank, .Source)
-                                .Data(1) = Read_Memory(.Source_Bank, .Source + 1)
-                                .Data(2) = Read_Memory(.Source_Bank, .Source + 2)
-                                .Data(3) = Read_Memory(.Source_Bank, .Source + 3)
-                                .Source += 4
-                            Case &H40 'Modo Indireto
-                                Dim Address As Integer = Read_Memory_16(.Source_Bank, .Source)
-                                .Data(0) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address)
-                                .Source += 2
-                            Case &H41, &H42
-                                Dim Address As Integer = Read_Memory_16(.Source_Bank, .Source)
-                                .Data(0) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address)
-                                .Data(1) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 1)
-                                .Source += 2
-                            Case &H43, &H44
-                                Dim Address As Integer = Read_Memory_16(.Source_Bank, .Source)
-                                .Data(0) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address)
-                                .Data(1) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 1)
-                                .Data(2) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 2)
-                                .Data(3) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 3)
-                                .Source += 2
-                        End Select
-                        .First = True
+                            Select Case DMA_Channels(Channel).Control And &H47
+                                Case 0 'Modo Normal
+                                    .Data(0) = Read_Memory(.Source_Bank, .Source)
+                                    .Source += 1
+                                Case 1, 2
+                                    .Data(0) = Read_Memory(.Source_Bank, .Source)
+                                    .Data(1) = Read_Memory(.Source_Bank, .Source + 1)
+                                    .Source += 2
+                                Case 3, 4
+                                    .Data(0) = Read_Memory(.Source_Bank, .Source)
+                                    .Data(1) = Read_Memory(.Source_Bank, .Source + 1)
+                                    .Data(2) = Read_Memory(.Source_Bank, .Source + 2)
+                                    .Data(3) = Read_Memory(.Source_Bank, .Source + 3)
+                                    .Source += 4
+                                Case &H40 'Modo Indireto
+                                    Dim Address As Integer = Read_Memory_16(.Source_Bank, .Source)
+                                    .Data(0) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address)
+                                    .Source += 2
+                                Case &H41, &H42
+                                    Dim Address As Integer = Read_Memory_16(.Source_Bank, .Source)
+                                    .Data(0) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address)
+                                    .Data(1) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 1)
+                                    .Source += 2
+                                Case &H43, &H44
+                                    Dim Address As Integer = Read_Memory_16(.Source_Bank, .Source)
+                                    .Data(0) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address)
+                                    .Data(1) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 1)
+                                    .Data(2) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 2)
+                                    .Data(3) = Read_Memory(DMA_Channels(Channel).HDMA_Bank, Address + 3)
+                                    .Source += 2
+                            End Select
+                            .First = True
+                        End If
+
+                        '+=================+
+                        '| Escreve valores |
+                        '+=================+
+
+                        If .First Or .Repeat Then
+                            .First = False
+                            Select Case DMA_Channels(Channel).Control And &H7
+                                Case 0 : Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                Case 1
+                                    Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                    Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
+                                Case 2
+                                    Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                    Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(1))
+                                Case 3
+                                    Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                    Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
+                                    Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(2))
+                                    Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(3))
+                                Case 4
+                                    Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
+                                    Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
+                                    Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 2), .Data(2))
+                                    Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 3), .Data(3))
+                            End Select
+                        End If
+
+                        .Count -= 1
                     End If
-
-                    '+=================+
-                    '| Escreve valores |
-                    '+=================+
-
-                    If .First Or .Repeat Then
-                        .First = False
-                        Select Case DMA_Channels(Channel).Control And &H7
-                            Case 0 : Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                            Case 1
-                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
-                            Case 2
-                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(1))
-                            Case 3
-                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
-                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(2))
-                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(3))
-                            Case 4
-                                Write_Memory(0, &H2100 Or DMA_Channels(Channel).Dest, .Data(0))
-                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 1), .Data(1))
-                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 2), .Data(2))
-                                Write_Memory(0, &H2100 Or (DMA_Channels(Channel).Dest + 3), .Data(3))
-                        End Select
-                    End If
-
-                    .Count -= 1
                 End If
             End With
         Next
