@@ -42,11 +42,13 @@ Partial Class FrmMain
         Me.DumpObjRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem5 = New System.Windows.Forms.ToolStripSeparator()
         Me.LimitarFPSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem6 = New System.Windows.Forms.ToolStripSeparator()
         Me.ThemeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SwitchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SPCDebugToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SPCDumpRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Menu.SuspendLayout()
         Me.SuspendLayout()
@@ -135,7 +137,7 @@ Partial Class FrmMain
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem, Me.ToolStripMenuItem6, Me.ThemeToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem, Me.ToolStripMenuItem6, Me.ThemeToolStripMenuItem, Me.SPCDebugToolStripMenuItem, Me.SPCDumpRAMToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
@@ -169,19 +171,6 @@ Partial Class FrmMain
         Me.LimitarFPSToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
         Me.LimitarFPSToolStripMenuItem.Text = "&Limitar FPS"
         '
-        'AjudaToolStripMenuItem
-        '
-        Me.AjudaToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SobreToolStripMenuItem})
-        Me.AjudaToolStripMenuItem.Name = "AjudaToolStripMenuItem"
-        Me.AjudaToolStripMenuItem.Size = New System.Drawing.Size(50, 20)
-        Me.AjudaToolStripMenuItem.Text = "&Ajuda"
-        '
-        'SobreToolStripMenuItem
-        '
-        Me.SobreToolStripMenuItem.Name = "SobreToolStripMenuItem"
-        Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
-        Me.SobreToolStripMenuItem.Text = "&Sobre"
-        '
         'ToolStripMenuItem6
         '
         Me.ToolStripMenuItem6.Name = "ToolStripMenuItem6"
@@ -197,8 +186,33 @@ Partial Class FrmMain
         'SwitchToolStripMenuItem
         '
         Me.SwitchToolStripMenuItem.Name = "SwitchToolStripMenuItem"
-        Me.SwitchToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SwitchToolStripMenuItem.Size = New System.Drawing.Size(109, 22)
         Me.SwitchToolStripMenuItem.Text = "Switch"
+        '
+        'AjudaToolStripMenuItem
+        '
+        Me.AjudaToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SobreToolStripMenuItem})
+        Me.AjudaToolStripMenuItem.Name = "AjudaToolStripMenuItem"
+        Me.AjudaToolStripMenuItem.Size = New System.Drawing.Size(50, 20)
+        Me.AjudaToolStripMenuItem.Text = "&Ajuda"
+        '
+        'SobreToolStripMenuItem
+        '
+        Me.SobreToolStripMenuItem.Name = "SobreToolStripMenuItem"
+        Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
+        Me.SobreToolStripMenuItem.Text = "&Sobre"
+        '
+        'SPCDebugToolStripMenuItem
+        '
+        Me.SPCDebugToolStripMenuItem.Name = "SPCDebugToolStripMenuItem"
+        Me.SPCDebugToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
+        Me.SPCDebugToolStripMenuItem.Text = "SPC Debug"
+        '
+        'SPCDumpRAMToolStripMenuItem
+        '
+        Me.SPCDumpRAMToolStripMenuItem.Name = "SPCDumpRAMToolStripMenuItem"
+        Me.SPCDumpRAMToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.SPCDumpRAMToolStripMenuItem.Text = "SPC Dump RAM"
         '
         'FrmMain
         '
@@ -244,5 +258,7 @@ Partial Class FrmMain
     Friend WithEvents ToolStripMenuItem6 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents ThemeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SwitchToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents SPCDebugToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents SPCDumpRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

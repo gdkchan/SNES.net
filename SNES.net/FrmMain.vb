@@ -48,4 +48,24 @@ Public Class FrmMain
         Custom_Menu.Switch_Theme(Custom_Menu.Background_Color.Black, Color.FromArgb(Int(Rnd() * 255), Int(Rnd() * 255), Int(Rnd() * 255)))
         Menu.Invalidate()
     End Sub
+
+    Private Sub SPCDebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SPCDebugToolStripMenuItem.Click
+        Dim ROM() As Byte = File.ReadAllBytes("D:\spc-700-cpu-tests\tests\CPU Instructions_Full CMP")
+        Reset_SPU()
+        Buffer.BlockCopy(ROM, 0, SPU_Memory, &H400, ROM.Length)
+        SPU_Registers.Program_Counter = &H430
+
+        Do
+            For Scanline As Integer = 0 To 261
+                Current_Line = Scanline
+                Execute_SPU(SPU_Ticks_Per_Scanline)
+                SPU_Ticks -= SPU_Ticks_Per_Scanline
+            Next
+            Application.DoEvents()
+        Loop
+    End Sub
+
+    Private Sub SPCDumpRAMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SPCDumpRAMToolStripMenuItem.Click
+        File.WriteAllBytes("D:\SPC_Ram_Dump", SPU_Memory)
+    End Sub
 End Class
