@@ -867,7 +867,7 @@ Module SPC700
         SPU_Registers.Program_Counter += 1
     End Sub
     Private Sub DP_Indirect_Y()
-        Dim Addr As Integer = Int(Read_Memory_SPU(SPU_Registers.Program_Counter)) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
+        Dim Addr As Integer = Read_Memory_SPU(SPU_Registers.Program_Counter) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
         Effective_Address = Read_Memory_SPU_16(Addr) + SPU_Registers.Y
         SPU_Registers.Program_Counter += 1
     End Sub
