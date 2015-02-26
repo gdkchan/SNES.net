@@ -202,17 +202,15 @@ Module SPC700
                 SPU_Ticks += 5
             Case &H6A 'AND1 C,/m.b
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Carry = Carry And (Not Value)
-                Write_Memory_SPU(Effective_Address And &H1FFF, Carry)
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Test_Flag((SPU_Registers.PSW And Carry_Flag) And (Not ((Value And (1 << Mask)) >> Mask)), Carry_Flag)
                 SPU_Ticks += 4
             Case &H4A 'AND1 C,m.b
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Carry = Carry And Value
-                Write_Memory_SPU(Effective_Address And &H1FFF, Carry)
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Test_Flag((SPU_Registers.PSW And Carry_Flag) And ((Value And (1 << Mask)) >> Mask), Carry_Flag)
                 SPU_Ticks += 4
 
             Case &H1C : Arithmetic_Shift_Left_A() : SPU_Ticks += 2 'ASL A
@@ -301,7 +299,6 @@ Module SPC700
                 Immediate()
                 Dim Value As Byte = Read_Memory_SPU(Effective_Address)
                 Direct_Page()
-                'If SPU_Registers.Program_Counter = &H2000 Then MsgBox(Hex(Effective_Address) & " - " & Hex(Read_Memory_SPU(Effective_Address)) & " VS " & Hex(Value))
                 Compare(Read_Memory_SPU(Effective_Address), Value)
                 SPU_Ticks += 5
             Case &H5A : Direct_Page() : Compare_Word() : SPU_Ticks += 4 'CMPW YA,d
@@ -393,11 +390,9 @@ Module SPC700
                 SPU_Ticks += 5
             Case &H8A 'EOR1 C,m.b
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Carry = Carry Xor Value
-                If Carry Then Set_Flag(Carry_Flag) Else Clear_Flag(Carry_Flag)
-                Write_Memory_SPU(Effective_Address And &H1FFF, Carry)
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Test_Flag((SPU_Registers.PSW And Carry_Flag) Xor ((Value And (1 << Mask)) >> Mask), Carry_Flag)
                 SPU_Ticks += 5
 
             Case &HBC 'INC A
@@ -426,11 +421,11 @@ Module SPC700
             Case &H4C : Absolute() : Logical_Shift_Right() : SPU_Ticks += 5 'LSR !a
 
             Case &HAF 'MOV (X)+,A
-                Write_Memory_SPU(Int(SPU_Registers.X) Or (If(SPU_Registers.PSW And Direct_Page_Flag, 1, 0) * &H100), SPU_Registers.A)
+                Write_Memory_SPU(SPU_Registers.X + ((SPU_Registers.PSW And Direct_Page_Flag) << 3), SPU_Registers.A)
                 SPU_Registers.X += 1
                 SPU_Ticks += 4
             Case &HC6 'MOV (X),A
-                Write_Memory_SPU(Int(SPU_Registers.X) Or (If(SPU_Registers.PSW And Direct_Page_Flag, 1, 0) * &H100), SPU_Registers.A)
+                Write_Memory_SPU(SPU_Registers.X + ((SPU_Registers.PSW And Direct_Page_Flag) << 3), SPU_Registers.A)
                 SPU_Ticks += 4
             Case &HD7 'MOV [d]+Y,A
                 DP_Indirect_Y()
@@ -446,11 +441,11 @@ Module SPC700
                 Set_Zero_Negative_Flag(SPU_Registers.A)
                 SPU_Ticks += 2
             Case &HE6 'MOV A,(X)
-                SPU_Registers.A = Read_Memory_SPU(Int(SPU_Registers.X) Or (If(SPU_Registers.PSW And Direct_Page_Flag, 1, 0) * &H100))
+                SPU_Registers.A = Read_Memory_SPU(SPU_Registers.X + ((SPU_Registers.PSW And Direct_Page_Flag) << 3))
                 Set_Zero_Negative_Flag(SPU_Registers.A)
                 SPU_Ticks += 3
             Case &HBF 'MOV A,(X)+
-                SPU_Registers.A = Read_Memory_SPU(Int(SPU_Registers.X) Or (If(SPU_Registers.PSW And Direct_Page_Flag, 1, 0) * &H100))
+                SPU_Registers.A = Read_Memory_SPU(SPU_Registers.X + ((SPU_Registers.PSW And Direct_Page_Flag) << 3))
                 SPU_Registers.X += 1
                 Set_Zero_Negative_Flag(SPU_Registers.A)
                 SPU_Ticks += 4
@@ -578,17 +573,16 @@ Module SPC700
             Case &HCC : Absolute() : Write_Memory_SPU(Effective_Address, SPU_Registers.Y) : SPU_Ticks += 5 'MOV !a,Y
             Case &HAA 'MOV1 C,m.b
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Carry = Carry And Value
-                If Carry Then Set_Flag(Carry_Flag) Else Clear_Flag(Carry_Flag)
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Test_Flag((Value And (1 << Mask)), Carry_Flag)
                 SPU_Ticks += 4
             Case &HCA 'MOV1 m.b,C
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                If SPU_Registers.PSW And Carry_Flag Then Carry = Carry Or Value Else Carry = Carry And Not Value
-                Write_Memory_SPU(Effective_Address And &H1FFF, Carry)
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                If SPU_Registers.PSW And Carry_Flag Then Value = Value Or (1 << Mask) Else Value = Value And Not (1 << Mask)
+                Write_Memory_SPU(Effective_Address And &H1FFF, Value)
                 SPU_Ticks += 6
             Case &HBA 'MOVW YA,d
                 Direct_Page()
@@ -611,10 +605,10 @@ Module SPC700
 
             Case &HEA 'NOT1 m.b
                 Absolute()
-                Dim Value_1 As Byte = 1 << (Effective_Address >> 13)
-                Dim Value_2 As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Dim Result As Byte = Value_2 Xor Value_1
-                Write_Memory_SPU(Effective_Address And &H1FFF, Result)
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Value = Value Xor (1 << Mask)
+                Write_Memory_SPU(Effective_Address And &H1FFF, Value)
                 SPU_Ticks += 5
             Case &HED 'NOTC
                 If SPU_Registers.PSW And Carry_Flag Then Clear_Flag(Carry_Flag) Else Set_Flag(Carry_Flag)
@@ -644,18 +638,16 @@ Module SPC700
                 SPU_Ticks += 5
             Case &H2A 'OR1 C,/m.b
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Carry = Carry Or (Not Value)
-                Write_Memory_SPU(Effective_Address And &H1FFF, Carry)
-                SPU_Ticks += 4
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Test_Flag((SPU_Registers.PSW And Carry_Flag) Or (Not ((Value And (1 << Mask)) >> Mask)), Carry_Flag)
+                SPU_Ticks += 5
             Case &HA 'OR1 C,m.b
                 Absolute()
-                Dim Value As Byte = 1 << (Effective_Address >> 13)
-                Dim Carry As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
-                Carry = Carry Or Value
-                Write_Memory_SPU(Effective_Address And &H1FFF, Carry)
-                SPU_Ticks += 4
+                Dim Mask As Byte = Effective_Address >> 13
+                Dim Value As Byte = Read_Memory_SPU(Effective_Address And &H1FFF)
+                Test_Flag((SPU_Registers.PSW And Carry_Flag) Or ((Value And (1 << Mask)) >> Mask), Carry_Flag)
+                SPU_Ticks += 5
 
             Case &H4F 'PCALL u
                 Dim Address As Integer = Read_Memory_SPU(SPU_Registers.Program_Counter) Or &HFF00
@@ -858,24 +850,24 @@ Module SPC700
         SPU_Registers.Program_Counter += 2
     End Sub
     Private Sub Direct_Page()
-        Effective_Address = Read_Memory_SPU(SPU_Registers.Program_Counter) Or If(SPU_Registers.PSW And Direct_Page_Flag, &H100, 0)
+        Effective_Address = Read_Memory_SPU(SPU_Registers.Program_Counter) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
         SPU_Registers.Program_Counter += 1
     End Sub
     Private Sub Direct_Page_X()
-        Effective_Address = ((Read_Memory_SPU(SPU_Registers.Program_Counter) + SPU_Registers.X) And &HFF) Or If(SPU_Registers.PSW And Direct_Page_Flag, &H100, 0)
+        Effective_Address = ((Read_Memory_SPU(SPU_Registers.Program_Counter) + SPU_Registers.X) And &HFF) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
         SPU_Registers.Program_Counter += 1
     End Sub
     Private Sub Direct_Page_Y()
-        Effective_Address = ((Read_Memory_SPU(SPU_Registers.Program_Counter) + SPU_Registers.Y) And &HFF) Or If(SPU_Registers.PSW And Direct_Page_Flag, &H100, 0)
+        Effective_Address = ((Read_Memory_SPU(SPU_Registers.Program_Counter) + SPU_Registers.Y) And &HFF) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
         SPU_Registers.Program_Counter += 1
     End Sub
     Private Sub DP_Indirect_X()
-        Dim Addr As Integer = ((Read_Memory_SPU(SPU_Registers.Program_Counter) + SPU_Registers.X) And &HFF) Or If(SPU_Registers.PSW And Direct_Page_Flag, &H100, 0)
+        Dim Addr As Integer = ((Read_Memory_SPU(SPU_Registers.Program_Counter) + SPU_Registers.X) And &HFF) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
         Effective_Address = Read_Memory_SPU_16(Addr)
         SPU_Registers.Program_Counter += 1
     End Sub
     Private Sub DP_Indirect_Y()
-        Dim Addr As Integer = Int(Read_Memory_SPU(SPU_Registers.Program_Counter)) Or If(SPU_Registers.PSW And Direct_Page_Flag, &H100, 0)
+        Dim Addr As Integer = Int(Read_Memory_SPU(SPU_Registers.Program_Counter)) Or ((SPU_Registers.PSW And Direct_Page_Flag) << 3)
         Effective_Address = Read_Memory_SPU_16(Addr) + SPU_Registers.Y
         SPU_Registers.Program_Counter += 1
     End Sub
@@ -918,13 +910,13 @@ Module SPC700
     Private Sub Arithmetic_Shift_Left() 'ASL
         Dim Value As Byte = Read_Memory_SPU(Effective_Address)
         Test_Flag(Value And &H80, Carry_Flag)
-        Value <<= 1
+        Value = (Value << 1) And &HFF
         Write_Memory_SPU(Effective_Address, Value)
         Set_Zero_Negative_Flag(Value)
     End Sub
     Private Sub Arithmetic_Shift_Left_A() 'ASL_A
         Test_Flag(SPU_Registers.A And &H80, Carry_Flag)
-        SPU_Registers.A <<= 1
+        SPU_Registers.A = (SPU_Registers.A << 1) And &HFF
         Set_Zero_Negative_Flag(SPU_Registers.A)
     End Sub
     Private Sub Branch_On_Memory_Bit_Clear(Bit As Byte) 'BBC
@@ -1040,21 +1032,23 @@ Module SPC700
         Set_Zero_Negative_Flag_16(Result)
     End Sub
     Private Sub Decimal_Adjust_For_Addition() 'DAA
-        If ((SPU_Registers.A And &HF) > 9) Or (SPU_Registers.PSW And Half_Carry_Flag) Then
+        Dim Source As Byte = SPU_Registers.A
+        If ((Source And &HF) > 9) Or (SPU_Registers.PSW And Half_Carry_Flag) Then
             SPU_Registers.A = (SPU_Registers.A + 6) And &HFF
             If SPU_Registers.A < &H6 Then Set_Flag(Carry_Flag)
         End If
-        If (SPU_Registers.A > 99) Or (SPU_Registers.PSW And Carry_Flag) Then
+        If (Source > &H99) Or (SPU_Registers.PSW And Carry_Flag) Then
             SPU_Registers.A = (SPU_Registers.A + &H60) And &HFF
             Set_Flag(Carry_Flag)
         End If
         Set_Zero_Negative_Flag(SPU_Registers.A)
     End Sub
     Private Sub Decimal_Adjust_For_Subtraction() 'DAS
-        If ((SPU_Registers.A And &HF) > 9) Or ((SPU_Registers.PSW And Half_Carry_Flag) = 0) Then
+        Dim Source As Byte = SPU_Registers.A
+        If ((Source And &HF) > 9) Or ((SPU_Registers.PSW And Half_Carry_Flag) = 0) Then
             SPU_Registers.A = (SPU_Registers.A - 6) And &HFF
         End If
-        If (SPU_Registers.A > 99) Or ((SPU_Registers.PSW And Carry_Flag) = 0) Then
+        If (Source > &H99) Or ((SPU_Registers.PSW And Carry_Flag) = 0) Then
             SPU_Registers.A = (SPU_Registers.A - &H60) And &HFF
             Clear_Flag(Carry_Flag)
         End If
@@ -1092,13 +1086,13 @@ Module SPC700
     Private Sub Logical_Shift_Right() 'LSR
         Dim Value As Byte = Read_Memory_SPU(Effective_Address)
         Test_Flag(Value And &H1, Carry_Flag)
-        Value >>= 1
+        Value = (Value >> 1) And &HFF
         Write_Memory_SPU(Effective_Address, Value)
         Set_Zero_Negative_Flag(Value)
     End Sub
     Private Sub Logical_Shift_Right_A() 'LSR_A
         Test_Flag(SPU_Registers.A And &H1, Carry_Flag)
-        SPU_Registers.A >>= 1
+        SPU_Registers.A = (SPU_Registers.A >> 1) And &HFF
         Set_Zero_Negative_Flag(SPU_Registers.A)
     End Sub
     Private Function Or_Value(Value_1 As Byte, Value_2 As Byte) As Byte 'OR

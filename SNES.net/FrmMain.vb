@@ -50,7 +50,7 @@ Public Class FrmMain
     End Sub
 
     Private Sub SPCDebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SPCDebugToolStripMenuItem.Click
-        Dim ROM() As Byte = File.ReadAllBytes("D:\spc-700-cpu-tests\tests\CPU Instructions_Full CMP")
+        Dim ROM() As Byte = File.ReadAllBytes("D:\spc-700-cpu-tests\tests\CPU Instructions_Edge arith")
         Reset_SPU()
         Buffer.BlockCopy(ROM, 0, SPU_Memory, &H400, ROM.Length)
         SPU_Registers.Program_Counter = &H430
