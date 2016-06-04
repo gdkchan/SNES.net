@@ -24,7 +24,7 @@ Partial Class FrmMain
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FrmMain))
         Me.PicScreen = New System.Windows.Forms.PictureBox()
-        Me.Menu = New System.Windows.Forms.MenuStrip()
+        Me.MainMenu = New System.Windows.Forms.MenuStrip()
         Me.ArquivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AbrirROMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripSeparator()
@@ -33,24 +33,15 @@ Partial Class FrmMain
         Me.ToolStripMenuItem2 = New System.Windows.Forms.ToolStripSeparator()
         Me.SlotToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem3 = New System.Windows.Forms.ToolStripSeparator()
-        Me.ScreenshotToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripMenuItem4 = New System.Windows.Forms.ToolStripSeparator()
         Me.SairToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpçõesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DebugToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DumpVRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.DumpObjRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripMenuItem5 = New System.Windows.Forms.ToolStripSeparator()
-        Me.LimitarFPSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripMenuItem6 = New System.Windows.Forms.ToolStripSeparator()
-        Me.ThemeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SwitchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DumpDbgLogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SPCDebugToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SPCDumpRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.Menu.SuspendLayout()
+        Me.MainMenu.SuspendLayout()
         Me.SuspendLayout()
         '
         'PicScreen
@@ -62,18 +53,17 @@ Partial Class FrmMain
         Me.PicScreen.TabIndex = 0
         Me.PicScreen.TabStop = False
         '
-        'Menu
+        'MainMenu
         '
-        Me.Menu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ArquivoToolStripMenuItem, Me.OpçõesToolStripMenuItem, Me.AjudaToolStripMenuItem})
-        Me.Menu.Location = New System.Drawing.Point(0, 0)
-        Me.Menu.Name = "Menu"
-        Me.Menu.Size = New System.Drawing.Size(256, 24)
-        Me.Menu.TabIndex = 1
-        Me.Menu.Text = "Menu"
+        Me.MainMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ArquivoToolStripMenuItem, Me.OpçõesToolStripMenuItem, Me.AjudaToolStripMenuItem})
+        Me.MainMenu.Location = New System.Drawing.Point(0, 0)
+        Me.MainMenu.Name = "MainMenu"
+        Me.MainMenu.Size = New System.Drawing.Size(256, 24)
+        Me.MainMenu.TabIndex = 1
         '
         'ArquivoToolStripMenuItem
         '
-        Me.ArquivoToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AbrirROMToolStripMenuItem, Me.ToolStripMenuItem1, Me.SalvarJogoToolStripMenuItem, Me.CarregarJogoToolStripMenuItem, Me.ToolStripMenuItem2, Me.SlotToolStripMenuItem, Me.ToolStripMenuItem3, Me.ScreenshotToolStripMenuItem, Me.ToolStripMenuItem4, Me.SairToolStripMenuItem})
+        Me.ArquivoToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AbrirROMToolStripMenuItem, Me.ToolStripMenuItem1, Me.SalvarJogoToolStripMenuItem, Me.CarregarJogoToolStripMenuItem, Me.ToolStripMenuItem2, Me.SlotToolStripMenuItem, Me.ToolStripMenuItem3, Me.SairToolStripMenuItem})
         Me.ArquivoToolStripMenuItem.Name = "ArquivoToolStripMenuItem"
         Me.ArquivoToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
         Me.ArquivoToolStripMenuItem.Text = "&Arquivo"
@@ -118,17 +108,6 @@ Partial Class FrmMain
         Me.ToolStripMenuItem3.Name = "ToolStripMenuItem3"
         Me.ToolStripMenuItem3.Size = New System.Drawing.Size(143, 6)
         '
-        'ScreenshotToolStripMenuItem
-        '
-        Me.ScreenshotToolStripMenuItem.Name = "ScreenshotToolStripMenuItem"
-        Me.ScreenshotToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
-        Me.ScreenshotToolStripMenuItem.Text = "&Screenshot"
-        '
-        'ToolStripMenuItem4
-        '
-        Me.ToolStripMenuItem4.Name = "ToolStripMenuItem4"
-        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(143, 6)
-        '
         'SairToolStripMenuItem
         '
         Me.SairToolStripMenuItem.Name = "SairToolStripMenuItem"
@@ -137,7 +116,7 @@ Partial Class FrmMain
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpObjRAMToolStripMenuItem, Me.ToolStripMenuItem5, Me.LimitarFPSToolStripMenuItem, Me.ToolStripMenuItem6, Me.ThemeToolStripMenuItem, Me.SPCDebugToolStripMenuItem, Me.SPCDumpRAMToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpDbgLogToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
@@ -145,49 +124,20 @@ Partial Class FrmMain
         'DebugToolStripMenuItem
         '
         Me.DebugToolStripMenuItem.Name = "DebugToolStripMenuItem"
-        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
+        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.DebugToolStripMenuItem.Text = "Debug"
         '
         'DumpVRAMToolStripMenuItem
         '
         Me.DumpVRAMToolStripMenuItem.Name = "DumpVRAMToolStripMenuItem"
-        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
-        Me.DumpVRAMToolStripMenuItem.Text = "&Dump VRAM"
+        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(151, 22)
+        Me.DumpVRAMToolStripMenuItem.Text = "Dump VRAM"
         '
-        'DumpObjRAMToolStripMenuItem
+        'DumpDbgLogToolStripMenuItem
         '
-        Me.DumpObjRAMToolStripMenuItem.Name = "DumpObjRAMToolStripMenuItem"
-        Me.DumpObjRAMToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
-        Me.DumpObjRAMToolStripMenuItem.Text = "Dump ObjRAM"
-        '
-        'ToolStripMenuItem5
-        '
-        Me.ToolStripMenuItem5.Name = "ToolStripMenuItem5"
-        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(152, 6)
-        '
-        'LimitarFPSToolStripMenuItem
-        '
-        Me.LimitarFPSToolStripMenuItem.Name = "LimitarFPSToolStripMenuItem"
-        Me.LimitarFPSToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
-        Me.LimitarFPSToolStripMenuItem.Text = "&Limitar FPS"
-        '
-        'ToolStripMenuItem6
-        '
-        Me.ToolStripMenuItem6.Name = "ToolStripMenuItem6"
-        Me.ToolStripMenuItem6.Size = New System.Drawing.Size(152, 6)
-        '
-        'ThemeToolStripMenuItem
-        '
-        Me.ThemeToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SwitchToolStripMenuItem})
-        Me.ThemeToolStripMenuItem.Name = "ThemeToolStripMenuItem"
-        Me.ThemeToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
-        Me.ThemeToolStripMenuItem.Text = "Theme"
-        '
-        'SwitchToolStripMenuItem
-        '
-        Me.SwitchToolStripMenuItem.Name = "SwitchToolStripMenuItem"
-        Me.SwitchToolStripMenuItem.Size = New System.Drawing.Size(109, 22)
-        Me.SwitchToolStripMenuItem.Text = "Switch"
+        Me.DumpDbgLogToolStripMenuItem.Name = "DumpDbgLogToolStripMenuItem"
+        Me.DumpDbgLogToolStripMenuItem.Size = New System.Drawing.Size(151, 22)
+        Me.DumpDbgLogToolStripMenuItem.Text = "Dump dbg log"
         '
         'AjudaToolStripMenuItem
         '
@@ -202,40 +152,29 @@ Partial Class FrmMain
         Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
         '
-        'SPCDebugToolStripMenuItem
-        '
-        Me.SPCDebugToolStripMenuItem.Name = "SPCDebugToolStripMenuItem"
-        Me.SPCDebugToolStripMenuItem.Size = New System.Drawing.Size(155, 22)
-        Me.SPCDebugToolStripMenuItem.Text = "SPC Debug"
-        '
-        'SPCDumpRAMToolStripMenuItem
-        '
-        Me.SPCDumpRAMToolStripMenuItem.Name = "SPCDumpRAMToolStripMenuItem"
-        Me.SPCDumpRAMToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
-        Me.SPCDumpRAMToolStripMenuItem.Text = "SPC Dump RAM"
-        '
         'FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(256, 248)
         Me.Controls.Add(Me.PicScreen)
-        Me.Controls.Add(Me.Menu)
+        Me.Controls.Add(Me.MainMenu)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
-        Me.MainMenuStrip = Me.Menu
+        Me.KeyPreview = True
+        Me.MainMenuStrip = Me.MainMenu
         Me.MaximizeBox = False
         Me.Name = "FrmMain"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "SNES.net"
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.Menu.ResumeLayout(False)
-        Me.Menu.PerformLayout()
+        Me.MainMenu.ResumeLayout(False)
+        Me.MainMenu.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Friend WithEvents PicScreen As System.Windows.Forms.PictureBox
-    Friend WithEvents Menu As System.Windows.Forms.MenuStrip
+    Friend WithEvents MainMenu As System.Windows.Forms.MenuStrip
     Friend WithEvents ArquivoToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents AbrirROMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripSeparator
@@ -244,21 +183,11 @@ Partial Class FrmMain
     Friend WithEvents ToolStripMenuItem2 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents SlotToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem3 As System.Windows.Forms.ToolStripSeparator
-    Friend WithEvents ScreenshotToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents ToolStripMenuItem4 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents SairToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents OpçõesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents DebugToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents AjudaToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SobreToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents ToolStripMenuItem5 As System.Windows.Forms.ToolStripSeparator
-    Friend WithEvents LimitarFPSToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents DumpVRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents DumpObjRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents ToolStripMenuItem6 As System.Windows.Forms.ToolStripSeparator
-    Friend WithEvents ThemeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents SwitchToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents SPCDebugToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents SPCDumpRAMToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-
+    Friend WithEvents DebugToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents DumpVRAMToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents DumpDbgLogToolStripMenuItem As ToolStripMenuItem
 End Class

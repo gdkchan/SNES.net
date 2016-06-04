@@ -37,8 +37,10 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>SNES.net.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,8 +50,11 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>SNES.net.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -88,9 +93,6 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="65816.vb" />
-    <Compile Include="Common.vb" />
-    <Compile Include="Custom_Menu.vb" />
     <Compile Include="FPS.vb" />
     <Compile Include="FrmMain.vb">
       <SubType>Form</SubType>
@@ -99,7 +101,6 @@
       <DependentUpon>FrmMain.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="IO_Ports.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -115,11 +116,24 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="PPU.vb" />
-    <Compile Include="ROM.vb" />
-    <Compile Include="SPC700.vb" />
-    <Compile Include="SPU.vb" />
-    <Compile Include="Threads.vb" />
+    <Compile Include="SNES\Cart.vb" />
+    <Compile Include="SNES\PPU\PPU.vb" />
+    <Compile Include="SNES\APU\DSP\DSP.vb" />
+    <Compile Include="SNES\APU\DSP\DSP_IO.vb" />
+    <Compile Include="SNES\APU\SPC700.vb" />
+    <Compile Include="SNES\APU\SPC700_Addressing.vb" />
+    <Compile Include="SNES\APU\SPC700_Instructions.vb" />
+    <Compile Include="SNES\APU\SPC700_IO.vb" />
+    <Compile Include="SNES\CPU\W65c816.vb" />
+    <Compile Include="SNES\CPU\W65c816_Addressing.vb" />
+    <Compile Include="SNES\CPU\W65c816_Instructions.vb" />
+    <Compile Include="SNES\CPU\W65c816_IO.vb" />
+    <Compile Include="SNES\DMA.vb" />
+    <Compile Include="SNES\IO.vb" />
+    <Compile Include="SNES\PPU\PPU_Background.vb" />
+    <Compile Include="SNES\PPU\PPU_IO.vb" />
+    <Compile Include="SNES\PPU\PPU_Characters.vb" />
+    <Compile Include="SNES\SNES.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="FrmMain.resx">

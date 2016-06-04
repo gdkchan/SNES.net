@@ -117,21 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="Menu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="MainMenu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="AbrirROMToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAGhSURBVDhPYxgcwMVEULIvX72yr0C9Co7z1cC4KVXRF6oMN1jSbNj25eWc/19ezvr/5dnU/58f
-        9/3/dL/t/4fbdf8vbfB/7mYmyARVigmOLXI98PBMxS+I5in/Pz/q/f/pHlDzrbr/76+V/n92POn/pTVu
-        Hy6ucnx/cbnt+wtLLN6fXWD8riBcxhVswIVNEZe/vABqfgrR/PFeK1BzLVBzyf93F7P/vzmT9P/18Yj/
-        Lw74/b+8MfD/naP5YLykSb8BbMC5dUFH39xq+39tR+z/W/uS/9/am/j/5p4EII77f3N3zP+bu6L/39gZ
-        +f/69vD/7+91/f/8dDIY3zmU+enYQsfDDCeWee2+fyzn/5srFf8/3q4nCZ9f63eRYd8c5403d8X8f3s+
-        g2S8c4r5IobNk6yXX9vk8//VIX+S8MuDfv9781QKGFZ1ms69stz8/7OtZiThu+tM/6f5S9oyzK7SnHxt
-        ocr/xyvlScKXF6j+dTQS4GWYVKjSeXue4P8HC3hJwqemK94CR2NbhmLKyamyd05NlSEJb+lS7wEbMMCA
-        gQEAfnXWyxu6oGcAAAAASUVORK5CYII=
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAaFJREFUOE9j
+        GBzAxURQsi9fvbKvQL0KjvPVwLgpVdEXqgw3WNJs2Pbl5Zz/X17O+v/l2dT/nx/3/f90v+3/h9t1/y9t
+        8H/uZibIBFWKCY4tcj3w8EzFL4jmKf8/P+r9/+keUPOtuv/vr5X+f3Y86f+lNW4fLq5yfH9xue37C0ss
+        3p9dYPyuIFzGFWzAhU0Rl7+8AGp+CtH88V4rUHMtUHPJ/3cXs/+/OZP0//XxiP8vDvj9v7wx8P+do/lg
+        vKRJvwFswLl1QUff3Gr7f21H7P9b+5L/39qb+P/mngQgjvt/c3fM/5u7ov/f2Bn5//r28P/v73X9//x0
+        MhjfOZT56dhCx8MMJ5Z57b5/LOf/mysV/z/ericJn1/rd5Fh3xznjTd3xfx/ez6DZLxzivkihs2TrJdf
+        2+Tz/9Uhf5Lwy4N+/3vzVAoYVnWazr2y3Pz/s61mJOG760z/p/lL2jLMrtKcfG2hyv/HK+VJwpcXqP51
+        NBLgZZhUqNJ5e57g/wcLeEnCp6Yr3gJHY1uGYsrJqbJ3Tk2VIQlv6VLvARswwICBAQB+ddbLG7qgZwAA
+        AABJRU5ErkJggg==
 </value>
   </data>
 </root>
