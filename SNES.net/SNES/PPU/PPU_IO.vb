@@ -85,26 +85,18 @@
                 Read8 = OAM(OAMAddr)
                 OAMAddr = (OAMAddr + 1) Mod &H220
             Case &H2139
-                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
-                    Read8 = VPreFetch And &HFF
+                Read8 = VPreFetch And &HFF
 
-                    If (VMAIn >> 7) = 0 Then
-                        PreFetch()
-                        VAddr = (VAddr + VInc) And &H7FFF
-                    End If
-                Else
-                    Read8 = 0
+                If (VMAIn >> 7) = 0 Then
+                    PreFetch()
+                    VAddr = (VAddr + VInc) And &H7FFF
                 End If
             Case &H213A
-                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
-                    Read8 = VPreFetch >> 8
+                Read8 = VPreFetch >> 8
 
-                    If VMAIn >> 7 Then
-                        PreFetch()
-                        VAddr = (VAddr + VInc) And &H7FFF
-                    End If
-                Else
-                    Read8 = 0
+                If VMAIn >> 7 Then
+                    PreFetch()
+                    VAddr = (VAddr + VInc) And &H7FFF
                 End If
             Case &H213B
                 Read8 = CGRAM(CGAddr)
@@ -250,17 +242,13 @@
             Case &H2116 : VAddr = Value Or (VAddr And &HFF00) : PreFetch()
             Case &H2117 : VAddr = (Value << 8) Or (VAddr And &HFF) : PreFetch()
             Case &H2118
-                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
-                    Dim Addr As Integer = TransVAddr()
-                    If (VMAIn >> 7) = 0 Then VAddr = (VAddr + VInc) And &H7FFF
-                    VRAM(Addr << 1) = Value
-                End If
+                Dim Addr As Integer = TransVAddr()
+                If (VMAIn >> 7) = 0 Then VAddr = (VAddr + VInc) And &H7FFF
+                VRAM(Addr << 1) = Value
             Case &H2119
-                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
-                    Dim Addr As Integer = TransVAddr()
-                    If VMAIn >> 7 Then VAddr = (VAddr + VInc) And &H7FFF
-                    VRAM((Addr << 1) Or 1) = Value
-                End If
+                Dim Addr As Integer = TransVAddr()
+                If VMAIn >> 7 Then VAddr = (VAddr + VInc) And &H7FFF
+                VRAM((Addr << 1) Or 1) = Value
             Case &H211A : M7Sel = Value
             Case &H211B To &H2120
                 Dim Value16 As Integer = M7Old Or (Value << 8)

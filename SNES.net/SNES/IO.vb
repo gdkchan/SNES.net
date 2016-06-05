@@ -1,7 +1,6 @@
 ﻿Public Class IO
     'Write-only registers
     Public NMITimEn As Integer
-    Public WrIO As Integer
     Public WrMpy As Integer
     Public WrDiv As Integer
     Public HTime As Integer
@@ -31,7 +30,7 @@
     Public Sub New(SNES As SNES)
         Parent = SNES
 
-        WrIO = &HFF
+        RdIO = &HFF
         WrMpy = &HFFFF
         WrDiv = &HFFFF
         HTime = &H1FF
@@ -88,7 +87,13 @@
             Case &H4200
                 NMITimEn = Value
                 HVIRQ = (NMITimEn >> 4) And 3
-            Case &H4201 : WrIO = Value
+            Case &H4201
+                If (Value And &H80) = 0 And (RdIO And &H80) Then
+                    Parent.PPU.OPHCt = Parent.PPUDot
+                    Parent.PPU.OPVCt = Parent.ScanLine
+                End If
+
+                RdIO = Value
             Case &H4202 : WrMpy = Value
             Case &H4203
                 RdMpy = WrMpy * Value

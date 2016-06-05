@@ -26,6 +26,8 @@
 
     Dim Execute As Boolean
 
+    Public Zoom As Integer
+
     Public ScanLine As Integer
     Public PPUDot As Integer
 
@@ -38,6 +40,8 @@
         PPU = New PPU(Me)
 
         APU.Reset()
+
+        Zoom = 2
     End Sub
 
     Public Sub InsertCart(FileName As String)
@@ -52,6 +56,10 @@
 
     Public Sub SetKeyUp(Button As SNESButton)
         IO.Joy1 = IO.Joy1 And Not Button
+    End Sub
+
+    Public Sub SetZoom(Value As Integer)
+        Zoom = Value
     End Sub
 
     Private Sub Run()

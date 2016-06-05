@@ -49,7 +49,7 @@ Partial Class FrmMain
         Me.PicScreen.BackColor = System.Drawing.Color.Black
         Me.PicScreen.Location = New System.Drawing.Point(0, 24)
         Me.PicScreen.Name = "PicScreen"
-        Me.PicScreen.Size = New System.Drawing.Size(256, 224)
+        Me.PicScreen.Size = New System.Drawing.Size(512, 448)
         Me.PicScreen.TabIndex = 0
         Me.PicScreen.TabStop = False
         '
@@ -58,7 +58,7 @@ Partial Class FrmMain
         Me.MainMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ArquivoToolStripMenuItem, Me.OpçõesToolStripMenuItem, Me.AjudaToolStripMenuItem})
         Me.MainMenu.Location = New System.Drawing.Point(0, 0)
         Me.MainMenu.Name = "MainMenu"
-        Me.MainMenu.Size = New System.Drawing.Size(256, 24)
+        Me.MainMenu.Size = New System.Drawing.Size(512, 24)
         Me.MainMenu.TabIndex = 1
         '
         'ArquivoToolStripMenuItem
@@ -156,7 +156,7 @@ Partial Class FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(256, 248)
+        Me.ClientSize = New System.Drawing.Size(512, 472)
         Me.Controls.Add(Me.PicScreen)
         Me.Controls.Add(Me.MainMenu)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle

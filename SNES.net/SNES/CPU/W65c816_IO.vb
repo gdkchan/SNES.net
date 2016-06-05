@@ -27,10 +27,19 @@
                         Case &H4000 To &H42FF : Read8 = Parent.IO.Read8(Address)
                         Case &H4300 To &H43FF : Read8 = Parent.DMA.Read8(Address)
                         Case &H6000 To &H7FFF : Read8 = SRAM(0, Address And &H1FFF)
-                        Case &H8000 To &HFFFF : Read8 = Parent.Cart.Image(Bank And &H7F, Address)
+                        Case &H8000 To &HFFFF
+                            If Parent.Cart.Mapper = Mapper.ExHiRom Then
+                                Read8 = Parent.Cart.Image((Bank And &H7F) Or &H40, Address)
+                            Else
+                                Read8 = Parent.Cart.Image(Bank And &H7F, Address)
+                            End If
                     End Select
                 Else
-                    Read8 = Parent.Cart.Image(Bank And &H3F, Address)
+                    If Parent.Cart.Mapper = Mapper.ExHiRom And Bank < &HC0 Then
+                        Read8 = Parent.Cart.Image((Bank And &H3F) Or &H40, Address)
+                    Else
+                        Read8 = Parent.Cart.Image(Bank And &H3F, Address)
+                    End If
                 End If
             Else
                 If Address < &H8000 And (Bank > &H6F And Bank < &H78) Then
@@ -115,7 +124,7 @@
                     Case &H2183 : WRAddr = ((Value And 1) << 16) Or (WRAddr And &HFFFF)
                     Case &H4000 To &H42FF : Parent.IO.Write8(Address, Value)
                     Case &H4300 To &H43FF : Parent.DMA.Write8(Address, Value)
-                    Case &H6000 To &H7FFF : If Bank > &H2F And Bank < &H40 Then SRAM(0, Address And &H1FFF) = Value
+                    Case &H6000 To &H7FFF : SRAM(0, Address And &H1FFF) = Value
                 End Select
             End If
         End If

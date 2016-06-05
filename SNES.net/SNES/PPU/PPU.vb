@@ -1,4 +1,6 @@
-﻿Partial Public Class PPU
+﻿Imports System.Drawing.Imaging
+
+Partial Public Class PPU
     Dim BackBuffer((256 * 224 * 4) - 1) As Byte
 
     Dim Parent As SNES
@@ -102,12 +104,36 @@
     End Sub
 
     Public Sub Blit()
-        Dim Img As New Bitmap(256, 224)
-        Dim BmpData As Imaging.BitmapData
-        Dim BmpRect As New Rectangle(0, 0, 256, 224)
-        BmpData = Img.LockBits(BmpRect, Imaging.ImageLockMode.WriteOnly, Imaging.PixelFormat.Format32bppRgb)
-        Runtime.InteropServices.Marshal.Copy(BackBuffer, 0, BmpData.Scan0, BackBuffer.Length)
+        Dim Buffer() As Byte
+        Dim Width As Integer = 256 * Parent.Zoom
+        Dim Height As Integer = 224 * Parent.Zoom
+
+        If Parent.Zoom > 1 Then
+            ReDim Buffer(Width * Height * 4 - 1)
+
+            Dim Offset As Integer
+            For Y As Integer = 0 To Height - 1
+                For X As Integer = 0 To Width - 1
+                    Dim BPos As Integer = ((X \ Parent.Zoom) + ((Y \ Parent.Zoom) << 8)) << 2
+
+                    Buffer(Offset + 0) = BackBuffer(BPos + 0)
+                    Buffer(Offset + 1) = BackBuffer(BPos + 1)
+                    Buffer(Offset + 2) = BackBuffer(BPos + 2)
+                    Buffer(Offset + 3) = BackBuffer(BPos + 3)
+
+                    Offset = Offset + 4
+                Next
+            Next
+        Else
+            Buffer = BackBuffer
+        End If
+
+        Dim Img As New Bitmap(Width, Height)
+        Dim BmpRect As New Rectangle(0, 0, Width, Height)
+        Dim BmpData As BitmapData = Img.LockBits(BmpRect, ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb)
+        Runtime.InteropServices.Marshal.Copy(Buffer, 0, BmpData.Scan0, Buffer.Length)
         Img.UnlockBits(BmpData)
+
         FrmMain.PicScreen.Image = Img
     End Sub
 End Class

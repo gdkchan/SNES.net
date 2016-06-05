@@ -10,7 +10,7 @@ Public Class FrmMain
     Private Sub AbrirROMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AbrirROMToolStripMenuItem.Click
         Dim Open_Dlg As New OpenFileDialog
         Open_Dlg.Title = "Abrir ROM de Super Nintendo"
-        Open_Dlg.Filter = "ROM SMC|*.smc"
+        Open_Dlg.Filter = "Super Famicom ROM|*.sfc;*.smc"
         Open_Dlg.ShowDialog()
 
         If File.Exists(Open_Dlg.FileName) Then
