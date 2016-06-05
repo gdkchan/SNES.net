@@ -2,7 +2,7 @@
     Const OneCycleSlow As Integer = 8
     Const OneCycleXSlow As Integer = 12
 
-    Dim WRAM(&H1FFFF) As Byte
+    Public WRAM(&H1FFFF) As Byte
     Dim SRAM(7, &H7FFF) As Byte
 
     Dim WRAddr As Integer
@@ -61,14 +61,14 @@
 
         If IncCycles Then AccessCycles(Bank, Address)
     End Function
-    Public Function Read16(Address As Integer) As Integer
-        Read16 = Read8(Address)
-        Read16 = Read16 Or (Read8(AddWB(Address, 1)) << 8)
+    Public Function Read16(Address As Integer, Optional IncCycles As Boolean = True) As Integer
+        Read16 = Read8(Address, IncCycles)
+        Read16 = Read16 Or (Read8(AddWB(Address, 1), IncCycles) << 8)
     End Function
-    Public Function Read24(Address As Integer) As Integer
-        Read24 = Read8(Address)
-        Read24 = Read24 Or (Read8(AddWB(Address, 1)) << 8)
-        Read24 = Read24 Or (Read8(AddWB(Address, 2)) << 16)
+    Public Function Read24(Address As Integer, Optional IncCycles As Boolean = True) As Integer
+        Read24 = Read8(Address, IncCycles)
+        Read24 = Read24 Or (Read8(AddWB(Address, 1), IncCycles) << 8)
+        Read24 = Read24 Or (Read8(AddWB(Address, 2), IncCycles) << 16)
     End Function
 
     Private Function Read8PC() As Integer
@@ -125,14 +125,14 @@
 
         If IncCycles Then AccessCycles(Bank, Address)
     End Sub
-    Public Sub Write16(Address As Integer, Value As Integer)
-        Write8(Address, Value And &HFF)
-        Write8(AddWB(Address, 1), (Value >> 8) And &HFF)
+    Public Sub Write16(Address As Integer, Value As Integer, Optional IncCycles As Boolean = True)
+        Write8(Address, Value And &HFF, IncCycles)
+        Write8(AddWB(Address, 1), (Value >> 8) And &HFF, IncCycles)
     End Sub
-    Public Sub Write24(Address As Integer, Value As Integer)
-        Write8(Address, Value & &HFF)
-        Write8(AddWB(Address, 1), (Value >> 8) And &HFF)
-        Write8(AddWB(Address, 2), (Value >> 16) And &HFF)
+    Public Sub Write24(Address As Integer, Value As Integer, Optional IncCycles As Boolean = True)
+        Write8(Address, Value & &HFF, IncCycles)
+        Write8(AddWB(Address, 1), (Value >> 8) And &HFF, IncCycles)
+        Write8(AddWB(Address, 2), (Value >> 16) And &HFF, IncCycles)
     End Sub
 
     'Timing

@@ -163,8 +163,6 @@
                                 .HDMACurr = (.HDMACurr + Size) And &HFFFF
                             End If
 
-                            'Diagnostics.Debug.WriteLine("HDMA " & Ch & " " & .HDMALine.ToString("X2") & " Param " & .Params.ToString("X2") & " Addr " & AAddr.ToString("X6") & " PPU Addr " & .PPUAddr.ToString("X4") & " Size " & Size & " VLine " & ScanLine)
-
                             For i As Integer = 0 To Size - 1
                                 Dim PPUInc As Integer = 0
 

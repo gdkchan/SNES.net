@@ -78,6 +78,7 @@
             Case &H421D : Read8 = Joy3 >> 8
             Case &H421E : Read8 = Joy4 And &HFF
             Case &H421F : Read8 = Joy4 >> 8
+
             Case Else : Debug.WriteLine("WARN: Trying to read unimplemented Address " & Address.ToString("X4"))
         End Select
     End Function

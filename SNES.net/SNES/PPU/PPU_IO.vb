@@ -85,18 +85,26 @@
                 Read8 = OAM(OAMAddr)
                 OAMAddr = (OAMAddr + 1) Mod &H220
             Case &H2139
-                Read8 = VPreFetch And &HFF
+                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
+                    Read8 = VPreFetch And &HFF
 
-                If (VMAIn >> 7) = 0 Then
-                    PreFetch()
-                    VAddr = (VAddr + VInc) And &H7FFF
+                    If (VMAIn >> 7) = 0 Then
+                        PreFetch()
+                        VAddr = (VAddr + VInc) And &H7FFF
+                    End If
+                Else
+                    Read8 = 0
                 End If
             Case &H213A
-                Read8 = VPreFetch >> 8
+                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
+                    Read8 = VPreFetch >> 8
 
-                If VMAIn >> 7 Then
-                    PreFetch()
-                    VAddr = (VAddr + VInc) And &H7FFF
+                    If VMAIn >> 7 Then
+                        PreFetch()
+                        VAddr = (VAddr + VInc) And &H7FFF
+                    End If
+                Else
+                    Read8 = 0
                 End If
             Case &H213B
                 Read8 = CGRAM(CGAddr)
@@ -108,6 +116,7 @@
                 If VCtLoHi Then Read8 = OPVCt >> 8 Else Read8 = OPVCt And &HFF
                 VCtLoHi = Not VCtLoHi
             Case &H213F : Read8 = &HE1
+
             Case Else : Debug.WriteLine("WARN: Trying to read unimplemented Address " & Address.ToString("X4"))
         End Select
     End Function
@@ -241,13 +250,17 @@
             Case &H2116 : VAddr = Value Or (VAddr And &HFF00) : PreFetch()
             Case &H2117 : VAddr = (Value << 8) Or (VAddr And &HFF) : PreFetch()
             Case &H2118
-                Dim Addr As Integer = TransVAddr()
-                If (VMAIn >> 7) = 0 Then VAddr = (VAddr + VInc) And &H7FFF
-                VRAM(Addr << 1) = Value
+                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
+                    Dim Addr As Integer = TransVAddr()
+                    If (VMAIn >> 7) = 0 Then VAddr = (VAddr + VInc) And &H7FFF
+                    VRAM(Addr << 1) = Value
+                End If
             Case &H2119
-                Dim Addr As Integer = TransVAddr()
-                If VMAIn >> 7 Then VAddr = (VAddr + VInc) And &H7FFF
-                VRAM((Addr << 1) Or 1) = Value
+                If Parent.ScanLine > 224 Or (IniDisp And &H80) Then
+                    Dim Addr As Integer = TransVAddr()
+                    If VMAIn >> 7 Then VAddr = (VAddr + VInc) And &H7FFF
+                    VRAM((Addr << 1) Or 1) = Value
+                End If
             Case &H211A : M7Sel = Value
             Case &H211B To &H2120
                 Dim Value16 As Integer = M7Old Or (Value << 8)
@@ -300,16 +313,16 @@
         Dim Addr As Integer = VAddr
 
         Select Case (VMAIn And &HC) >> 2
-            Case 1 : Addr = (ROL3(Addr, 8) And &HFF) Or (Addr And &HFF00)
-            Case 2 : Addr = (ROL3(Addr, 9) And &H1FF) Or (Addr And &HFE00)
-            Case 3 : Addr = (ROL3(Addr, 10) And &H3FF) Or (Addr And &HFC00)
+            Case 1 : Addr = ROL3(Addr And &HFF, 8) Or (Addr And &HFF00)
+            Case 2 : Addr = ROL3(Addr And &H1FF, 9) Or (Addr And &HFE00)
+            Case 3 : Addr = ROL3(Addr And &H3FF, 10) Or (Addr And &HFC00)
         End Select
 
         TransVAddr = Addr And &H7FFF
     End Function
 
     Private Function ROL3(Value As Integer, Bits As Integer) As Integer
-        ROL3 = (Value << 3) Or (Value >> (Bits - 3))
+        ROL3 = ((Value << 3) Or (Value >> (Bits - 3))) And ((1 << Bits) - 1)
     End Function
 
     'Integer Sign

@@ -23,30 +23,30 @@
                     If M7Sel And 1 Then StartX = &HFF
                     If M7Sel And 2 Then StartY = StartY Xor &HFF
 
-                    Dim SzA As Integer = (A * Clip10(H - X)) And Not &H3F
-                    Dim SzB As Integer = (B * Clip10(V - Y)) And Not &H3F
-                    Dim SzC As Integer = (C * Clip10(H - X)) And Not &H3F
-                    Dim SzD As Integer = (D * Clip10(V - Y)) And Not &H3F
+                    Dim A2 As Integer = (A * Clip10(H - X)) And Not &H3F
+                    Dim B2 As Integer = (B * Clip10(V - Y)) And Not &H3F
+                    Dim C2 As Integer = (C * Clip10(H - X)) And Not &H3F
+                    Dim D2 As Integer = (D * Clip10(V - Y)) And Not &H3F
 
-                    Dim BmpX As Integer = SzA + SzB + A * StartX + ((B * StartY) And Not &H3F) + (X << 8)
-                    Dim BMpy As Integer = SzC + SzD + C * StartX + ((D * StartY) And Not &H3F) + (Y << 8)
+                    Dim BmpX As Integer = A2 + B2 + A * StartX + ((B * StartY) And Not &H3F) + (X << 8)
+                    Dim BmpY As Integer = C2 + D2 + C * StartX + ((D * StartY) And Not &H3F) + (Y << 8)
 
                     For ScrnX As Integer = StartX To StartX Xor &HFF
                         Dim XOver As Boolean = BmpX And Not &H3FFFF
-                        Dim YOver As Boolean = BMpy And Not &H3FFFF
+                        Dim YOver As Boolean = BmpY And Not &H3FFFF
 
                         Dim TMX As Integer = (BmpX >> 11) And &H7F
-                        Dim TMY As Integer = (BMpy >> 11) And &H7F
+                        Dim TMY As Integer = (BmpY >> 11) And &H7F
 
                         Dim PixelX As Integer = (BmpX >> 8) And 7
-                        Dim PixelY As Integer = (BMpy >> 8) And 7
+                        Dim PixelY As Integer = (BmpY >> 8) And 7
 
                         If M7Sel And 1 Then
                             BmpX = BmpX - A
-                            BMpy = BMpy - C
+                            BmpY = BmpY - C
                         Else
                             BmpX = BmpX + A
-                            BMpy = BMpy + C
+                            BmpY = BmpY + C
                         End If
 
                         Dim ChrAddr As Integer = VRAM((TMX + (TMY << 7)) << 1) * 128

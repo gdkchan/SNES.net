@@ -66,5 +66,6 @@ Public Class FrmMain
 
     Private Sub DebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DebugToolStripMenuItem.Click
         SNES.CPU.dbgmode = True
+        SNES.APU.dbgmode = True
     End Sub
 End Class

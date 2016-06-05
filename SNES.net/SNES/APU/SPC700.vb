@@ -56,6 +56,8 @@
         Halted = False
     End Sub
 
+    Public dbgmode As Boolean
+
     Public Sub Execute(TargetCycles As Integer)
         While Cycles < TargetCycles
             ExecuteStep()
@@ -67,6 +69,8 @@
 
         Dim StartCycles As Integer = Cycles
         Dim OpCode As Integer = Read8PC()
+
+        'If dbgmode Then Debug.WriteLine("spc core " & ((PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - PSW: " & Hex(PSW) & " - " & Hex(OpCode)))
 
         Select Case OpCode
             Case &H99 : Write8DP(X, ADC(Read8DP(X), Read8DP(Y))) : Cycles = Cycles + 5 'ADC (X),(Y)

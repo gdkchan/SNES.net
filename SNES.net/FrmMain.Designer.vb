@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FrmMain
     Inherits System.Windows.Forms.Form
 
     'Descartar substituições de formulário para limpar a lista de componentes.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class FrmMain
     'OBSERVAÇÃO: O procedimento a seguir é exigido pelo Windows Form Designer
     'Ele pode ser modificado usando o Windows Form Designer.  
     'Não o modifique usando o editor de códigos.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FrmMain))
         Me.PicScreen = New System.Windows.Forms.PictureBox()
@@ -130,13 +130,13 @@ Partial Class FrmMain
         'DumpVRAMToolStripMenuItem
         '
         Me.DumpVRAMToolStripMenuItem.Name = "DumpVRAMToolStripMenuItem"
-        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(151, 22)
+        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.DumpVRAMToolStripMenuItem.Text = "Dump VRAM"
         '
         'DumpDbgLogToolStripMenuItem
         '
         Me.DumpDbgLogToolStripMenuItem.Name = "DumpDbgLogToolStripMenuItem"
-        Me.DumpDbgLogToolStripMenuItem.Size = New System.Drawing.Size(151, 22)
+        Me.DumpDbgLogToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.DumpDbgLogToolStripMenuItem.Text = "Dump dbg log"
         '
         'AjudaToolStripMenuItem
