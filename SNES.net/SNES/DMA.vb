@@ -97,9 +97,9 @@
                             End Select
 
                             If .Params And &H80 Then
-                                Parent.CPU.Write8(.DMACurr, Parent.CPU.Read8(.PPUAddr + PPUInc), False)
+                                Parent.CPU.Write8(.DMACurr, Parent.CPU.Read8(.PPUAddr + PPUInc, False), False)
                             Else
-                                Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(.DMACurr, False))
+                                Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(.DMACurr, False), False)
                             End If
 
                             Select Case (.Params And &H18) >> 3
@@ -173,9 +173,9 @@
                                 End Select
 
                                 If .Params And &H80 Then
-                                    Parent.CPU.Write8(AAddr, Parent.CPU.Read8(.PPUAddr + PPUInc), False)
+                                    Parent.CPU.Write8(AAddr, Parent.CPU.Read8(.PPUAddr + PPUInc, False), False)
                                 Else
-                                    Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(AAddr, False))
+                                    Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(AAddr, False), False)
                                 End If
 
                                 AAddr = ((AAddr + 1) And &HFFFF) Or (AAddr And &HFF0000)

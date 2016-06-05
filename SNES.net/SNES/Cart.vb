@@ -70,7 +70,7 @@ Public Class Cart
 
         Dim BAddr As Integer = Bank << 16
 
-        If BAddr + &H1F <= UBound(Data) Then
+        If BAddr + &HFFFF <= UBound(Data) Then
             Dim CheckSumB As Integer = Data(BAddr + &HFFDC) Or (Data(BAddr + &HFFDD) * &H100)
             Dim CheckSumC As Integer = Data(BAddr + &HFFDE) Or (Data(BAddr + &HFFDF) * &H100)
             IsValidHeader = (CheckSumB + CheckSumC = &HFFFF)
