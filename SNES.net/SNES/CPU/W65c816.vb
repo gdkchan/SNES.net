@@ -64,7 +64,7 @@
 
         Dim OpCode As Integer = Read8PC()
 
-        'If dbgmode Then sbd.AppendLine((PB.ToString("X2") & ":" & (PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - DB " & Hex(DB) & " - DP " & Hex(DP) & " - P: " & Hex(P) & " - " & Hex(OpCode)) & " - VC: " & Parent.ScanLine & " - HC: " & Parent.PPUDot & " - Cyc " & Cycles) '& lastread
+        'If dbgmode Then Debug.WriteLine((PB.ToString("X2") & ":" & (PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - DB " & Hex(DB) & " - DP " & Hex(DP) & " - P: " & Hex(P) & " - " & Hex(OpCode)) & " - VC: " & Parent.ScanLine & " - HC: " & Parent.PPUDot & " - Cyc " & Cycles) '& lastread
 
         Select Case OpCode
             Case &H61 : ADC(DINDX()) 'ADC (d,x)

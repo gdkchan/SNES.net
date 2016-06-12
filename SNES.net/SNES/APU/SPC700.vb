@@ -1,4 +1,6 @@
-﻿Partial Public Class SPC700
+﻿Imports System.Text
+
+Partial Public Class SPC700
     Const CyclesToSample As Integer = 32
 
     Public Enum Flags
@@ -68,12 +70,15 @@
     End Sub
 
     Public Sub ExecuteStep()
-        If Halted Then Exit Sub
+        If Halted Then
+            Cycles = Cycles + 2
+            Exit Sub
+        End If
 
         Dim StartCycles As Integer = Cycles
         Dim OpCode As Integer = Read8PC()
 
-        'If dbgmode Then Parent.CPU.sbd.AppendLine("spc core " & ((PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - PSW: " & Hex(PSW) & " - " & Hex(OpCode)))
+        'If dbgmode Then Debug.WriteLine("spc core " & ((PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - PSW: " & Hex(PSW) & " - " & Hex(OpCode)))
 
         Select Case OpCode
             Case &H99 : Write8DP(X, ADC(Read8DP(X), Read8DP(Y))) : Cycles = Cycles + 5 'ADC (X),(Y)
@@ -482,22 +487,22 @@
 
             Case &H9A : SetYA(SUBW(GetYA(), Read16WP(D()))) : Cycles = Cycles + 5 'SUBW YA,d
 
-            Case &H1 : _CALL(&HFFDE) : Cycles = Cycles + 8 'TCALL 0
-            Case &H11 : _CALL(&HFFDC) : Cycles = Cycles + 8 'TCALL 1
-            Case &H21 : _CALL(&HFFDA) : Cycles = Cycles + 8 'TCALL 2
-            Case &H31 : _CALL(&HFFD8) : Cycles = Cycles + 8 'TCALL 3
-            Case &H41 : _CALL(&HFFD6) : Cycles = Cycles + 8 'TCALL 4
-            Case &H51 : _CALL(&HFFD4) : Cycles = Cycles + 8 'TCALL 5
-            Case &H61 : _CALL(&HFFD2) : Cycles = Cycles + 8 'TCALL 6
-            Case &H71 : _CALL(&HFFD0) : Cycles = Cycles + 8 'TCALL 7
-            Case &H81 : _CALL(&HFFCE) : Cycles = Cycles + 8 'TCALL 8
-            Case &H91 : _CALL(&HFFCC) : Cycles = Cycles + 8 'TCALL 9
-            Case &HA1 : _CALL(&HFFCA) : Cycles = Cycles + 8 'TCALL 10
-            Case &HB1 : _CALL(&HFFC8) : Cycles = Cycles + 8 'TCALL 11
-            Case &HC1 : _CALL(&HFFC6) : Cycles = Cycles + 8 'TCALL 12
-            Case &HD1 : _CALL(&HFFC4) : Cycles = Cycles + 8 'TCALL 13
-            Case &HE1 : _CALL(&HFFC2) : Cycles = Cycles + 8 'TCALL 14
-            Case &HF1 : _CALL(&HFFC0) : Cycles = Cycles + 8 'TCALL 15
+            Case &H1 : _CALL(Read16(&HFFDE)) : Cycles = Cycles + 8 'TCALL 0
+            Case &H11 : _CALL(Read16(&HFFDC)) : Cycles = Cycles + 8 'TCALL 1
+            Case &H21 : _CALL(Read16(&HFFDA)) : Cycles = Cycles + 8 'TCALL 2
+            Case &H31 : _CALL(Read16(&HFFD8)) : Cycles = Cycles + 8 'TCALL 3
+            Case &H41 : _CALL(Read16(&HFFD6)) : Cycles = Cycles + 8 'TCALL 4
+            Case &H51 : _CALL(Read16(&HFFD4)) : Cycles = Cycles + 8 'TCALL 5
+            Case &H61 : _CALL(Read16(&HFFD2)) : Cycles = Cycles + 8 'TCALL 6
+            Case &H71 : _CALL(Read16(&HFFD0)) : Cycles = Cycles + 8 'TCALL 7
+            Case &H81 : _CALL(Read16(&HFFCE)) : Cycles = Cycles + 8 'TCALL 8
+            Case &H91 : _CALL(Read16(&HFFCC)) : Cycles = Cycles + 8 'TCALL 9
+            Case &HA1 : _CALL(Read16(&HFFCA)) : Cycles = Cycles + 8 'TCALL 10
+            Case &HB1 : _CALL(Read16(&HFFC8)) : Cycles = Cycles + 8 'TCALL 11
+            Case &HC1 : _CALL(Read16(&HFFC6)) : Cycles = Cycles + 8 'TCALL 12
+            Case &HD1 : _CALL(Read16(&HFFC4)) : Cycles = Cycles + 8 'TCALL 13
+            Case &HE1 : _CALL(Read16(&HFFC2)) : Cycles = Cycles + 8 'TCALL 14
+            Case &HF1 : _CALL(Read16(&HFFC0)) : Cycles = Cycles + 8 'TCALL 15
 
             Case &H4E : TCLR1() : Cycles = Cycles + 6 'TCLR1 !a
             Case &HE : TSET1() : Cycles = Cycles + 6 'TSET1 !a
