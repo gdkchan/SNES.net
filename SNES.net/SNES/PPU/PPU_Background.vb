@@ -1,7 +1,7 @@
 ﻿Partial Public Class PPU
     Public Sub RenderLayer(Line As Integer, Layer As Integer, Optional BPP As Integer = 0, Optional Fg As Boolean = False)
         If (TM Or TS) And (1 << Layer) Then
-            Dim BaseY As Integer = Line * 256
+            Dim BaseY As Integer = (Line - 1) << 8
             Dim BaseY4 As Integer = BaseY << 2
             Dim Mode As Integer = BgMode And 7
 
@@ -190,7 +190,7 @@
 
                                     If PalColor <> 0 Then
                                         Dim Offset As Integer = (BaseBuff + X - (.HOfs And 7)) << 2
-                                        Dim Color As Byte = (CGNum * (1 << BPP)) + PalColor
+                                        Dim Color As Integer = ((CGNum * (1 << BPP)) + PalColor) And &HFF
 
                                         If Offset >= BaseY4 And Offset <= UBound(BackBuffer) Then
                                             BackBuffer(Offset + 0) = Pal(Color).B

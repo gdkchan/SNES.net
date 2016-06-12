@@ -55,6 +55,8 @@
     Public OPHCt As Integer
     Public OPVCt As Integer
     Public OAMReload As Integer
+    Public Stat77 As Integer
+    Public Stat78 As Integer
 
     Public CGRAM(&H1FF) As Byte
     Public OAM(&H21F) As Byte
@@ -107,7 +109,12 @@
             Case &H213D
                 If VCtLoHi Then Read8 = OPVCt >> 8 Else Read8 = OPVCt And &HFF
                 VCtLoHi = Not VCtLoHi
-            Case &H213F : Read8 = &HE1
+            Case &H213E : Read8 = Stat77
+            Case &H213F
+                Read8 = Stat78
+                HCtLoHi = False
+                VCtLoHi = False
+                Stat78 = Stat78 And Not &H40
 
             Case Else : Debug.WriteLine("WARN: Trying to read unimplemented Address " & Address.ToString("X4"))
         End Select

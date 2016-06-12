@@ -26,12 +26,13 @@
 
     Dim Execute As Boolean
 
-    Public Zoom As Integer
+    Dim AudioOut As IAudio
+    Dim Renderer As IRenderer
 
     Public ScanLine As Integer
     Public PPUDot As Integer
 
-    Public Sub New()
+    Public Sub New(AudioOut As IAudio, Renderer As IRenderer)
         APU = New SPC700()
         Cart = New Cart()
         CPU = New W65c816(Me)
@@ -41,13 +42,22 @@
 
         APU.Reset()
 
-        Zoom = 2
+        Me.AudioOut = AudioOut
+        Me.Renderer = Renderer
     End Sub
 
     Public Sub InsertCart(FileName As String)
         Cart.LoadFile(FileName)
         CPU.Reset()
         Run()
+    End Sub
+
+    Public Sub SetAudioOut(AudioOut As IAudio)
+        Me.AudioOut = AudioOut
+    End Sub
+
+    Public Sub SetRenderer(Renderer As IRenderer)
+        Me.Renderer = Renderer
     End Sub
 
     Public Sub SetKeyDown(Button As SNESButton)
@@ -58,17 +68,19 @@
         IO.Joy1 = IO.Joy1 And Not Button
     End Sub
 
-    Public Sub SetZoom(Value As Integer)
-        Zoom = Value
-    End Sub
-
     Private Sub Run()
+        Dim WriteOld As Integer = AudioOut.GetWriteCur()
+        Dim SndBuffAddr As Integer = WriteOld
+
         Execute = True
 
         While Execute
+            Dim SndBuffLen As Integer = AudioOut.GetBuffLen()
+
             'V-Blank End
             IO.RdNMI = IO.RdNMI And Not &H80
             IO.HVBJoy = IO.HVBJoy And Not &H80
+            If (PPU.IniDisp And &H80) = 0 Then PPU.Stat77 = PPU.Stat77 And Not &HC0
 
             For ScanLine = 0 To 261
                 Dim HIRQ As Boolean = False
@@ -78,26 +90,25 @@
                 IO.HVBJoy = IO.HVBJoy And Not &H40
 
                 'V-Blank Start
-                If ScanLine > 224 Then
-                    If ScanLine = 225 Then
-                        If IO.NMITimEn And &H80 Then CPU.NMI()
-                        IO.RdNMI = IO.RdNMI Or &H80
-                        PPU.OAMAddr = PPU.OAMReload
-                    End If
+                If ScanLine = 225 Then
+                    If IO.NMITimEn And &H80 Then CPU.NMI()
+                    IO.RdNMI = IO.RdNMI Or &H80
+                    IO.HVBJoy = IO.HVBJoy Or &H81
 
-                    IO.HVBJoy = IO.HVBJoy Or &H80
+                    PPU.OAMAddr = PPU.OAMReload
                 End If
 
-                'If ScanLine = 227 Then IO.HVBJoy = IO.HVBJoy And Not 1
+                If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
 
-                'H/V IRQ 2 (V=V H=*)
+                'H/V IRQ 2 (V=V H=0)
                 If ScanLine = IO.VTime Then
                     If IO.HVIRQ = 2 Then CPU.IRQ()
                     IO.TimeUp = IO.TimeUp Or &H80
                 End If
 
                 While CPU.Cycles < CPUCyclesPerLine
-                    CPU.ExecuteStep()
+                    If IO.MDMAEn <> 0 Then DMA.DMATransfer() Else CPU.ExecuteStep()
+
                     APU.Execute((CPU.Cycles / CPUCyclesPerLine) * APUCyclesPerLine)
 
                     PPUDot = CPU.Cycles >> 2
@@ -120,10 +131,24 @@
                 APU.Cycles = APU.Cycles - APUCyclesPerLine
                 CPU.Cycles = CPU.Cycles - CPUCyclesPerLine
 
-                If ScanLine < 224 Then PPU.Render(ScanLine)
+                If ScanLine > 0 And ScanLine < 225 Then PPU.Render(ScanLine)
             Next
 
-            PPU.Blit()
+            If SndBuffLen <> 0 Then
+                Dim WriteCur As Integer = AudioOut.GetWriteCur()
+                Dim Needed As Integer = RingDist(WriteOld, WriteCur, AudioOut.GetBuffLen())
+                Dim Buff() As Byte = Resample(APU.DSP.SndBuff, APU.DSP.SndBuffAddr, Needed)
+
+                WriteOld = WriteCur
+
+                AudioOut.WriteBuffer(SndBuffAddr, Buff)
+
+                SndBuffAddr = (SndBuffAddr + Needed) Mod SndBuffLen
+            End If
+
+            Renderer.RenderBuffer(PPU.BackBuffer)
+
+            FrmMain.Text = Get_FPS()
 
             Application.DoEvents()
         End While

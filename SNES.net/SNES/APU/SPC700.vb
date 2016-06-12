@@ -1,4 +1,6 @@
 ﻿Partial Public Class SPC700
+    Const CyclesToSample As Integer = 32
+
     Public Enum Flags
         Carry = &H1
         Zero = &H2
@@ -20,7 +22,7 @@
 
     Dim Halted As Boolean
 
-    Dim DSP As DSP
+    Public DSP As DSP
 
     Private Structure Tmr
         Public Clock As Integer
@@ -31,19 +33,20 @@
     End Structure
 
     Dim Timer(2) As Tmr
+    Dim DSPCycles As Integer
 
     Public Sub Reset()
-        'Reset IO register values
-        DSP = New DSP()
+        'Reset IO regs
+        DSP = New DSP(Me)
 
-        TEST = &HA
-        CONTROL = &HB0
+        Test = &HA
+        Control = &HB0
 
         Timer(0).Clock = 128
         Timer(1).Clock = 128
         Timer(2).Clock = 16
 
-        'Reset CPU registers
+        'Reset regs
         A = 0
         X = 0
         Y = 0
@@ -70,7 +73,7 @@
         Dim StartCycles As Integer = Cycles
         Dim OpCode As Integer = Read8PC()
 
-        'If dbgmode Then Debug.WriteLine("spc core " & ((PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - PSW: " & Hex(PSW) & " - " & Hex(OpCode)))
+        'If dbgmode Then Parent.CPU.sbd.AppendLine("spc core " & ((PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - PSW: " & Hex(PSW) & " - " & Hex(OpCode)))
 
         Select Case OpCode
             Case &H99 : Write8DP(X, ADC(Read8DP(X), Read8DP(Y))) : Cycles = Cycles + 5 'ADC (X),(Y)
@@ -502,7 +505,16 @@
             Case &H9F : XCN() : Cycles = Cycles + 5 'XCN A
         End Select
 
-        TickTimers(Cycles - StartCycles)
+        Dim SpentCycles As Integer = Cycles - StartCycles
+
+        DSPCycles = DSPCycles + SpentCycles
+
+        If DSPCycles >= CyclesToSample Then
+            DSP.ProcessSample()
+            DSPCycles = DSPCycles - CyclesToSample
+        End If
+
+        TickTimers(SpentCycles)
     End Sub
 
     'YA
@@ -556,7 +568,7 @@
     'Timers
     Private Sub TickTimers(ElapsedCycles As Integer)
         For i As Integer = 0 To 2
-            If CONTROL And (1 << i) Then
+            If Control And (1 << i) Then
                 With Timer(i)
                     .Cycles = .Cycles + ElapsedCycles
 

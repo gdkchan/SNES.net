@@ -1,9 +1,27 @@
 ﻿Imports System.IO
 Public Class FrmMain
-    Public SNES As SNES
+    Dim AudioOut As IAudio
+    Dim Renderer As IRenderer
+
+    Dim WDiffX As Integer
+    Dim WDiffY As Integer
+    Dim Zoom As Integer = 2
+
+    Dim SNES As SNES
 
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Hi_Res_Timer_Initialize()
+
+        AudioOut = New NoAudio()
+        AudioOut.SetHandle(Handle)
+
+        Renderer = New GDIRenderer()
+        Renderer.SetTargetControl(PicScreen)
+        Renderer.SetZoom(Zoom)
+
+        WDiffX = Width - PicScreen.Width
+        WDiffY = Height - PicScreen.Height
+
         Show()
     End Sub
 
@@ -14,7 +32,7 @@ Public Class FrmMain
         Open_Dlg.ShowDialog()
 
         If File.Exists(Open_Dlg.FileName) Then
-            SNES = New SNES()
+            SNES = New SNES(AudioOut, Renderer)
             SNES.InsertCart(Open_Dlg.FileName)
         End If
     End Sub
@@ -67,5 +85,73 @@ Public Class FrmMain
     Private Sub DebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DebugToolStripMenuItem.Click
         SNES.CPU.dbgmode = True
         SNES.APU.dbgmode = True
+    End Sub
+
+    Private Sub DumpDbgLogToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpDbgLogToolStripMenuItem.Click
+        File.WriteAllText("D:\sneslog.txt", SNES.CPU.sbd.ToString())
+    End Sub
+
+    Private Sub MenuGDI_Click(sender As Object, e As EventArgs) Handles MenuGDI.Click
+        SetRenderer(New GDIRenderer())
+    End Sub
+
+    Private Sub MenuD3D_Click(sender As Object, e As EventArgs) Handles MenuD3D.Click
+        SetRenderer(New DXRenderer())
+    End Sub
+
+    Private Sub MenuZoom1x_Click(sender As Object, e As EventArgs) Handles MenuZoom1x.Click
+        SetZoom(1)
+    End Sub
+
+    Private Sub MenuZoom2x_Click(sender As Object, e As EventArgs) Handles MenuZoom2x.Click
+        SetZoom(2)
+    End Sub
+
+    Private Sub MenuZoom3x_Click(sender As Object, e As EventArgs) Handles MenuZoom3x.Click
+        SetZoom(3)
+    End Sub
+
+    Private Sub MenuZoom4x_Click(sender As Object, e As EventArgs) Handles MenuZoom4x.Click
+        SetZoom(4)
+    End Sub
+
+    Private Sub SetRenderer(NewRenderer As IRenderer)
+        If Renderer IsNot Nothing Then Renderer.Terminate()
+
+        Renderer = NewRenderer
+        Renderer.SetZoom(Zoom)
+        Renderer.SetTargetControl(PicScreen)
+
+        If SNES IsNot Nothing Then SNES.SetRenderer(Renderer)
+    End Sub
+
+    Private Sub SetZoom(Value As Integer)
+        Zoom = Value
+        Renderer.SetZoom(Zoom)
+
+        PicScreen.Width = 256 * Zoom
+        PicScreen.Height = 224 * Zoom
+
+        Width = PicScreen.Width + WDiffX
+        Height = PicScreen.Height + WDiffY
+
+        CenterToScreen()
+    End Sub
+
+    Private Sub NoAudioToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles MenuNoAudio.Click
+        SetAudio(New NoAudio())
+    End Sub
+
+    Private Sub DirectSoundToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles MenuDSound.Click
+        SetAudio(New DXAudio())
+    End Sub
+
+    Private Sub SetAudio(NewAudioOut As IAudio)
+        If AudioOut IsNot Nothing Then AudioOut.Terminate()
+
+        AudioOut = NewAudioOut
+        AudioOut.SetHandle(Handle)
+
+        If SNES IsNot Nothing Then SNES.SetAudioOut(AudioOut)
     End Sub
 End Class

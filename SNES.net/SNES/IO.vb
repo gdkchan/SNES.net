@@ -5,6 +5,7 @@
     Public WrDiv As Integer
     Public HTime As Integer
     Public VTime As Integer
+    Public MDMAEn As Integer
     Public HDMAEn As Integer
     Public MemSel As Integer
 
@@ -87,10 +88,12 @@
             Case &H4200
                 NMITimEn = Value
                 HVIRQ = (NMITimEn >> 4) And 3
+                If HVIRQ = 0 Then TimeUp = TimeUp And Not &H80
             Case &H4201
                 If (Value And &H80) = 0 And (RdIO And &H80) Then
                     Parent.PPU.OPHCt = Parent.PPUDot
                     Parent.PPU.OPVCt = Parent.ScanLine
+                    Parent.PPU.Stat78 = Parent.PPU.Stat78 Or &H40
                 End If
 
                 RdIO = Value
@@ -112,7 +115,7 @@
             Case &H4208 : HTime = ((Value And 1) << 8) Or (HTime And &HFF)
             Case &H4209 : VTime = Value Or (VTime And &H100)
             Case &H420A : VTime = ((Value And 1) << 8) Or (VTime And &HFF)
-            Case &H420B : Parent.DMA.DMATransfer(Value)
+            Case &H420B : MDMAEn = Value
             Case &H420C : HDMAEn = Value
             Case &H420D : MemSel = Value
         End Select

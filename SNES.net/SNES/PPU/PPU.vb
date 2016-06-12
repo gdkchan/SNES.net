@@ -1,16 +1,18 @@
-﻿Imports System.Drawing.Imaging
-
-Partial Public Class PPU
-    Dim BackBuffer((256 * 224 * 4) - 1) As Byte
+﻿Partial Public Class PPU
+    Public BackBuffer(256 * 224 * 4 - 1) As Byte
 
     Dim Parent As SNES
 
     Public Sub New(SNES As SNES)
         Parent = SNES
+
+        Stat77 = 1
+        Stat78 = 1
     End Sub
 
     Public Sub Render(Line As Integer)
-        Dim Addr As Integer = Line * 256
+        Dim Addr As Integer = (Line - 1) << 8
+
         For X As Integer = 0 To 255
             Dim Offset = (Addr + X) << 2
 
@@ -101,39 +103,5 @@ Partial Public Class PPU
                     RenderCharacters(Line, 3)
             End Select
         End If
-    End Sub
-
-    Public Sub Blit()
-        Dim Buffer() As Byte
-        Dim Width As Integer = 256 * Parent.Zoom
-        Dim Height As Integer = 224 * Parent.Zoom
-
-        If Parent.Zoom > 1 Then
-            ReDim Buffer(Width * Height * 4 - 1)
-
-            Dim Offset As Integer
-            For Y As Integer = 0 To Height - 1
-                For X As Integer = 0 To Width - 1
-                    Dim BPos As Integer = ((X \ Parent.Zoom) + ((Y \ Parent.Zoom) << 8)) << 2
-
-                    Buffer(Offset + 0) = BackBuffer(BPos + 0)
-                    Buffer(Offset + 1) = BackBuffer(BPos + 1)
-                    Buffer(Offset + 2) = BackBuffer(BPos + 2)
-                    Buffer(Offset + 3) = BackBuffer(BPos + 3)
-
-                    Offset = Offset + 4
-                Next
-            Next
-        Else
-            Buffer = BackBuffer
-        End If
-
-        Dim Img As New Bitmap(Width, Height)
-        Dim BmpRect As New Rectangle(0, 0, Width, Height)
-        Dim BmpData As BitmapData = Img.LockBits(BmpRect, ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb)
-        Runtime.InteropServices.Marshal.Copy(Buffer, 0, BmpData.Scan0, Buffer.Length)
-        Img.UnlockBits(BmpData)
-
-        FrmMain.PicScreen.Image = Img
     End Sub
 End Class

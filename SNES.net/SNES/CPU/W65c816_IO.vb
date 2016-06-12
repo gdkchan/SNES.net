@@ -26,7 +26,7 @@
                             WRAddr = (WRAddr + 1) And &H1FFFF
                         Case &H4000 To &H42FF : Read8 = Parent.IO.Read8(Address)
                         Case &H4300 To &H43FF : Read8 = Parent.DMA.Read8(Address)
-                        Case &H6000 To &H7FFF : Read8 = SRAM(0, Address And &H1FFF)
+                        Case &H6000 To &H7FFF : If (Bank And &H7F) > &H1F Then Read8 = SRAM(0, Address And &H1FFF)
                         Case &H8000 To &HFFFF
                             If Parent.Cart.Mapper = Mapper.ExHiRom Then
                                 Read8 = Parent.Cart.Image((Bank And &H7F) Or &H40, Address)
@@ -109,23 +109,41 @@
         Address = Address And &HFFFF
 
         If Bank < &H7E Or Bank > &H7F Then
-            If Address < &H8000 And (Bank > &H6F And Bank < &H78) Then
-                SRAM(Bank And 7, Address And &H1FFF) = Value
+            If Parent.Cart.IsHiROM Then
+                If (Bank And &H7F) < &H40 Then
+                    Select Case Address
+                        Case 0 To &H1FFF : WRAM(Address) = Value
+                        Case &H2000 To &H213F : Parent.PPU.Write8(Address, Value)
+                        Case &H2140 To &H217F : Parent.APU.Write8IO(Address, Value)
+                        Case &H2180
+                            WRAM(WRAddr) = Value
+                            WRAddr = (WRAddr + 1) And &H1FFFF
+                        Case &H2181 : WRAddr = Value Or (WRAddr And &H1FF00)
+                        Case &H2182 : WRAddr = (Value << 8) Or (WRAddr And &H100FF)
+                        Case &H2183 : WRAddr = ((Value And 1) << 16) Or (WRAddr And &HFFFF)
+                        Case &H4000 To &H42FF : Parent.IO.Write8(Address, Value)
+                        Case &H4300 To &H43FF : Parent.DMA.Write8(Address, Value)
+                        Case &H6000 To &H7FFF : If (Bank And &H7F) > &H1F Then SRAM(0, Address And &H1FFF) = Value
+                    End Select
+                End If
             Else
-                Select Case Address
-                    Case 0 To &H1FFF : WRAM(Address) = Value
-                    Case &H2000 To &H213F : Parent.PPU.Write8(Address, Value)
-                    Case &H2140 To &H217F : Parent.APU.Write8IO(Address, Value)
-                    Case &H2180
-                        WRAM(WRAddr) = Value
-                        WRAddr = (WRAddr + 1) And &H1FFFF
-                    Case &H2181 : WRAddr = Value Or (WRAddr And &H1FF00)
-                    Case &H2182 : WRAddr = (Value << 8) Or (WRAddr And &H100FF)
-                    Case &H2183 : WRAddr = ((Value And 1) << 16) Or (WRAddr And &HFFFF)
-                    Case &H4000 To &H42FF : Parent.IO.Write8(Address, Value)
-                    Case &H4300 To &H43FF : Parent.DMA.Write8(Address, Value)
-                    Case &H6000 To &H7FFF : SRAM(0, Address And &H1FFF) = Value
-                End Select
+                If Address < &H8000 And (Bank > &H6F And Bank < &H78) Then
+                    SRAM(Bank And 7, Address And &H1FFF) = Value
+                Else
+                    Select Case Address
+                        Case 0 To &H1FFF : WRAM(Address) = Value
+                        Case &H2000 To &H213F : Parent.PPU.Write8(Address, Value)
+                        Case &H2140 To &H217F : Parent.APU.Write8IO(Address, Value)
+                        Case &H2180
+                            WRAM(WRAddr) = Value
+                            WRAddr = (WRAddr + 1) And &H1FFFF
+                        Case &H2181 : WRAddr = Value Or (WRAddr And &H1FF00)
+                        Case &H2182 : WRAddr = (Value << 8) Or (WRAddr And &H100FF)
+                        Case &H2183 : WRAddr = ((Value And 1) << 16) Or (WRAddr And &HFFFF)
+                        Case &H4000 To &H42FF : Parent.IO.Write8(Address, Value)
+                        Case &H4300 To &H43FF : Parent.DMA.Write8(Address, Value)
+                    End Select
+                End If
             End If
         End If
 

@@ -72,49 +72,53 @@
         End Select
     End Sub
 
-    Public Sub DMATransfer(Channels As Integer)
+    Public Sub DMATransfer()
         For Ch As Integer = 0 To 7
-            If Channels And (1 << Ch) Then
+            If Parent.IO.MDMAEn And (1 << Ch) Then
                 With Channel(Ch)
                     If .Counter = 0 Then .Counter = &H10000
 
-                    While .Counter
-                        Dim Size As Integer
+                    Dim Size As Integer
+
+                    Select Case .Params And 7
+                        Case 0 : Size = 1
+                        Case 1, 2, 6 : Size = 2
+                        Case 3, 4, 5, 7 : Size = 4
+                    End Select
+
+                    For i As Integer = 0 To Size - 1
+                        Dim PPUInc As Integer = 0
 
                         Select Case .Params And 7
-                            Case 0 : Size = 1
-                            Case 1, 2, 6 : Size = 2
-                            Case 3, 4, 5, 7 : Size = 4
+                            Case 1, 4 : PPUInc = i
+                            Case 3, 7 : PPUInc = i >> 1
+                            Case 5 : PPUInc = i And 1
                         End Select
 
-                        For i As Integer = 0 To Size - 1
-                            Dim PPUInc As Integer = 0
+                        If .Params And &H80 Then
+                            Parent.CPU.Write8(.DMACurr, Parent.CPU.Read8(.PPUAddr + PPUInc, False), False)
+                        Else
+                            Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(.DMACurr, False), False)
+                        End If
 
-                            Select Case .Params And 7
-                                Case 1, 4 : PPUInc = i
-                                Case 3, 7 : PPUInc = i >> 1
-                                Case 5 : PPUInc = i And 1
-                            End Select
+                        Select Case (.Params And &H18) >> 3
+                            Case 0 : .DMACurr = ((.DMACurr + 1) And &HFFFF) Or (.DMACurr And &HFF0000)
+                            Case 2 : .DMACurr = ((.DMACurr - 1) And &HFFFF) Or (.DMACurr And &HFF0000)
+                        End Select
 
-                            If .Params And &H80 Then
-                                Parent.CPU.Write8(.DMACurr, Parent.CPU.Read8(.PPUAddr + PPUInc, False), False)
-                            Else
-                                Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(.DMACurr, False), False)
-                            End If
+                        Parent.CPU.Cycles = Parent.CPU.Cycles + 8
 
-                            Select Case (.Params And &H18) >> 3
-                                Case 0 : .DMACurr = ((.DMACurr + 1) And &HFFFF) Or (.DMACurr And &HFF0000)
-                                Case 2 : .DMACurr = ((.DMACurr - 1) And &HFFFF) Or (.DMACurr And &HFF0000)
-                            End Select
+                        .Counter = .Counter - 1
 
+                        If .Counter = 0 Then
+                            Parent.IO.MDMAEn = Parent.IO.MDMAEn And Not (1 << Ch)
                             Parent.CPU.Cycles = Parent.CPU.Cycles + 8
-
-                            If .Counter Then .Counter = .Counter - 1 Else Exit While
-                        Next
-                    End While
+                            Exit For
+                        End If
+                    Next
                 End With
 
-                Parent.CPU.Cycles = Parent.CPU.Cycles + 8
+                Exit For
             End If
         Next
     End Sub

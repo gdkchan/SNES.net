@@ -1,8 +1,7 @@
 ﻿Partial Public Class SPC700
-    Dim TEST As Integer
-    Dim CONTROL As Integer
-    Dim DSPADDR As Integer
-    Dim DSPDATA As Integer
+    Dim Test As Integer
+    Dim Control As Integer
+    Dim DSPAddr As Integer
 
     Dim CPUI0, CPUO0 As Integer
     Dim CPUI1, CPUO1 As Integer
@@ -28,8 +27,8 @@
         Select Case Address
             Case &HF0 To &HFF
                 Select Case Address And &HF
-                    Case &H2 : Read8 = DSPADDR
-                    Case &H3 : Read8 = DSP.Registers(DSPADDR And &H7F)
+                    Case &H2 : Read8 = DSPAddr
+                    Case &H3 : Read8 = DSP.Read8(DSPAddr)
                     Case &H4 : Read8 = CPUI0
                     Case &H5 : Read8 = CPUI1
                     Case &H6 : Read8 = CPUI2
@@ -90,16 +89,16 @@
         Select Case Address
             Case &HF0 To &HFF
                 Select Case Address And &HF
-                    Case &H0 : TEST = Value
+                    Case &H0 : Test = Value
                     Case &H1
-                        CONTROL = Value
-                        If CONTROL And &H1 Then Timer(0).Counter = 0
-                        If CONTROL And &H2 Then Timer(1).Counter = 0
-                        If CONTROL And &H4 Then Timer(2).Counter = 0
-                        If CONTROL And &H10 Then CPUI0 = 0 : CPUI1 = 0
-                        If CONTROL And &H20 Then CPUI2 = 0 : CPUI3 = 0
-                    Case &H2 : DSPADDR = Value
-                    Case &H3 : If DSPADDR < &H80 Then DSP.Registers(DSPADDR) = Value
+                        Control = Value
+                        If Control And &H1 Then Timer(0).Counter = 0
+                        If Control And &H2 Then Timer(1).Counter = 0
+                        If Control And &H4 Then Timer(2).Counter = 0
+                        If Control And &H10 Then CPUI0 = 0 : CPUI1 = 0
+                        If Control And &H20 Then CPUI2 = 0 : CPUI3 = 0
+                    Case &H2 : DSPAddr = Value
+                    Case &H3 : DSP.Write8(DSPAddr, Value)
                     Case &H4 : CPUO0 = Value
                     Case &H5 : CPUO1 = Value
                     Case &H6 : CPUO2 = Value

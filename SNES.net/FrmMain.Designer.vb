@@ -35,11 +35,24 @@ Partial Class FrmMain
         Me.ToolStripMenuItem3 = New System.Windows.Forms.ToolStripSeparator()
         Me.SairToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpçõesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuVideo = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuZoom = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuZoom1x = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuZoom2x = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuZoom3x = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuZoom4x = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuVidSep0 = New System.Windows.Forms.ToolStripSeparator()
+        Me.MenuGDI = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuD3D = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuAudio = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuOptsSep0 = New System.Windows.Forms.ToolStripSeparator()
         Me.DebugToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DumpVRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DumpDbgLogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuNoAudio = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuDSound = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MainMenu.SuspendLayout()
         Me.SuspendLayout()
@@ -116,10 +129,77 @@ Partial Class FrmMain
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpDbgLogToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuVideo, Me.MenuAudio, Me.MenuOptsSep0, Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem, Me.DumpDbgLogToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
+        '
+        'MenuVideo
+        '
+        Me.MenuVideo.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuZoom, Me.MenuVidSep0, Me.MenuGDI, Me.MenuD3D})
+        Me.MenuVideo.Name = "MenuVideo"
+        Me.MenuVideo.Size = New System.Drawing.Size(152, 22)
+        Me.MenuVideo.Text = "Video"
+        '
+        'MenuZoom
+        '
+        Me.MenuZoom.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuZoom1x, Me.MenuZoom2x, Me.MenuZoom3x, Me.MenuZoom4x})
+        Me.MenuZoom.Name = "MenuZoom"
+        Me.MenuZoom.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom.Text = "Zoom"
+        '
+        'MenuZoom1x
+        '
+        Me.MenuZoom1x.Name = "MenuZoom1x"
+        Me.MenuZoom1x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom1x.Text = "1x"
+        '
+        'MenuZoom2x
+        '
+        Me.MenuZoom2x.Name = "MenuZoom2x"
+        Me.MenuZoom2x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom2x.Text = "2x"
+        '
+        'MenuZoom3x
+        '
+        Me.MenuZoom3x.Name = "MenuZoom3x"
+        Me.MenuZoom3x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom3x.Text = "3x"
+        '
+        'MenuZoom4x
+        '
+        Me.MenuZoom4x.Name = "MenuZoom4x"
+        Me.MenuZoom4x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom4x.Text = "4x"
+        '
+        'MenuVidSep0
+        '
+        Me.MenuVidSep0.Name = "MenuVidSep0"
+        Me.MenuVidSep0.Size = New System.Drawing.Size(149, 6)
+        '
+        'MenuGDI
+        '
+        Me.MenuGDI.Name = "MenuGDI"
+        Me.MenuGDI.Size = New System.Drawing.Size(152, 22)
+        Me.MenuGDI.Text = "GDI+"
+        '
+        'MenuD3D
+        '
+        Me.MenuD3D.Name = "MenuD3D"
+        Me.MenuD3D.Size = New System.Drawing.Size(152, 22)
+        Me.MenuD3D.Text = "Direct3D"
+        '
+        'MenuAudio
+        '
+        Me.MenuAudio.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuNoAudio, Me.MenuDSound})
+        Me.MenuAudio.Name = "MenuAudio"
+        Me.MenuAudio.Size = New System.Drawing.Size(152, 22)
+        Me.MenuAudio.Text = "Áudio"
+        '
+        'MenuOptsSep0
+        '
+        Me.MenuOptsSep0.Name = "MenuOptsSep0"
+        Me.MenuOptsSep0.Size = New System.Drawing.Size(149, 6)
         '
         'DebugToolStripMenuItem
         '
@@ -149,8 +229,20 @@ Partial Class FrmMain
         'SobreToolStripMenuItem
         '
         Me.SobreToolStripMenuItem.Name = "SobreToolStripMenuItem"
-        Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
+        Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
+        '
+        'MenuNoAudio
+        '
+        Me.MenuNoAudio.Name = "MenuNoAudio"
+        Me.MenuNoAudio.Size = New System.Drawing.Size(152, 22)
+        Me.MenuNoAudio.Text = "No Audio"
+        '
+        'MenuDSound
+        '
+        Me.MenuDSound.Name = "MenuDSound"
+        Me.MenuDSound.Size = New System.Drawing.Size(152, 22)
+        Me.MenuDSound.Text = "DirectSound"
         '
         'FrmMain
         '
@@ -190,4 +282,17 @@ Partial Class FrmMain
     Friend WithEvents DebugToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents DumpVRAMToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents DumpDbgLogToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents MenuVideo As ToolStripMenuItem
+    Friend WithEvents MenuZoom As ToolStripMenuItem
+    Friend WithEvents MenuZoom1x As ToolStripMenuItem
+    Friend WithEvents MenuZoom2x As ToolStripMenuItem
+    Friend WithEvents MenuZoom3x As ToolStripMenuItem
+    Friend WithEvents MenuZoom4x As ToolStripMenuItem
+    Friend WithEvents MenuVidSep0 As ToolStripSeparator
+    Friend WithEvents MenuGDI As ToolStripMenuItem
+    Friend WithEvents MenuD3D As ToolStripMenuItem
+    Friend WithEvents MenuAudio As ToolStripMenuItem
+    Friend WithEvents MenuOptsSep0 As ToolStripSeparator
+    Friend WithEvents MenuNoAudio As ToolStripMenuItem
+    Friend WithEvents MenuDSound As ToolStripMenuItem
 End Class

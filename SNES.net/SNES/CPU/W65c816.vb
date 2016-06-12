@@ -54,6 +54,8 @@
 
     Public dbgmode As Boolean
 
+    Public sbd As New System.Text.StringBuilder()
+
     Public Sub ExecuteStep()
         If WAIState Or STPState Then
             Cycles = Cycles + 4
@@ -62,7 +64,7 @@
 
         Dim OpCode As Integer = Read8PC()
 
-        'If dbgmode Then Debug.WriteLine((PB.ToString("X2") & ":" & (PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - DB " & Hex(DB) & " - DP " & Hex(DP) & " - P: " & Hex(P) & " - " & Hex(OpCode)) & " - VC: " & Parent.ScanLine & " - HC: " & Parent.PPUDot & " - Cyc " & Cycles) '& lastread
+        'If dbgmode Then sbd.AppendLine((PB.ToString("X2") & ":" & (PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - DB " & Hex(DB) & " - DP " & Hex(DP) & " - P: " & Hex(P) & " - " & Hex(OpCode)) & " - VC: " & Parent.ScanLine & " - HC: " & Parent.PPUDot & " - Cyc " & Cycles) '& lastread
 
         Select Case OpCode
             Case &H61 : ADC(DINDX()) 'ADC (d,x)
@@ -361,7 +363,6 @@
 
             Case &H3B : TSC() 'TSC i
             Case &HBA : TSX() 'TSX i
-            Case &H3B : TSC() 'TSC i
 
             Case &H8A : TXA() 'TXA i
             Case &H9A : TXS() 'TXS i
