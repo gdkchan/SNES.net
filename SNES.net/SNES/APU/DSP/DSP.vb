@@ -59,8 +59,8 @@
 
                     Smpl = (Smpl * .Env) >> 11
 
-                    .EnvX = .Env >> 4
-                    .OutX = Smpl
+                    .EnvX = (.Env >> 4) And &HFF
+                    .OutX = (Smpl >> 8) And &HFF
 
                     Dim SmplL As Integer = Smpl
                     Dim SmplR As Integer = Smpl
