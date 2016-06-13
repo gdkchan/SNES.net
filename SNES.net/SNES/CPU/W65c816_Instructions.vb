@@ -1699,11 +1699,12 @@
 
         If M6502 Then
             S = (S And &HFF) Or &H100
-            ClearIndex8()
+
+            SetFlag(Flags.X)
+            SetFlag(Flags.M)
         End If
 
-        SetFlag(Flags.X)
-        SetFlag(Flags.M)
+        ClearIndex8()
 
         Cycles = Cycles + OneCycle
     End Sub

@@ -1,6 +1,11 @@
 ﻿Imports System.IO
 Imports System.Text
 
+Public Enum Region
+    NTSC
+    PAL
+End Enum
+
 Public Enum Mapper
     LoRom = &H20
     HiRom = &H21
@@ -16,6 +21,7 @@ Public Class Cart
     Public Mapper As Mapper
     Public Type As Byte
     Public SRAMLen As Byte
+    Public Region As Region
     Public IsHiROM As Boolean
     Public Banks As Integer
 
@@ -39,7 +45,21 @@ Public Class Cart
         Mapper = Data((Bank << 15) + &H7FD5)
         Type = Data((Bank << 15) + &H7FD6)
         SRAMLen = Data((Bank << 15) + &H7FD8)
+
+        Debug.WriteLine(Data((Bank << 15) + &H7FD9))
+
+        Select Case Data((Bank << 15) + &H7FD9)
+            Case &H2 : Region = Region.PAL 'Europe
+            Case &H6 : Region = Region.PAL 'French
+            Case &H8 : Region = Region.PAL 'Spanish
+            Case &H9 : Region = Region.PAL 'German
+            Case &H10 : Region = Region.PAL 'Brasil
+            Case Else : Region = Region.NTSC 'Too lazy to finish this
+        End Select
+
         IsHiROM = Mapper And 1
+
+        If Mapper = &HFF Then IsHiROM = False
 
         Debug.WriteLine("ROM Name: " & Name)
         Debug.WriteLine("ROM Type: " & Mapper.ToString())

@@ -45,14 +45,14 @@ Partial Class FrmMain
         Me.MenuGDI = New System.Windows.Forms.ToolStripMenuItem()
         Me.MenuD3D = New System.Windows.Forms.ToolStripMenuItem()
         Me.MenuAudio = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuNoAudio = New System.Windows.Forms.ToolStripMenuItem()
+        Me.MenuDSound = New System.Windows.Forms.ToolStripMenuItem()
         Me.MenuOptsSep0 = New System.Windows.Forms.ToolStripSeparator()
         Me.DebugToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DumpVRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DumpDbgLogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.MenuNoAudio = New System.Windows.Forms.ToolStripMenuItem()
-        Me.MenuDSound = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MainMenu.SuspendLayout()
         Me.SuspendLayout()
@@ -145,48 +145,48 @@ Partial Class FrmMain
         '
         Me.MenuZoom.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuZoom1x, Me.MenuZoom2x, Me.MenuZoom3x, Me.MenuZoom4x})
         Me.MenuZoom.Name = "MenuZoom"
-        Me.MenuZoom.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom.Size = New System.Drawing.Size(119, 22)
         Me.MenuZoom.Text = "Zoom"
         '
         'MenuZoom1x
         '
         Me.MenuZoom1x.Name = "MenuZoom1x"
-        Me.MenuZoom1x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom1x.Size = New System.Drawing.Size(85, 22)
         Me.MenuZoom1x.Text = "1x"
         '
         'MenuZoom2x
         '
         Me.MenuZoom2x.Name = "MenuZoom2x"
-        Me.MenuZoom2x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom2x.Size = New System.Drawing.Size(85, 22)
         Me.MenuZoom2x.Text = "2x"
         '
         'MenuZoom3x
         '
         Me.MenuZoom3x.Name = "MenuZoom3x"
-        Me.MenuZoom3x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom3x.Size = New System.Drawing.Size(85, 22)
         Me.MenuZoom3x.Text = "3x"
         '
         'MenuZoom4x
         '
         Me.MenuZoom4x.Name = "MenuZoom4x"
-        Me.MenuZoom4x.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom4x.Size = New System.Drawing.Size(85, 22)
         Me.MenuZoom4x.Text = "4x"
         '
         'MenuVidSep0
         '
         Me.MenuVidSep0.Name = "MenuVidSep0"
-        Me.MenuVidSep0.Size = New System.Drawing.Size(149, 6)
+        Me.MenuVidSep0.Size = New System.Drawing.Size(116, 6)
         '
         'MenuGDI
         '
         Me.MenuGDI.Name = "MenuGDI"
-        Me.MenuGDI.Size = New System.Drawing.Size(152, 22)
+        Me.MenuGDI.Size = New System.Drawing.Size(119, 22)
         Me.MenuGDI.Text = "GDI+"
         '
         'MenuD3D
         '
         Me.MenuD3D.Name = "MenuD3D"
-        Me.MenuD3D.Size = New System.Drawing.Size(152, 22)
+        Me.MenuD3D.Size = New System.Drawing.Size(119, 22)
         Me.MenuD3D.Text = "Direct3D"
         '
         'MenuAudio
@@ -195,6 +195,18 @@ Partial Class FrmMain
         Me.MenuAudio.Name = "MenuAudio"
         Me.MenuAudio.Size = New System.Drawing.Size(152, 22)
         Me.MenuAudio.Text = "Áudio"
+        '
+        'MenuNoAudio
+        '
+        Me.MenuNoAudio.Name = "MenuNoAudio"
+        Me.MenuNoAudio.Size = New System.Drawing.Size(139, 22)
+        Me.MenuNoAudio.Text = "No Audio"
+        '
+        'MenuDSound
+        '
+        Me.MenuDSound.Name = "MenuDSound"
+        Me.MenuDSound.Size = New System.Drawing.Size(139, 22)
+        Me.MenuDSound.Text = "DirectSound"
         '
         'MenuOptsSep0
         '
@@ -229,20 +241,8 @@ Partial Class FrmMain
         'SobreToolStripMenuItem
         '
         Me.SobreToolStripMenuItem.Name = "SobreToolStripMenuItem"
-        Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
-        '
-        'MenuNoAudio
-        '
-        Me.MenuNoAudio.Name = "MenuNoAudio"
-        Me.MenuNoAudio.Size = New System.Drawing.Size(152, 22)
-        Me.MenuNoAudio.Text = "No Audio"
-        '
-        'MenuDSound
-        '
-        Me.MenuDSound.Name = "MenuDSound"
-        Me.MenuDSound.Size = New System.Drawing.Size(152, 22)
-        Me.MenuDSound.Text = "DirectSound"
         '
         'FrmMain
         '

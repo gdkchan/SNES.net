@@ -1,6 +1,4 @@
-﻿Imports System.Text
-
-Partial Public Class SPC700
+﻿Partial Public Class SPC700
     Const CyclesToSample As Integer = 32
 
     Public Enum Flags

@@ -7,6 +7,8 @@
 
     Dim WRAddr As Integer
 
+    Dim DataBus As Integer
+
     'Read
     Public Function Read8(Address As Integer, Optional IncCycles As Boolean = True) As Integer
         Dim Bank As Integer = Address >> 16
@@ -19,11 +21,12 @@
                 If (Bank And &H7F) < &H40 Then
                     Select Case Address
                         Case 0 To &H1FFF : Read8 = WRAM(Address)
-                        Case &H2000 To &H213F : Read8 = Parent.PPU.Read8(Address)
+                        Case &H2100 To &H213F : Read8 = Parent.PPU.Read8(Address)
                         Case &H2140 To &H217F : Read8 = Parent.APU.Read8IO(Address)
                         Case &H2180
                             Read8 = WRAM(WRAddr)
                             WRAddr = (WRAddr + 1) And &H1FFFF
+                        Case &H2184 To &H3FFF : Read8 = DataBus
                         Case &H4000 To &H42FF : Read8 = Parent.IO.Read8(Address)
                         Case &H4300 To &H43FF : Read8 = Parent.DMA.Read8(Address)
                         Case &H6000 To &H7FFF : If (Bank And &H7F) > &H1F Then Read8 = SRAM(0, Address And &H1FFF)
@@ -47,11 +50,12 @@
                 Else
                     Select Case Address
                         Case 0 To &H1FFF : Read8 = WRAM(Address)
-                        Case &H2000 To &H213F : Read8 = Parent.PPU.Read8(Address)
+                        Case &H2100 To &H213F : Read8 = Parent.PPU.Read8(Address)
                         Case &H2140 To &H217F : Read8 = Parent.APU.Read8IO(Address)
                         Case &H2180
                             Read8 = WRAM(WRADDR)
-                            WRADDR = (WRADDR + 1) And &H1FFFF
+                            WRAddr = (WRAddr + 1) And &H1FFFF
+                        Case &H2184 To &H3FFF : Read8 = DataBus
                         Case &H4000 To &H42FF : Read8 = Parent.IO.Read8(Address)
                         Case &H4300 To &H43FF : Read8 = Parent.DMA.Read8(Address)
                         Case &H8000 To &HFFFF
@@ -69,6 +73,8 @@
         If Bank = &H7F Then Read8 = WRAM(Address Or &H10000)
 
         If IncCycles Then AccessCycles(Bank, Address)
+
+        DataBus = Read8
     End Function
     Public Function Read16(Address As Integer, Optional IncCycles As Boolean = True) As Integer
         Read16 = Read8(Address, IncCycles)
@@ -113,7 +119,7 @@
                 If (Bank And &H7F) < &H40 Then
                     Select Case Address
                         Case 0 To &H1FFF : WRAM(Address) = Value
-                        Case &H2000 To &H213F : Parent.PPU.Write8(Address, Value)
+                        Case &H2100 To &H213F : Parent.PPU.Write8(Address, Value)
                         Case &H2140 To &H217F : Parent.APU.Write8IO(Address, Value)
                         Case &H2180
                             WRAM(WRAddr) = Value
@@ -132,7 +138,7 @@
                 Else
                     Select Case Address
                         Case 0 To &H1FFF : WRAM(Address) = Value
-                        Case &H2000 To &H213F : Parent.PPU.Write8(Address, Value)
+                        Case &H2100 To &H213F : Parent.PPU.Write8(Address, Value)
                         Case &H2140 To &H217F : Parent.APU.Write8IO(Address, Value)
                         Case &H2180
                             WRAM(WRAddr) = Value
@@ -151,6 +157,8 @@
         If Bank = &H7F Then WRAM(Address Or &H10000) = Value
 
         If IncCycles Then AccessCycles(Bank, Address)
+
+        DataBus = Value
     End Sub
     Public Sub Write16(Address As Integer, Value As Integer, Optional IncCycles As Boolean = True)
         Write8(Address, Value And &HFF, IncCycles)

@@ -48,6 +48,13 @@
 
     Public Sub InsertCart(FileName As String)
         Cart.LoadFile(FileName)
+
+        If Cart.Region = Region.PAL Then
+            'Some games will refuse to work if the region is different
+            'TODO: Actually implement PAL timings. Games works with NTSC timings anyway
+            PPU.Stat78 = &H11
+        End If
+
         CPU.Reset()
         Run()
     End Sub
@@ -107,11 +114,11 @@
                 End If
 
                 While CPU.Cycles < CPUCyclesPerLine
+                    PPUDot = CPU.Cycles >> 2
+
                     If IO.MDMAEn <> 0 Then DMA.DMATransfer() Else CPU.ExecuteStep()
 
                     APU.Execute((CPU.Cycles / CPUCyclesPerLine) * APUCyclesPerLine)
-
-                    PPUDot = CPU.Cycles >> 2
 
                     'H/V IRQ 3 or 1 (V=V H=H or V=* H=H)
                     If Not HIRQ And PPUDot >= IO.HTime Then
