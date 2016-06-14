@@ -32,11 +32,7 @@ Public Class Cart
         Dim Bank As Integer
 
         If Data.Length > &H400000 Then 'ExXXROM
-            If Data.Length > &H600000 Then 'ExHiROM
-                Bank = &H81
-            Else 'ExLoROM or ExHiROM
-                Bank = IIf(IsValidHeader(Data, &H40), &H81, &H80)
-            End If
+            Bank = IIf(IsValidHeader(Data, &H40), &H81, 0)
         Else 'LoROM or HiROM
             Bank = IIf(IsValidHeader(Data, 0), 1, 0)
         End If
@@ -45,8 +41,6 @@ Public Class Cart
         Mapper = Data((Bank << 15) + &H7FD5)
         Type = Data((Bank << 15) + &H7FD6)
         SRAMLen = Data((Bank << 15) + &H7FD8)
-
-        Debug.WriteLine(Data((Bank << 15) + &H7FD9))
 
         Select Case Data((Bank << 15) + &H7FD9)
             Case &H2 : Region = Region.PAL 'Europe
@@ -64,22 +58,22 @@ Public Class Cart
         Debug.WriteLine("ROM Name: " & Name)
         Debug.WriteLine("ROM Type: " & Mapper.ToString())
 
-        If IsHiROM Then
+        If IsHiROM Or Mapper = Mapper.ExLoRom Then
             Banks = Data.Length >> 16
-            ReDim Image(Banks - 1, &HFFFF)
+            ReDim Image(&H7F, &HFFFF)
 
             For Bank = 0 To Banks - 1
                 For Offset As Integer = 0 To &HFFFF
-                    Image(Bank, Offset) = Data((Bank << 16) + Offset)
+                    Image(Bank, Offset) = Data((Bank << 16) Or Offset)
                 Next
             Next
         Else
             Banks = Data.Length >> 15
-            ReDim Image(Banks - 1, &H7FFF)
+            ReDim Image(&H7F, &H7FFF)
 
             For Bank = 0 To Banks - 1
                 For Offset As Integer = 0 To &H7FFF
-                    Image(Bank, Offset) = Data((Bank << 15) + Offset)
+                    Image(Bank, Offset) = Data((Bank << 15) Or Offset)
                 Next
             Next
         End If

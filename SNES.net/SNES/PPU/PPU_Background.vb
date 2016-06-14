@@ -111,6 +111,8 @@
                                 Case 3 : TAddr = TAddr + (TMSX << 11) + (TMSY << 12)
                             End Select
 
+                            TAddr = TAddr And &HFFFE
+
                             Dim Pri As Boolean = VRAM(TAddr + 1) And &H20
 
                             If Pri = Fg Then
@@ -182,6 +184,8 @@
                                 Case 2 : TAddr = TAddr + (TMSY << 11)
                                 Case 3 : TAddr = TAddr + (TMSX << 11) + (TMSY << 12)
                             End Select
+
+                            TAddr = TAddr And &HFFFE
 
                             Dim Pri As Boolean = VRAM(TAddr + 1) And &H20
 

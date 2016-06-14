@@ -32,7 +32,7 @@
                         Case &H6000 To &H7FFF : If (Bank And &H7F) > &H1F Then Read8 = SRAM(0, Address And &H1FFF)
                         Case &H8000 To &HFFFF
                             If Parent.Cart.Mapper = Mapper.ExHiRom Then
-                                Read8 = Parent.Cart.Image((Bank And &H7F) Or &H40, Address)
+                                Read8 = Parent.Cart.Image((Bank And &H3F) Or &H40, Address)
                             Else
                                 Read8 = Parent.Cart.Image(Bank And &H7F, Address)
                             End If
@@ -45,6 +45,7 @@
                     End If
                 End If
             Else
+
                 If Address < &H8000 And (Bank > &H6F And Bank < &H78) Then
                     Read8 = SRAM(Bank And 7, Address And &H1FFF)
                 Else
@@ -53,7 +54,7 @@
                         Case &H2100 To &H213F : Read8 = Parent.PPU.Read8(Address)
                         Case &H2140 To &H217F : Read8 = Parent.APU.Read8IO(Address)
                         Case &H2180
-                            Read8 = WRAM(WRADDR)
+                            Read8 = WRAM(WRAddr)
                             WRAddr = (WRAddr + 1) And &H1FFFF
                         Case &H2184 To &H3FFF : Read8 = DataBus
                         Case &H4000 To &H42FF : Read8 = Parent.IO.Read8(Address)
