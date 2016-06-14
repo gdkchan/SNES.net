@@ -59,24 +59,15 @@
         Halted = False
     End Sub
 
-    Public dbgmode As Boolean
-
     Public Sub Execute(TargetCycles As Integer)
-        While Cycles < TargetCycles
+        While Cycles < TargetCycles And Not Halted
             ExecuteStep()
         End While
     End Sub
 
     Public Sub ExecuteStep()
-        If Halted Then
-            Cycles = Cycles + 2
-            Exit Sub
-        End If
-
         Dim StartCycles As Integer = Cycles
         Dim OpCode As Integer = Read8PC()
-
-        'If dbgmode Then Debug.WriteLine("spc core " & ((PC - 1).ToString("X4") & " - A " & Hex(A) & " - X " & Hex(X) & " - Y " & Hex(Y) & " - S " & Hex(S) & " - PSW: " & Hex(PSW) & " - " & Hex(OpCode)))
 
         Select Case OpCode
             Case &H99 : Write8DP(X, ADC(Read8DP(X), Read8DP(Y))) : Cycles = Cycles + 5 'ADC (X),(Y)
@@ -369,7 +360,7 @@
 
                 Cycles = Cycles + 6
 
-            Case &HBA : SetYA(Read16WP(D())) : SetZNFlags16(GetYA()) : Cycles = Cycles + 5 'MOVW YA,d
+            Case &HBA : MOVWYA(Read16WP(D())) : Cycles = Cycles + 5 'MOVW YA,d
             Case &HDA : Write16(D(), GetYA()) : Cycles = Cycles + 5 'MOVW d,YA
 
             Case &HCF : MUL() : Cycles = Cycles + 9 'MUL YA

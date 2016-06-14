@@ -100,12 +100,10 @@
                 If ScanLine = 225 Then
                     If IO.NMITimEn And &H80 Then CPU.NMI()
                     IO.RdNMI = IO.RdNMI Or &H80
-                    IO.HVBJoy = IO.HVBJoy Or &H81
+                    IO.HVBJoy = IO.HVBJoy Or &H80
 
                     PPU.OAMAddr = PPU.OAMReload
                 End If
-
-                If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
 
                 'H/V IRQ 2 (V=V H=0)
                 If ScanLine = IO.VTime Then
@@ -132,6 +130,12 @@
                         DMA.HDMATransfer(ScanLine)
                         IO.HVBJoy = IO.HVBJoy Or &H40
                         HBlk = True
+                    End If
+
+                    'Joypad Busy
+                    If PPUDot >= 32 Then
+                        If ScanLine = 225 Then IO.HVBJoy = IO.HVBJoy Or 1
+                        If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
                     End If
                 End While
 

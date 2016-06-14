@@ -12,8 +12,9 @@
         Public SC As Integer
         Public HOfs As Integer
         Public VOfs As Integer
-        Public HLoHi As Boolean
-        Public VLoHi As Boolean
+        Public HOfsOld As Integer
+        Public VOfsOld As Integer
+        Public ChrBase As Integer
     End Structure
 
     Public Bg(3) As BgStruct
@@ -23,8 +24,6 @@
     Public OAMAddr As Integer
     Public BgMode As Integer
     Public Mosaic As Integer
-    Public Bg12NBA As Integer
-    Public Bg34NBA As Integer
     Public VMAIn As Integer
     Public VAddr As Integer
     Public M7Sel As Integer
@@ -150,93 +149,57 @@
             Case &H2108 : Bg(1).SC = Value
             Case &H2109 : Bg(2).SC = Value
             Case &H210A : Bg(3).SC = Value
-            Case &H210B : Bg12NBA = Value
-            Case &H210C : Bg34NBA = Value
+            Case &H210B
+                Bg(0).ChrBase = (Value And &HF) << 13
+                Bg(1).ChrBase = (Value >> 4) << 13
+            Case &H210C
+                Bg(2).ChrBase = (Value And &HF) << 13
+                Bg(3).ChrBase = (Value >> 4) << 13
             Case &H210D
                 M7H = M7Old Or (Value << 8)
                 M7Old = Value
 
                 With Bg(0)
-                    If .HLoHi Then
-                        .HOfs = (Value << 8) Or (.HOfs And &HFF)
-                    Else
-                        .HOfs = Value Or (.HOfs And &HFF00)
-                    End If
-
-                    .HLoHi = Not .HLoHi
+                    .HOfs = (Value << 8) Or (.HOfsOld And Not 7) Or ((.HOfs >> 8) And 7)
+                    .HOfsOld = Value
                 End With
             Case &H210E
                 M7V = M7Old Or (Value << 8)
                 M7Old = Value
 
                 With Bg(0)
-                    If .VLoHi Then
-                        .VOfs = (Value << 8) Or (.VOfs And &HFF)
-                    Else
-                        .VOfs = Value Or (.VOfs And &HFF00)
-                    End If
-
-                    .VLoHi = Not .VLoHi
+                    .VOfs = (Value << 8) Or .VOfsOld
+                    .VOfsOld = Value
                 End With
             Case &H210F
                 With Bg(1)
-                    If .HLoHi Then
-                        .HOfs = (Value << 8) Or (.HOfs And &HFF)
-                    Else
-                        .HOfs = Value Or (.HOfs And &HFF00)
-                    End If
-
-                    .HLoHi = Not .HLoHi
+                    .HOfs = (Value << 8) Or (.HOfsOld And Not 7) Or ((.HOfs >> 8) And 7)
+                    .HOfsOld = Value
                 End With
             Case &H2110
                 With Bg(1)
-                    If .VLoHi Then
-                        .VOfs = (Value << 8) Or (.VOfs And &HFF)
-                    Else
-                        .VOfs = Value Or (.VOfs And &HFF00)
-                    End If
-
-                    .VLoHi = Not .VLoHi
+                    .VOfs = (Value << 8) Or .VOfsOld
+                    .VOfsOld = Value
                 End With
             Case &H2111
                 With Bg(2)
-                    If .HLoHi Then
-                        .HOfs = (Value << 8) Or (.HOfs And &HFF)
-                    Else
-                        .HOfs = Value Or (.HOfs And &HFF00)
-                    End If
-
-                    .HLoHi = Not .HLoHi
+                    .HOfs = (Value << 8) Or (.HOfsOld And Not 7) Or ((.HOfs >> 8) And 7)
+                    .HOfsOld = Value
                 End With
             Case &H2112
                 With Bg(2)
-                    If .VLoHi Then
-                        .VOfs = (Value << 8) Or (.VOfs And &HFF)
-                    Else
-                        .VOfs = Value Or (.VOfs And &HFF00)
-                    End If
-
-                    .VLoHi = Not .VLoHi
+                    .VOfs = (Value << 8) Or .VOfsOld
+                    .VOfsOld = Value
                 End With
             Case &H2113
                 With Bg(3)
-                    If .HLoHi Then
-                        .HOfs = (Value << 8) Or (.HOfs And &HFF)
-                    Else
-                        .HOfs = Value Or (.HOfs And &HFF00)
-                    End If
-
-                    .HLoHi = Not .HLoHi
+                    .HOfs = (Value << 8) Or (.HOfsOld And Not 7) Or ((.HOfs >> 8) And 7)
+                    .HOfsOld = Value
                 End With
             Case &H2114
                 With Bg(3)
-                    If .VLoHi Then
-                        .VOfs = (Value << 8) Or (.VOfs And &HFF)
-                    Else
-                        .VOfs = Value Or (.VOfs And &HFF00)
-                    End If
-
-                    .VLoHi = Not .VLoHi
+                    .VOfs = (Value << 8) Or .VOfsOld
+                    .VOfsOld = Value
                 End With
             Case &H2115
                 VMAIn = Value

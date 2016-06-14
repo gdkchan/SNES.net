@@ -25,70 +25,75 @@
         If (IniDisp And &H80) = 0 Then
             Select Case BgMode And 7
                 Case 0
-                    RenderLayer(Line, 3, 2, False)
-                    RenderLayer(Line, 2, 2, False)
+                    RenderLayer(Line, 3, False)
+                    RenderLayer(Line, 2, False)
                     RenderCharacters(Line, 0)
 
-                    RenderLayer(Line, 3, 2, True)
-                    RenderLayer(Line, 2, 2, True)
+                    RenderLayer(Line, 3, True)
+                    RenderLayer(Line, 2, True)
                     RenderCharacters(Line, 1)
 
-                    RenderLayer(Line, 1, 2, False)
-                    RenderLayer(Line, 0, 2, False)
+                    RenderLayer(Line, 1, False)
+                    RenderLayer(Line, 0, False)
                     RenderCharacters(Line, 2)
 
-                    RenderLayer(Line, 1, 2, True)
-                    RenderLayer(Line, 0, 2, True)
+                    RenderLayer(Line, 1, True)
+                    RenderLayer(Line, 0, True)
                     RenderCharacters(Line, 3)
 
                 Case 1
-                    RenderLayer(Line, 2, 2, False)
-                    RenderCharacters(Line, 0)
+                    If BgMode And 8 Then
+                        RenderLayer(Line, 2, False)
+                        RenderCharacters(Line, 0)
 
-                    If (BgMode And 8) = 0 Then RenderLayer(Line, 2, 2, True)
-                    RenderCharacters(Line, 1)
+                        RenderCharacters(Line, 1)
 
-                    RenderLayer(Line, 1, 4, False)
-                    RenderLayer(Line, 0, 4, False)
-                    RenderCharacters(Line, 2)
+                        RenderLayer(Line, 1, False)
+                        RenderLayer(Line, 0, False)
+                        RenderCharacters(Line, 2)
 
-                    RenderLayer(Line, 1, 4, True)
-                    RenderLayer(Line, 0, 4, True)
-                    RenderCharacters(Line, 3)
+                        RenderLayer(Line, 1, True)
+                        RenderLayer(Line, 0, True)
+                        RenderCharacters(Line, 3)
 
-                    If BgMode And 8 Then RenderLayer(Line, 2, 2, True)
+                        RenderLayer(Line, 2, True)
+                    Else
+                        RenderLayer(Line, 2, False)
+                        RenderCharacters(Line, 0)
+
+                        RenderLayer(Line, 2, True)
+                        RenderCharacters(Line, 1)
+
+                        RenderLayer(Line, 1, False)
+                        RenderLayer(Line, 0, False)
+                        RenderCharacters(Line, 2)
+
+                        RenderLayer(Line, 1, True)
+                        RenderLayer(Line, 0, True)
+                        RenderCharacters(Line, 3)
+                    End If
 
                 Case 2 To 5
-                    Dim BPP0 As Integer
-                    Dim BPP1 As Integer
-
-                    Select Case BgMode And 7
-                        Case 2 : BPP0 = 4 : BPP1 = 4
-                        Case 3 : BPP0 = 8 : BPP1 = 4
-                        Case 4 : BPP0 = 8 : BPP1 = 2
-                        Case 5 : BPP0 = 4 : BPP1 = 2
-                    End Select
-
-                    RenderLayer(Line, 1, BPP1, False)
+                    RenderLayer(Line, 1, False)
                     RenderCharacters(Line, 0)
 
-                    RenderLayer(Line, 0, BPP0, False)
+                    RenderLayer(Line, 0, False)
                     RenderCharacters(Line, 1)
 
-                    RenderLayer(Line, 1, BPP1, True)
+                    RenderLayer(Line, 1, True)
                     RenderCharacters(Line, 2)
 
-                    RenderLayer(Line, 0, BPP0, True)
+                    RenderLayer(Line, 0, True)
                     RenderCharacters(Line, 3)
 
                 Case 6
                     RenderCharacters(Line, 0)
 
-                    RenderLayer(Line, 0, 4, False)
+                    RenderLayer(Line, 0, False)
                     RenderCharacters(Line, 1)
                     RenderCharacters(Line, 2)
 
-                    RenderLayer(Line, 0, 4, True)
+                    RenderLayer(Line, 0, True)
                     RenderCharacters(Line, 3)
 
                 Case 7

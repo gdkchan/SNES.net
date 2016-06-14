@@ -83,11 +83,7 @@ Public Class FrmMain
     End Sub
 
     Private Sub DebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DebugToolStripMenuItem.Click
-        SNES.CPU.dbgmode = Not SNES.CPU.dbgmode
-    End Sub
 
-    Private Sub DumpDbgLogToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DumpDbgLogToolStripMenuItem.Click
-        File.WriteAllText("D:\snescpulog.txt", SNES.CPU.sbd.ToString())
     End Sub
 
     Private Sub MenuGDI_Click(sender As Object, e As EventArgs) Handles MenuGDI.Click

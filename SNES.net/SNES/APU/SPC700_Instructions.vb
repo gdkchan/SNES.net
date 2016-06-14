@@ -351,6 +351,12 @@
         S = Value
     End Sub
 
+    'Move to YA
+    Private Sub MOVWYA(Value As Integer)
+        SetYA(Value)
+        SetZNFlags16(Value)
+    End Sub
+
     'Multiply
     Private Sub MUL()
         SetYA(Y * A)

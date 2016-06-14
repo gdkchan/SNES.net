@@ -1,9 +1,30 @@
 ﻿Partial Public Class PPU
-    Public Sub RenderLayer(Line As Integer, Layer As Integer, Optional BPP As Integer = 0, Optional Fg As Boolean = False)
+    Dim BPPLUT(,) As Integer =
+    {
+        {2, 2, 2, 2},
+        {4, 4, 2, 0},
+        {4, 4, 0, 0},
+        {8, 4, 0, 0},
+        {8, 2, 0, 0},
+        {4, 2, 0, 0},
+        {4, 0, 0, 0},
+        {8, 8, 0, 0}
+    }
+
+    Public Sub RenderLayer(Line As Integer, Layer As Integer, Optional Fg As Boolean = False)
         If (TM Or TS) And (1 << Layer) Then
             Dim BaseY As Integer = (Line - 1) << 8
             Dim BaseY4 As Integer = BaseY << 2
             Dim Mode As Integer = BgMode And 7
+            Dim BPP As Integer = BPPLUT(Mode, Layer)
+
+            Dim BPPLSh As Integer
+
+            Select Case BPP
+                Case 2 : BPPLSh = 4
+                Case 4 : BPPLSh = 5
+                Case 8 : BPPLSh = 6
+            End Select
 
             With Bg(Layer)
                 If Mode = 7 Then
@@ -70,53 +91,47 @@
                         Offset = Offset + 4
                     Next
                 Else
-                    Dim CHRBase As Integer
-
-                    Select Case Layer
-                        Case 0 : CHRBase = (Bg12NBA And &HF) << 13
-                        Case 1 : CHRBase = (Bg12NBA >> 4) << 13
-                        Case 2 : CHRBase = (Bg34NBA And &HF) << 13
-                        Case 3 : CHRBase = (Bg34NBA >> 4) << 13
-                    End Select
-
                     If BgMode And (&H10 << Layer) Then
                         ' --- 16x16
                         Dim TMBase As Integer = (.SC And &HFC) << 9
                         Dim TMY As Integer = (((Line + (.VOfs And &HF)) >> 4) + ((.VOfs And &HFF) >> 4)) And &HF
                         Dim TMAddr As Integer = TMBase + (TMY << 6)
-                        Dim TMSY As Integer = ((Line + .VOfs) >> 8) And 1
+                        Dim TMSY As Integer = ((Line + .VOfs) >> 9) And 1
 
                         For TX As Integer = 0 To 16
                             Dim TMSX As Integer = (TX << 4) + .HOfs
-                            Dim XAddr As Integer = (TMSX And &HF0) >> 3
+                            Dim XAddr As Integer = (TMSX And &H1F0) >> 3
                             Dim TAddr As Integer = TMAddr + XAddr
 
-                            TMSX = (TMSX >> 8) And 1
+                            TMSX = (TMSX >> 9) And 1
 
                             Select Case .SC And 3
-                                Case 1 : TAddr = TAddr + (TMSX << 9)
-                                Case 2 : TAddr = TAddr + (TMSY << 9)
-                                Case 3 : TAddr = TAddr + (TMSX << 9) + (TMSY << 10)
+                                Case 1 : TAddr = TAddr + (TMSX << 11)
+                                Case 2 : TAddr = TAddr + (TMSY << 11)
+                                Case 3 : TAddr = TAddr + (TMSX << 11) + (TMSY << 12)
                             End Select
 
-                            Dim Tile As Integer = VRAM(TAddr) Or (VRAM(TAddr + 1) * &H100)
-                            Dim CHRNum As Integer = Tile And &H3FF
-                            Dim CGNum As Integer = (Tile And &H1C00) >> 10
-                            Dim Priority As Boolean = Tile And &H2000
-                            Dim HFlip As Boolean = Tile And &H4000
-                            Dim VFlip As Boolean = Tile And &H8000
+                            Dim Pri As Boolean = VRAM(TAddr + 1) And &H20
 
-                            If Priority = Fg Then
+                            If Pri = Fg Then
+                                Dim VL As Integer = VRAM(TAddr)
+                                Dim VH As Integer = VRAM(TAddr + 1)
+                                Dim Tile As Integer = VL Or (VH << 8)
+                                Dim ChrNum As Integer = Tile And &H3FF
+                                Dim CGNum As Integer = ((Tile And &H1C00) >> 10) << BPP
+                                Dim HFlip As Boolean = Tile And &H4000
+                                Dim VFlip As Boolean = Tile And &H8000
+
                                 Dim BaseBuff As Integer = BaseY + (TX << 4)
-                                Dim YOfs As Integer = (Line + (.VOfs And 7)) And 7
+                                Dim YOfs As Integer = (Line + .VOfs) And 7
                                 If VFlip Then YOfs = YOfs Xor 7
                                 If VFlip Then
-                                    If ((Line + (.VOfs And &HF)) And 8) = 0 Then CHRNum = CHRNum + &H10
+                                    If ((Line + .VOfs) And 8) = 0 Then ChrNum = ChrNum + &H10
                                 Else
-                                    If (Line + (.VOfs And &HF)) And 8 Then CHRNum = CHRNum + &H10
+                                    If (Line + .VOfs) And 8 Then ChrNum = ChrNum + &H10
                                 End If
 
-                                Dim CHRAddr As Integer = CHRBase + (BPP << 3) * CHRNum + (YOfs << 1)
+                                Dim ChrAddr As Integer = (.ChrBase + (ChrNum << BPPLSh) + (YOfs << 1)) And &HFFFF
 
                                 For TBX As Integer = 0 To 1
                                     For X As Integer = 0 To 7
@@ -128,22 +143,22 @@
                                             TBXOfs = TBXOfs Xor 8
                                         End If
 
-                                        Dim PalColor As Byte = ReadChr(CHRAddr, BPP, XBit)
+                                        Dim PalColor As Byte = ReadChr(ChrAddr, BPP, XBit)
 
                                         If PalColor <> 0 Then
                                             Dim Offset As Integer = (BaseBuff + X + TBXOfs - (.HOfs And &HF)) << 2
-                                            Dim Color As Byte = (CGNum * (1 << BPP)) + PalColor
+                                            Dim Color As Integer = (CGNum + PalColor) And &HFF
+                                            If Offset > UBound(BackBuffer) Then Exit For
+                                            If Offset < BaseY4 Then Continue For
 
-                                            If Offset >= BaseY4 And Offset <= UBound(BackBuffer) Then
-                                                BackBuffer(Offset + 0) = Pal(Color).B
-                                                BackBuffer(Offset + 1) = Pal(Color).G
-                                                BackBuffer(Offset + 2) = Pal(Color).R
-                                                BackBuffer(Offset + 3) = &HFF
-                                            End If
+                                            BackBuffer(Offset + 0) = Pal(Color).B
+                                            BackBuffer(Offset + 1) = Pal(Color).G
+                                            BackBuffer(Offset + 2) = Pal(Color).R
+                                            BackBuffer(Offset + 3) = &HFF
                                         End If
                                     Next
 
-                                    CHRAddr = CHRAddr + (BPP << 3)
+                                    ChrAddr = ChrAddr + (BPP << 3)
                                 Next
                             End If
                         Next
@@ -168,36 +183,39 @@
                                 Case 3 : TAddr = TAddr + (TMSX << 11) + (TMSY << 12)
                             End Select
 
-                            Dim Tile As Integer = VRAM(TAddr) Or (VRAM(TAddr + 1) * &H100)
-                            Dim CHRNum As Integer = Tile And &H3FF
-                            Dim CGNum As Integer = (Tile And &H1C00) >> 10
-                            Dim Priority As Boolean = Tile And &H2000
-                            Dim HFlip As Boolean = Tile And &H4000
-                            Dim VFlip As Boolean = Tile And &H8000
+                            Dim Pri As Boolean = VRAM(TAddr + 1) And &H20
 
-                            If Priority = Fg Then
+                            If Pri = Fg Then
+                                Dim VL As Integer = VRAM(TAddr)
+                                Dim VH As Integer = VRAM(TAddr + 1)
+                                Dim Tile As Integer = VL Or (VH << 8)
+                                Dim ChrNum As Integer = Tile And &H3FF
+                                Dim CGNum As Integer = ((Tile And &H1C00) >> 10) << BPP
+                                Dim HFlip As Boolean = Tile And &H4000
+                                Dim VFlip As Boolean = Tile And &H8000
+
                                 Dim BaseBuff As Integer = BaseY + (TX << 3)
-                                Dim YOfs As Integer = (Line + (.VOfs And 7)) And 7
+                                Dim YOfs As Integer = (Line + .VOfs) And 7
                                 If VFlip Then YOfs = YOfs Xor 7
 
-                                Dim CHRAddr As Integer = CHRBase + (BPP << 3) * CHRNum + (YOfs << 1)
+                                Dim ChrAddr As Integer = (.ChrBase + (ChrNum << BPPLSh) + (YOfs << 1)) And &HFFFF
 
                                 For X As Integer = 0 To 7
                                     Dim XBit As Integer = X
                                     If HFlip Then XBit = XBit Xor 7
 
-                                    Dim PalColor As Byte = ReadChr(CHRAddr, BPP, XBit)
+                                    Dim PalColor As Byte = ReadChr(ChrAddr, BPP, XBit)
 
                                     If PalColor <> 0 Then
                                         Dim Offset As Integer = (BaseBuff + X - (.HOfs And 7)) << 2
-                                        Dim Color As Integer = ((CGNum * (1 << BPP)) + PalColor) And &HFF
+                                        Dim Color As Integer = (CGNum + PalColor) And &HFF
+                                        If Offset > UBound(BackBuffer) Then Exit For
+                                        If Offset < BaseY4 Then Continue For
 
-                                        If Offset >= BaseY4 And Offset <= UBound(BackBuffer) Then
-                                            BackBuffer(Offset + 0) = Pal(Color).B
-                                            BackBuffer(Offset + 1) = Pal(Color).G
-                                            BackBuffer(Offset + 2) = Pal(Color).R
-                                            BackBuffer(Offset + 3) = &HFF
-                                        End If
+                                        BackBuffer(Offset + 0) = Pal(Color).B
+                                        BackBuffer(Offset + 1) = Pal(Color).G
+                                        BackBuffer(Offset + 2) = Pal(Color).R
+                                        BackBuffer(Offset + 3) = &HFF
                                     End If
                                 Next
                             End If
@@ -210,14 +228,13 @@
     End Sub
 
     Private Function ReadChr(Address As Integer, BPP As Integer, X As Integer) As Byte
-        Address = Address And &HFFFF
         Dim Color As Byte = 0
         Dim Bit As Integer = &H80 >> X
 
         If VRAM(Address + 0) And Bit Then Color = Color Or &H1
         If VRAM(Address + 1) And Bit Then Color = Color Or &H2
 
-        If BPP = 4 Or BPP = 8 Then
+        If BPP <> 2 Then
             If VRAM(Address + 16) And Bit Then Color = Color Or &H4
             If VRAM(Address + 17) And Bit Then Color = Color Or &H8
 
