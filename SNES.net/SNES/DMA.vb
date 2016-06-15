@@ -106,6 +106,7 @@
                             Case 2 : .DMACurr = ((.DMACurr - 1) And &HFFFF) Or (.DMACurr And &HFF0000)
                         End Select
 
+                        '8 cycles per byte transferred
                         Parent.CPU.Cycles = Parent.CPU.Cycles + 8
 
                         .Counter = .Counter - 1
@@ -147,6 +148,9 @@
                                 If .Params And &H40 Then
                                     .Counter = Parent.CPU.Read16(.HDMACurr Or (.DMACurr And &HFF0000))
                                     .HDMACurr = (.HDMACurr + 2) And &HFFFF
+
+                                    '16 cycles on Indirect Address reload
+                                    Parent.CPU.Cycles = Parent.CPU.Cycles + 16
                                 End If
                             End If
 
@@ -182,6 +186,9 @@
                                     Parent.CPU.Write8(.PPUAddr + PPUInc, Parent.CPU.Read8(AAddr, False), False)
                                 End If
 
+                                '8 cycles per byte transferred
+                                Parent.CPU.Cycles = Parent.CPU.Cycles + 8
+
                                 AAddr = ((AAddr + 1) And &HFFFF) Or (AAddr And &HFF0000)
                             Next
                         End If
@@ -189,7 +196,13 @@
                         If .HDMALine And &H7F Then .HDMALine = .HDMALine - 1
                     End If
                 End With
+
+                '8 cycles per active channel
+                Parent.CPU.Cycles = Parent.CPU.Cycles + 8
             End If
         Next
+
+        '18 cycles just because the HDMA is active on this line
+        If Parent.IO.HDMAEn <> 0 Then Parent.CPU.Cycles = Parent.CPU.Cycles + 18
     End Sub
 End Class

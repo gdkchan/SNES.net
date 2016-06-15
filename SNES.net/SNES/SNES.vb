@@ -105,6 +105,9 @@
                     PPU.OAMAddr = PPU.OAMReload
                 End If
 
+                'H/V IRQ 2 (V=V H=0)
+                If ScanLine = IO.VTime And IO.HVIRQ = 2 Then IO.TimeUp = IO.TimeUp Or &H80
+
                 While CPU.Cycles < CPUCyclesPerLine
                     PPUDot = CPU.Cycles >> 2
 
@@ -123,7 +126,7 @@
 
                     'H-Blank Start
                     If Not HBlk And PPUDot >= 274 Then
-                        DMA.HDMATransfer(ScanLine)
+                        If ScanLine < 225 then DMA.HDMATransfer(ScanLine)
                         IO.HVBJoy = IO.HVBJoy Or &H40
                         HBlk = True
                     End If
@@ -134,9 +137,6 @@
                         If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
                     End If
                 End While
-
-                'H/V IRQ 2 (V=V H=0)
-                If ScanLine = IO.VTime And IO.HVIRQ = 2 Then IO.TimeUp = IO.TimeUp Or &H80
 
                 APU.Cycles = APU.Cycles - APUCyclesPerLine
                 CPU.Cycles = CPU.Cycles - CPUCyclesPerLine
