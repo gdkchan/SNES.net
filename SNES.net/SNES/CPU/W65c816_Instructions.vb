@@ -286,11 +286,6 @@
         If (P And Flags.M) Or M6502 Then TXA8() Else TXA16()
     End Sub
 
-    'Transfer Index Register X to Stack Pointer
-    Private Sub TXS()
-        If (P And Flags.X) Or M6502 Then TXS8() Else TXS16()
-    End Sub
-
     'Transfer Index Register X to Index Register Y
     Private Sub TXY()
         If (P And Flags.X) Or M6502 Then TXY8() Else TXY16()
@@ -1170,7 +1165,9 @@
 
     'Reset Status Register
     Private Sub REP(EA As Integer)
-        P = P And Not Read8(EA)
+        Dim Mask As Integer = Read8(EA)
+        If M6502 Then Mask = Mask And Not &H30
+        P = P And Not Mask
         ClearIndex8()
 
         Cycles = Cycles + OneCycle
@@ -1424,7 +1421,9 @@
 
     'Set Status Register
     Private Sub SEP(EA As Integer)
-        P = P Or Read8(EA)
+        Dim Mask As Integer = Read8(EA)
+        If M6502 Then Mask = Mask And Not &H30
+        P = P Or Mask
         ClearIndex8()
 
         Cycles = Cycles + OneCycle
@@ -1606,16 +1605,10 @@
         Cycles = Cycles + OneCycle
     End Sub
 
-    'Transfer Index Register X to Stack Pointer (8 bits)
-    Private Sub TXS8()
-        S = X Or (S And &HFF00)
-
-        Cycles = Cycles + OneCycle
-    End Sub
-
-    'Transfer Index Register X to Stack Pointer (16 bits)
-    Private Sub TXS16()
+    'Transfer Index Register X to Stack Pointer
+    Private Sub TXS()
         S = X
+        If M6502 Then S = S Or &H100
 
         Cycles = Cycles + OneCycle
     End Sub

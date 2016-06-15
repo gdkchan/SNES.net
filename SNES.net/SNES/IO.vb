@@ -87,6 +87,11 @@
     Public Sub Write8(Address As Integer, Value As Integer)
         Select Case Address
             Case &H4200
+                If (((NMITimEn And &H80) = 0) And (Value And &H80) And (RdNMI And &H80) And Parent.ScanLine > 224) Then
+                    'An NMI occurs when the NMI Enable reg transition from 0 -> 1 and in VBlank region
+                    Parent.CPU.DoNMI()
+                End If
+
                 NMITimEn = Value
                 HVIRQ = (NMITimEn >> 4) And 3
                 If HVIRQ = 0 Then TimeUp = TimeUp And Not &H80

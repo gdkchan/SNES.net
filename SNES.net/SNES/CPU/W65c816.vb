@@ -53,6 +53,9 @@
     End Sub
 
     Public Sub ExecuteStep()
+        If NMIPending Then NMI()
+        If IRQPending Then IRQ()
+
         If WAIState Or STPState Then
             Cycles = Cycles + 4
             Exit Sub
@@ -378,32 +381,20 @@
     Dim Interrupted As Boolean
 
     'Interrupts
-    Public Sub IRQ()
-        CheckWAI()
+    Public NMIPending As Boolean
+    Public IRQPending As Boolean
 
-        If (P And Flags.IRQ) = 0 Then
-            If M6502 Then
-                Push16(PC)
-                Push8(P And Not &H10)
-
-                PC = Read16(&HFFFE)
-            Else
-                Push8(PB)
-                Push16(PC)
-                Push8(P)
-
-                PC = Read16(&HFFEE)
-            End If
-
-            PB = 0
-            ClearFlag(Flags.BCD)
-            SetFlag(Flags.IRQ)
-
-            Cycles = Cycles + TwoCycles
-        End If
+    Public Sub DoNMI()
+        NMIPending = True
     End Sub
 
-    Public Sub NMI()
+    Public Sub DoIRQ()
+        IRQPending = True
+    End Sub
+
+    Private Sub NMI()
+        NMIPending = False
+        ExecuteStep()
         CheckWAI()
 
         If M6502 Then
@@ -424,6 +415,31 @@
         SetFlag(Flags.IRQ)
 
         Cycles = Cycles + TwoCycles
+    End Sub
+
+    Private Sub IRQ()
+        If (P And Flags.IRQ) = 0 Then
+            CheckWAI()
+
+            If M6502 Then
+                Push16(PC)
+                Push8(P And Not &H10)
+
+                PC = Read16(&HFFFE)
+            Else
+                Push8(PB)
+                Push16(PC)
+                Push8(P)
+
+                PC = Read16(&HFFEE)
+            End If
+
+            PB = 0
+            ClearFlag(Flags.BCD)
+            SetFlag(Flags.IRQ)
+
+            Cycles = Cycles + TwoCycles
+        End If
     End Sub
 
     Private Sub CheckWAI()

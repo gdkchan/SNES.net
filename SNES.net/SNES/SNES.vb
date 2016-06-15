@@ -98,21 +98,17 @@
 
                 'V-Blank Start
                 If ScanLine = 225 Then
-                    If IO.NMITimEn And &H80 Then CPU.NMI()
+                    If IO.NMITimEn And &H80 Then CPU.DoNMI()
                     IO.RdNMI = IO.RdNMI Or &H80
                     IO.HVBJoy = IO.HVBJoy Or &H80
 
                     PPU.OAMAddr = PPU.OAMReload
                 End If
 
-                'H/V IRQ 2 (V=V H=0)
-                If ScanLine = IO.VTime Then
-                    If IO.HVIRQ = 2 Then CPU.IRQ()
-                    IO.TimeUp = IO.TimeUp Or &H80
-                End If
-
                 While CPU.Cycles < CPUCyclesPerLine
                     PPUDot = CPU.Cycles >> 2
+
+                    CPU.IRQPending = IO.TimeUp And &H80
 
                     If IO.MDMAEn <> 0 Then DMA.DMATransfer() Else CPU.ExecuteStep()
 
@@ -120,8 +116,8 @@
 
                     'H/V IRQ 3 or 1 (V=V H=H or V=* H=H)
                     If Not HIRQ And PPUDot >= IO.HTime Then
-                        If (IO.HVIRQ = 3 And ScanLine = IO.VTime) Or IO.HVIRQ = 1 Then CPU.IRQ()
-                        IO.TimeUp = IO.TimeUp Or &H80
+                        Dim HVIRQ As Boolean = ScanLine = IO.VTime And IO.HVIRQ = 3
+                        If HVIRQ Or IO.HVIRQ = 1 Then IO.TimeUp = IO.TimeUp Or &H80
                         HIRQ = True
                     End If
 
@@ -138,6 +134,9 @@
                         If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
                     End If
                 End While
+
+                'H/V IRQ 2 (V=V H=0)
+                If ScanLine = IO.VTime And IO.HVIRQ = 2 Then IO.TimeUp = IO.TimeUp Or &H80
 
                 APU.Cycles = APU.Cycles - APUCyclesPerLine
                 CPU.Cycles = CPU.Cycles - CPUCyclesPerLine

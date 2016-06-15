@@ -32,7 +32,11 @@ Public Class Cart
         Dim Bank As Integer
 
         If Data.Length > &H400000 Then 'ExXXROM
-            Bank = IIf(IsValidHeader(Data, &H40), &H81, 0)
+            If Data.Length > &H600000 Then 'ExHiROM
+                Bank = &H81
+            Else 'ExLoROM or ExHiROM
+                Bank = IIf(IsValidHeader(Data, &H40), &H81, 0)
+            End If
         Else 'LoROM or HiROM
             Bank = IIf(IsValidHeader(Data, 0), 1, 0)
         End If
