@@ -149,4 +149,10 @@ Public Class FrmMain
 
         If SNES IsNot Nothing Then SNES.SetAudioOut(AudioOut)
     End Sub
+
+    Private Sub FrmMain_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If SNES IsNot Nothing Then SNES.StopEmulation()
+        If Renderer IsNot Nothing Then Renderer.Terminate()
+        If AudioOut IsNot Nothing Then AudioOut.Terminate()
+    End Sub
 End Class

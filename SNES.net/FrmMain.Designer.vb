@@ -137,14 +137,14 @@ Partial Class FrmMain
         '
         Me.MenuVideo.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuZoom, Me.MenuVidSep0, Me.MenuGDI, Me.MenuD3D})
         Me.MenuVideo.Name = "MenuVideo"
-        Me.MenuVideo.Size = New System.Drawing.Size(152, 22)
+        Me.MenuVideo.Size = New System.Drawing.Size(143, 22)
         Me.MenuVideo.Text = "Video"
         '
         'MenuZoom
         '
         Me.MenuZoom.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuZoom1x, Me.MenuZoom2x, Me.MenuZoom3x, Me.MenuZoom4x})
         Me.MenuZoom.Name = "MenuZoom"
-        Me.MenuZoom.Size = New System.Drawing.Size(152, 22)
+        Me.MenuZoom.Size = New System.Drawing.Size(119, 22)
         Me.MenuZoom.Text = "Zoom"
         '
         'MenuZoom1x
@@ -174,25 +174,25 @@ Partial Class FrmMain
         'MenuVidSep0
         '
         Me.MenuVidSep0.Name = "MenuVidSep0"
-        Me.MenuVidSep0.Size = New System.Drawing.Size(149, 6)
+        Me.MenuVidSep0.Size = New System.Drawing.Size(116, 6)
         '
         'MenuGDI
         '
         Me.MenuGDI.Name = "MenuGDI"
-        Me.MenuGDI.Size = New System.Drawing.Size(152, 22)
+        Me.MenuGDI.Size = New System.Drawing.Size(119, 22)
         Me.MenuGDI.Text = "GDI+"
         '
         'MenuD3D
         '
         Me.MenuD3D.Name = "MenuD3D"
-        Me.MenuD3D.Size = New System.Drawing.Size(152, 22)
+        Me.MenuD3D.Size = New System.Drawing.Size(119, 22)
         Me.MenuD3D.Text = "Direct3D"
         '
         'MenuAudio
         '
         Me.MenuAudio.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuNoAudio, Me.MenuDSound})
         Me.MenuAudio.Name = "MenuAudio"
-        Me.MenuAudio.Size = New System.Drawing.Size(152, 22)
+        Me.MenuAudio.Size = New System.Drawing.Size(143, 22)
         Me.MenuAudio.Text = "Áudio"
         '
         'MenuNoAudio
@@ -210,18 +210,18 @@ Partial Class FrmMain
         'MenuOptsSep0
         '
         Me.MenuOptsSep0.Name = "MenuOptsSep0"
-        Me.MenuOptsSep0.Size = New System.Drawing.Size(149, 6)
+        Me.MenuOptsSep0.Size = New System.Drawing.Size(140, 6)
         '
         'DebugToolStripMenuItem
         '
         Me.DebugToolStripMenuItem.Name = "DebugToolStripMenuItem"
-        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
         Me.DebugToolStripMenuItem.Text = "Debug"
         '
         'DumpVRAMToolStripMenuItem
         '
         Me.DumpVRAMToolStripMenuItem.Name = "DumpVRAMToolStripMenuItem"
-        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
         Me.DumpVRAMToolStripMenuItem.Text = "Dump VRAM"
         '
         'AjudaToolStripMenuItem

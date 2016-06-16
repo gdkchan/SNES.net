@@ -94,7 +94,7 @@
                     If BgMode And (&H10 << Layer) Then
                         ' --- 16x16
                         Dim TMBase As Integer = (.SC And &HFC) << 9
-                        Dim TMY As Integer = (((Line + (.VOfs And &HF)) >> 4) + ((.VOfs And &HFF) >> 4)) And &HF
+                        Dim TMY As Integer = ((Line + .VOfs) And &H1FF) >> 4
                         Dim TMAddr As Integer = TMBase + (TMY << 6)
                         Dim TMSY As Integer = ((Line + .VOfs) >> 9) And 1
 
@@ -168,7 +168,7 @@
                     Else
                         ' --- 8x8
                         Dim TMBase As Integer = (.SC And &HFC) << 9
-                        Dim TMY As Integer = (((Line + (.VOfs And 7)) >> 3) + ((.VOfs And &HFF) >> 3)) And &H1F
+                        Dim TMY As Integer = ((Line + .VOfs) And &HFF) >> 3
                         Dim TMAddr As Integer = TMBase + (TMY << 6)
                         Dim TMSY As Integer = ((Line + .VOfs) >> 8) And 1
 

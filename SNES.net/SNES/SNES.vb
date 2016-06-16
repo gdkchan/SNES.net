@@ -89,6 +89,8 @@
             IO.HVBJoy = IO.HVBJoy And Not &H80
             If (PPU.IniDisp And &H80) = 0 Then PPU.Stat77 = PPU.Stat77 And Not &HC0
 
+            DMA.HDMAReset()
+
             For ScanLine = 0 To 261
                 Dim HIRQ As Boolean = False
                 Dim HBlk As Boolean = False
@@ -126,7 +128,11 @@
 
                     'H-Blank Start
                     If Not HBlk And PPUDot >= 274 Then
-                        If ScanLine < 225 then DMA.HDMATransfer(ScanLine)
+                        If ScanLine > 0 And ScanLine < 225 Then
+                            DMA.HDMATransfer()
+                            PPU.Render(ScanLine)
+                        End If
+
                         IO.HVBJoy = IO.HVBJoy Or &H40
                         HBlk = True
                     End If
@@ -140,8 +146,6 @@
 
                 APU.Cycles = APU.Cycles - APUCyclesPerLine
                 CPU.Cycles = CPU.Cycles - CPUCyclesPerLine
-
-                If ScanLine > 0 And ScanLine < 225 Then PPU.Render(ScanLine)
             Next
 
             If SndBuffLen <> 0 Then

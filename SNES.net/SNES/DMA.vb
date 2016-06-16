@@ -124,16 +124,10 @@
         Next
     End Sub
 
-    Public Sub HDMATransfer(ScanLine As Integer)
+    Public Sub HDMATransfer()
         For Ch As Integer = 0 To 7
             If Parent.IO.HDMAEn And (1 << Ch) Then
                 With Channel(Ch)
-                    If ScanLine = 0 Then 'VBlank End
-                        .HDMACurr = .DMACurr And &HFFFF
-                        .HDMALine = 0
-                        .Enabled = True
-                    End If
-
                     If .Enabled Then
                         If (.HDMALine And &H7F) = 0 Or .HDMALine > &H80 Then
                             If (.HDMALine And &H7F) = 0 Then
@@ -204,5 +198,17 @@
 
         '18 cycles just because the HDMA is active on this line
         If Parent.IO.HDMAEn <> 0 Then Parent.CPU.Cycles = Parent.CPU.Cycles + 18
+    End Sub
+
+    Public Sub HDMAReset()
+        For Ch As Integer = 0 To 7
+            If Parent.IO.HDMAEn And (1 << Ch) Then
+                With Channel(Ch)
+                    .HDMACurr = .DMACurr And &HFFFF
+                    .HDMALine = 0
+                    .Enabled = True
+                End With
+            End If
+        Next
     End Sub
 End Class
