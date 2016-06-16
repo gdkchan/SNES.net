@@ -110,7 +110,7 @@
             Case &H4204 : WrDiv = Value Or (WrDiv And &HFF00)
             Case &H4205 : WrDiv = (Value << 8) Or (WrDiv And &HFF)
             Case &H4206
-                If WrDiv = 0 Or Value = 0 Then
+                If Value = 0 Then
                     RdDiv = &HFFFF
                     RdMpy = WrDiv
                 Else
