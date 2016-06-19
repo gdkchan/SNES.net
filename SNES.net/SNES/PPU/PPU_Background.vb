@@ -13,8 +13,6 @@
 
     Public Sub RenderLayer(Line As Integer, Layer As Integer, Optional Fg As Boolean = False)
         If (TM Or TS) And (1 << Layer) Then
-            Dim BaseY As Integer = (Line - 1) << 8
-            Dim BaseY4 As Integer = BaseY << 2
             Dim Mode As Integer = BgMode And 7
             Dim BPP As Integer = BPPLUT(Mode, Layer)
 
@@ -28,8 +26,9 @@
 
             With Bg(Layer)
                 If Mode = 7 Then
+                    Dim Offset As Integer = 0
                     Dim ScrnOver As Integer = M7Sel >> 6
-                    Dim Offset As Integer = BaseY4
+
                     Dim A As Integer = Sign16(M7A)
                     Dim B As Integer = Sign16(M7B)
                     Dim C As Integer = Sign16(M7C)
@@ -83,10 +82,7 @@
 
                         Dim Color As Byte = VRAM(ChrAddr + 1 + (PixelY << 4) + (PixelX << 1))
 
-                        BackBuffer(Offset + 0) = Pal(Color).B
-                        BackBuffer(Offset + 1) = Pal(Color).G
-                        BackBuffer(Offset + 2) = Pal(Color).R
-                        BackBuffer(Offset + 3) = &HFF
+                        DrawPixel(Layer, Offset, Color)
 
                         Offset = Offset + 4
                     Next
@@ -124,7 +120,6 @@
                                 Dim HFlip As Boolean = Tile And &H4000
                                 Dim VFlip As Boolean = Tile And &H8000
 
-                                Dim BaseBuff As Integer = BaseY + (TX << 4)
                                 Dim YOfs As Integer = (Line + .VOfs) And 7
                                 If VFlip Then YOfs = YOfs Xor 7
                                 If VFlip Then
@@ -148,15 +143,12 @@
                                         Dim PalColor As Byte = ReadChr(ChrAddr, BPP, XBit)
 
                                         If PalColor <> 0 Then
-                                            Dim Offset As Integer = (BaseBuff + X + TBXOfs - (.HOfs And &HF)) << 2
+                                            Dim Offset As Integer = ((TX << 4) + X + TBXOfs - (.HOfs And &HF)) << 2
                                             Dim Color As Integer = (CGNum + PalColor) And &HFF
-                                            If Offset > UBound(BackBuffer) Then Exit For
-                                            If Offset < BaseY4 Then Continue For
+                                            If Offset >= 1024 Then Exit For
+                                            If Offset < 0 Then Continue For
 
-                                            BackBuffer(Offset + 0) = Pal(Color).B
-                                            BackBuffer(Offset + 1) = Pal(Color).G
-                                            BackBuffer(Offset + 2) = Pal(Color).R
-                                            BackBuffer(Offset + 3) = &HFF
+                                            DrawPixel(Layer, Offset, Color)
                                         End If
                                     Next
 
@@ -198,7 +190,6 @@
                                 Dim HFlip As Boolean = Tile And &H4000
                                 Dim VFlip As Boolean = Tile And &H8000
 
-                                Dim BaseBuff As Integer = BaseY + (TX << 3)
                                 Dim YOfs As Integer = (Line + .VOfs) And 7
                                 If VFlip Then YOfs = YOfs Xor 7
 
@@ -211,15 +202,12 @@
                                     Dim PalColor As Byte = ReadChr(ChrAddr, BPP, XBit)
 
                                     If PalColor <> 0 Then
-                                        Dim Offset As Integer = (BaseBuff + X - (.HOfs And 7)) << 2
+                                        Dim Offset As Integer = ((TX << 3) + X - (.HOfs And 7)) << 2
                                         Dim Color As Integer = (CGNum + PalColor) And &HFF
-                                        If Offset > UBound(BackBuffer) Then Exit For
-                                        If Offset < BaseY4 Then Continue For
+                                        If Offset >= 1024 Then Exit For
+                                        If Offset < 0 Then Continue For
 
-                                        BackBuffer(Offset + 0) = Pal(Color).B
-                                        BackBuffer(Offset + 1) = Pal(Color).G
-                                        BackBuffer(Offset + 2) = Pal(Color).R
-                                        BackBuffer(Offset + 3) = &HFF
+                                        DrawPixel(Layer, Offset, Color)
                                     End If
                                 Next
                             End If
@@ -228,6 +216,24 @@
                     End If
                 End If
             End With
+        End If
+    End Sub
+
+    Private Sub DrawPixel(Layer As Integer, Offset As Integer, Color As Integer)
+        If TS And (1 << Layer) Then
+            SScrn(Offset + 0) = Pal(Color).B
+            SScrn(Offset + 1) = Pal(Color).G
+            SScrn(Offset + 2) = Pal(Color).R
+
+            SZOrder(Offset >> 2) = Layer
+        End If
+
+        If TM And (1 << Layer) Then
+            MScrn(Offset + 0) = Pal(Color).B
+            MScrn(Offset + 1) = Pal(Color).G
+            MScrn(Offset + 2) = Pal(Color).R
+
+            MZOrder(Offset >> 2) = Layer
         End If
     End Sub
 

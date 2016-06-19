@@ -110,6 +110,8 @@
                 'H/V IRQ 2 (V=V H=0)
                 If ScanLine = IO.VTime And IO.HVIRQ = 2 Then IO.TimeUp = IO.TimeUp Or &H80
 
+                If ScanLine > 0 And ScanLine < 225 Then PPU.Render(ScanLine)
+
                 While CPU.Cycles < CPUCyclesPerLine
                     PPUDot = CPU.Cycles >> 2
 
@@ -128,11 +130,7 @@
 
                     'H-Blank Start
                     If Not HBlk And PPUDot >= 274 Then
-                        If ScanLine > 0 And ScanLine < 225 Then
-                            DMA.HDMATransfer()
-                            PPU.Render(ScanLine)
-                        End If
-
+                        If ScanLine < 224 Then DMA.HDMATransfer()
                         IO.HVBJoy = IO.HVBJoy Or &H40
                         HBlk = True
                     End If

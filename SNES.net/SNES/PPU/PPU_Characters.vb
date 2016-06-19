@@ -2,7 +2,6 @@
     Private Sub RenderCharacters(Line As Integer, Pri As Integer)
         Dim ROverCt As Integer = 0
         Dim TOverCt As Integer = 0
-        Dim BaseY As Integer = (Line - 1) << 8
         Dim ChrBase As Integer = (ObSel And 3) << 14
 
         For Offset As Integer = &H1FC To 0 Step -4
@@ -68,16 +67,7 @@
 
                             Dim Color As Byte = ReadChr(ChrAddr, 4, XBit)
 
-                            If Color <> 0 Then
-                                Dim BOffs As Integer = (BaseY + PosX) << 2
-
-                                Color = 128 + (PalNum << 4) + Color
-
-                                BackBuffer(BOffs + 0) = Pal(Color).B
-                                BackBuffer(BOffs + 1) = Pal(Color).G
-                                BackBuffer(BOffs + 2) = Pal(Color).R
-                                BackBuffer(BOffs + 3) = &HFF
-                            End If
+                            If Color <> 0 Then DrawPixel(4, PosX << 2, 128 + (PalNum << 4) + Color)
                         Next
 
                         If HFlip Then X = X - 8 Else X = X + 8
