@@ -67,7 +67,7 @@
 
                             Dim Color As Byte = ReadChr(ChrAddr, 4, XBit)
 
-                            If Color <> 0 Then DrawPixel(4, PosX << 2, 128 + (PalNum << 4) + Color)
+                            If Color <> 0 Then DrawPixel(4, PosX << 2, Pal(128 + (PalNum << 4) + Color))
                         Next
 
                         If HFlip Then X = X - 8 Else X = X + 8

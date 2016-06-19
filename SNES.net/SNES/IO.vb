@@ -122,7 +122,12 @@
             Case &H4209 : VTime = Value Or (VTime And &H100)
             Case &H420A : VTime = ((Value And 1) << 8) Or (VTime And &HFF)
             Case &H420B : MDMAEn = Value
-            Case &H420C : HDMAEn = Value
+            Case &H420C
+                HDMAEn = Value
+
+                For Ch As Integer = 0 To 7
+                    If HDMAEn And (1 << Ch) Then Parent.DMA.Channel(Ch).Enabled = True
+                Next
             Case &H420D : MemSel = Value
         End Select
     End Sub

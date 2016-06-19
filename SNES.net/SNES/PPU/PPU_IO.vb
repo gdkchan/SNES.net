@@ -242,6 +242,15 @@
                 Pal(CGAddr >> 1).B = (CGRAM(WAddr + 1) And &H7C) << 1
 
                 CGAddr = (CGAddr + 1) And &H1FF
+            Case &H2123 : W12Sel = Value
+            Case &H2124 : W34Sel = Value
+            Case &H2125 : WObjSel = Value
+            Case &H2126 : WH0 = Value
+            Case &H2127 : WH1 = Value
+            Case &H2128 : WH2 = Value
+            Case &H2129 : WH3 = Value
+            Case &H212A : WBgLog = Value
+            Case &H212B : WObjLog = Value
             Case &H212C : TM = Value
             Case &H212D : TS = Value
             Case &H212E : TMW = Value

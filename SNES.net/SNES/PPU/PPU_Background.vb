@@ -82,7 +82,7 @@
 
                         Dim Color As Byte = VRAM(ChrAddr + 1 + (PixelY << 4) + (PixelX << 1))
 
-                        DrawPixel(Layer, Offset, Color)
+                        DrawPixel(Layer, Offset, Pal(Color))
 
                         Offset = Offset + 4
                     Next
@@ -148,7 +148,7 @@
                                             If Offset >= 1024 Then Exit For
                                             If Offset < 0 Then Continue For
 
-                                            DrawPixel(Layer, Offset, Color)
+                                            DrawPixel(Layer, Offset, Pal(Color))
                                         End If
                                     Next
 
@@ -207,7 +207,7 @@
                                         If Offset >= 1024 Then Exit For
                                         If Offset < 0 Then Continue For
 
-                                        DrawPixel(Layer, Offset, Color)
+                                        DrawPixel(Layer, Offset, Pal(Color))
                                     End If
                                 Next
                             End If
@@ -219,21 +219,62 @@
         End If
     End Sub
 
-    Private Sub DrawPixel(Layer As Integer, Offset As Integer, Color As Integer)
-        If TS And (1 << Layer) Then
-            SScrn(Offset + 0) = Pal(Color).B
-            SScrn(Offset + 1) = Pal(Color).G
-            SScrn(Offset + 2) = Pal(Color).R
+    Private Sub DrawPixel(Layer As Integer, Offset As Integer, Color As RGB)
+        Dim X As Integer = Offset >> 2
 
-            SZOrder(Offset >> 2) = Layer
+        Dim SEn As Boolean = True
+        Dim MEn As Boolean = True
+
+        If (TMW Or TSW) And (1 << Layer) Then
+            Dim W1Sel As Integer
+            Dim W2Sel As Integer
+            Dim MaskLog As Integer
+
+            Select Case Layer
+                Case 0 'BG1
+                    W1Sel = (W12Sel >> 0) And 3
+                    W2Sel = (W12Sel >> 2) And 3
+                    MaskLog = (WBgLog >> 0) And 3
+                Case 1 'BG2
+                    W1Sel = (W12Sel >> 4) And 3
+                    W2Sel = (W12Sel >> 6) And 3
+                    MaskLog = (WBgLog >> 2) And 3
+                Case 2 'BG3
+                    W1Sel = (W34Sel >> 0) And 3
+                    W2Sel = (W34Sel >> 2) And 3
+                    MaskLog = (WBgLog >> 4) And 3
+                Case 3 'BG4
+                    W1Sel = (W34Sel >> 4) And 3
+                    W2Sel = (W34Sel >> 6) And 3
+                    MaskLog = (WBgLog >> 6) And 3
+                Case 4 'OBJ
+                    W1Sel = (WObjSel >> 0) And 3
+                    W2Sel = (WObjSel >> 2) And 3
+                    MaskLog = (WObjLog >> 0) And 3
+            End Select
+
+            Dim Disable As Boolean = GetWindow(X, W1Sel, W2Sel, MaskLog)
+
+            If TSW And (1 << Layer) Then SEn = Not Disable
+            If TMW And (1 << Layer) Then MEn = Not Disable
         End If
 
-        If TM And (1 << Layer) Then
-            MScrn(Offset + 0) = Pal(Color).B
-            MScrn(Offset + 1) = Pal(Color).G
-            MScrn(Offset + 2) = Pal(Color).R
+        SEn = SEn And (CGWSel And 2)
 
-            MZOrder(Offset >> 2) = Layer
+        If SEn And (TS And (1 << Layer)) Then
+            SScrn(Offset + 0) = Color.B
+            SScrn(Offset + 1) = Color.G
+            SScrn(Offset + 2) = Color.R
+
+            SZOrder(X) = Layer
+        End If
+
+        If MEn And (TM And (1 << Layer)) Then
+            MScrn(Offset + 0) = Color.B
+            MScrn(Offset + 1) = Color.G
+            MScrn(Offset + 2) = Color.R
+
+            MZOrder(X) = Layer
         End If
     End Sub
 

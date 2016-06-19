@@ -1,5 +1,5 @@
 ﻿Public Class DMA
-    Private Structure DMACh
+    Public Structure DMACh
         Public Params As Integer
         Public PPUAddr As Integer
         Public DMACurr As Integer
@@ -12,7 +12,7 @@
         Public Enabled As Boolean
     End Structure
 
-    Dim Channel(7) As DMACh
+    Public Channel(7) As DMACh
 
     Dim Parent As SNES
 
