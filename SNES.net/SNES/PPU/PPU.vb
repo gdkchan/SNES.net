@@ -5,6 +5,7 @@
     Dim MScrn(256 * 4 - 1) As Integer
     Dim SZOrder(256 - 1) As Integer
     Dim MZOrder(256 - 1) As Integer
+    Dim UseMath(256 - 1) As Boolean
 
     Public BackBuffer(256 * 224 * 4 - 1) As Byte
 
@@ -35,6 +36,8 @@
             MScrn(Ofs + 3) = &HFF
 
             MZOrder(X) = 5 'Backdrop
+
+            UseMath(X) = True
         Next
 
         'Render Layers on Main/Sub Screen
@@ -126,6 +129,10 @@
         End Select
 
         'Do "Color Math" blending to final buffer
+        RenderBuffer(Line)
+    End Sub
+
+    Private Sub RenderBuffer(Line As Integer)
         Dim Base As Integer = (Line - 1) << 10
 
         If (IniDisp And &H80) = 0 Then
@@ -165,10 +172,10 @@
                     MScrn(O + 2) = 0
                 End If
 
-                If DoMath And (CGAdSub And (1 << MZOrder(X))) Then
+                If DoMath And UseMath(X) And (CGAdSub And (1 << MZOrder(X))) Then
                     Dim Div2 As Integer = (CGAdSub >> 6) And 1
 
-                    If SZOrder(X) = 5 Then Div2 = 0
+                    If SZOrder(X) = 5 Or IsBlack Then Div2 = 0
 
                     If CGAdSub And &H80 Then
                         BackBuffer(Base + O + 0) = ClampU8((MScrn(O + 0) - SScrn(O + 0)) >> Div2)
@@ -185,7 +192,7 @@
                     BackBuffer(Base + O + 2) = MScrn(O + 2)
                 End If
 
-                '.NET IL compiler is too dumb to ignore a multiplication by 1
+                '.NET JIT is too dumb to ignore a multiplication by 1
                 'Therefore doing this check is actually faster than directly multiplying it
                 If B <> 1 Then
                     BackBuffer(Base + O + 0) = BackBuffer(Base + O + 0) * B

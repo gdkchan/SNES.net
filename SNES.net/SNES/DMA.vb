@@ -188,11 +188,11 @@
                         End If
 
                         If .HDMALine And &H7F Then .HDMALine = .HDMALine - 1
+
+                        '8 cycles per active channel
+                        Parent.CPU.Cycles = Parent.CPU.Cycles + 8
                     End If
                 End With
-
-                '8 cycles per active channel
-                Parent.CPU.Cycles = Parent.CPU.Cycles + 8
             End If
         Next
 
