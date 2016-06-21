@@ -130,7 +130,7 @@
                                         Dim VOfs As Integer = GetBg3Tile(TX - 1, 8)
 
                                         If HOfs And (&H2000 << Layer) Then TileX = TX + (HOfs >> 4)
-                                        If VOfs And (&H2000 << Layer) And Layer = 0 Then Y = Line + VOfs
+                                        If VOfs And (&H2000 << Layer) Then Y = Line + VOfs
                                     End If
                                 End If
                             End If
@@ -239,7 +239,7 @@
                                         Dim VOfs As Integer = GetBg3Tile(TX - 1, 8)
 
                                         If HOfs And (&H2000 << Layer) Then TileX = TX + (HOfs >> 3)
-                                        If VOfs And (&H2000 << Layer) And Layer = 0 Then Y = Line + VOfs
+                                        If VOfs And (&H2000 << Layer) Then Y = Line + VOfs
                                     End If
                                 End If
                             End If
