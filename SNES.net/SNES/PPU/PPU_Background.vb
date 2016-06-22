@@ -107,16 +107,16 @@
                     If BgMode And (&H10 << Layer) Then
                         ' --- 16x16
                         Dim TMBase As Integer = (.SC And &HFC) << 9
-                        Dim Y As Integer = Line + .VOfs
 
                         For TX As Integer = 0 To 16
                             Dim TileX As Integer = TX
+                            Dim Y As Integer = Line + .VOfs
 
                             If Mode <> 0 And (Mode And 1) = 0 Then
                                 'Offset per Tile mode
                                 If TX <> 0 Then
                                     If Mode = 4 Then
-                                        Dim Ofs As Integer = GetBg3Tile(TX - 1, 0)
+                                        Dim Ofs As Integer = GetBg3Tile((TX << 4) - 16, 0)
 
                                         Y = Line
 
@@ -126,8 +126,8 @@
                                             TileX = TX + (Ofs >> 4)
                                         End If
                                     Else
-                                        Dim HOfs As Integer = GetBg3Tile(TX - 1, 0)
-                                        Dim VOfs As Integer = GetBg3Tile(TX - 1, 8)
+                                        Dim HOfs As Integer = GetBg3Tile((TX << 4) - 16, 0)
+                                        Dim VOfs As Integer = GetBg3Tile((TX << 4) - 16, 16)
 
                                         If HOfs And (&H2000 << Layer) Then TileX = TX + (HOfs >> 4)
                                         If VOfs And (&H2000 << Layer) Then Y = Line + VOfs
@@ -216,16 +216,16 @@
                     Else
                         ' --- 8x8
                         Dim TMBase As Integer = (.SC And &HFC) << 9
-                        Dim Y As Integer = Line + .VOfs
 
                         For TX As Integer = 0 To 32
                             Dim TileX As Integer = TX
+                            Dim Y As Integer = Line + .VOfs
 
                             If Mode <> 0 And (Mode And 1) = 0 Then
                                 'Offset per Tile mode
                                 If TX <> 0 Then
                                     If Mode = 4 Then
-                                        Dim Ofs As Integer = GetBg3Tile(TX - 1, 0)
+                                        Dim Ofs As Integer = GetBg3Tile((TX << 3) - 8, 0)
 
                                         Y = Line
 
@@ -235,8 +235,8 @@
                                             TileX = TX + (Ofs >> 3)
                                         End If
                                     Else
-                                        Dim HOfs As Integer = GetBg3Tile(TX - 1, 0)
-                                        Dim VOfs As Integer = GetBg3Tile(TX - 1, 8)
+                                        Dim HOfs As Integer = GetBg3Tile((TX << 3) - 8, 0)
+                                        Dim VOfs As Integer = GetBg3Tile((TX << 3) - 8, 8)
 
                                         If HOfs And (&H2000 << Layer) Then TileX = TX + (HOfs >> 3)
                                         If VOfs And (&H2000 << Layer) Then Y = Line + VOfs
@@ -375,7 +375,7 @@
         UseMath(X) = Math
     End Sub
 
-    Private Function GetBg3Tile(TX As Integer, Y As Integer) As Integer
+    Private Function GetBg3Tile(X As Integer, Y As Integer) As Integer
         'This is used on the Offset per Tile mode
         With Bg(2)
             Dim TMBase As Integer = (.SC And &HFC) << 9
@@ -387,7 +387,7 @@
                 Dim TMY As Integer = ((Y + .VOfs) And &H1FF) >> 4
                 Dim TMAddr As Integer = TMBase + (TMY << 6)
 
-                TMSX = (TX << 4) + .HOfs
+                TMSX = X + .HOfs
                 TMSY = ((Y + .VOfs) >> 9) And 1
                 TAddr = TMAddr + ((TMSX And &H1F0) >> 3)
                 TMSX = (TMSX >> 9) And 1
@@ -396,7 +396,7 @@
                 Dim TMY As Integer = ((Y + .VOfs) And &HFF) >> 3
                 Dim TMAddr As Integer = TMBase + (TMY << 6)
 
-                TMSX = (TX << 3) + .HOfs
+                TMSX = X + .HOfs
                 TMSY = ((Y + .VOfs) >> 8) And 1
                 TAddr = TMAddr + ((TMSX And &HF8) >> 2)
                 TMSX = (TMSX >> 8) And 1
