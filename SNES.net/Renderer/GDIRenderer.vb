@@ -15,7 +15,7 @@ Public Class GDIRenderer : Implements IRenderer
             Dim Offset As Integer
             For Y As Integer = 0 To Height - 1
                 For X As Integer = 0 To Width - 1
-                    Dim BPos As Integer = ((X \ Zoom) + ((Y \ Zoom) << 8)) << 2
+                    Dim BPos As Integer = (((X << 1) \ Zoom) + (((Y << 1) \ Zoom) << 9)) << 2
 
                     NewBuff(Offset + 0) = Buffer(BPos + 0)
                     NewBuff(Offset + 1) = Buffer(BPos + 1)

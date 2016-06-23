@@ -63,6 +63,9 @@
 
     Dim M7Old As Integer
 
+    Dim Mode As integer
+    Dim HiRes As Boolean
+
     Dim HCtLoHi As Boolean
     Dim VCtLoHi As Boolean
 
@@ -143,7 +146,10 @@
                 End If
 
                 OAMAddr = (OAMAddr + 1) Mod &H220
-            Case &H2105 : BgMode = Value
+            Case &H2105
+                BgMode = Value
+                Mode = Value And 7
+                HiRes = Mode = 5 Or Mode = 6
             Case &H2106 : Mosaic = Value
             Case &H2107 : Bg(0).SC = Value
             Case &H2108 : Bg(1).SC = Value

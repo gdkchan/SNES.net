@@ -1,5 +1,7 @@
 ﻿Partial Public Class PPU
     Private Sub RenderCharacters(Line As Integer, Pri As Integer)
+        Line = Line - 1
+
         Dim ROverCt As Integer = 0
         Dim TOverCt As Integer = 0
         Dim ChrBase As Integer = (ObSel And 3) << 14

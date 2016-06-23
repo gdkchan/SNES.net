@@ -47,7 +47,7 @@
             Else
 
                 If Address < &H8000 And (Bank > &H6F And Bank < &H78) Then
-                    Read8 = SRAM(Bank And 7, Address And &H1FFF)
+                    If Parent.Cart.SRAMLen Then Read8 = SRAM(Bank And 7, Address And &H1FFF)
                 Else
                     Select Case Address
                         Case 0 To &H1FFF : Read8 = WRAM(Address)
@@ -135,7 +135,7 @@
                 End If
             Else
                 If Address < &H8000 And (Bank > &H6F And Bank < &H78) Then
-                    SRAM(Bank And 7, Address And &H1FFF) = Value
+                    If Parent.Cart.SRAMLen Then SRAM(Bank And 7, Address And &H1FFF) = Value
                 Else
                     Select Case Address
                         Case 0 To &H1FFF : WRAM(Address) = Value

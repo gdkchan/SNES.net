@@ -7,7 +7,7 @@
     Dim MZOrder(256 - 1) As Integer
     Dim UseMath(256 - 1) As Boolean
 
-    Public BackBuffer(256 * 224 * 4 - 1) As Byte
+    Public BackBuffer(512 * 448 * 4 - 1) As Byte
 
     Dim Parent As SNES
 
@@ -23,10 +23,17 @@
         For X As Integer = 0 To 255
             Dim Ofs As Integer = X << 2
 
-            SScrn(Ofs + 0) = BgCol.B
-            SScrn(Ofs + 1) = BgCol.G
-            SScrn(Ofs + 2) = BgCol.R
-            SScrn(Ofs + 3) = &HFF
+            If HiRes Then
+                SScrn(Ofs + 0) = Pal(0).B
+                SScrn(Ofs + 1) = Pal(0).G
+                SScrn(Ofs + 2) = Pal(0).R
+                SScrn(Ofs + 3) = &HFF
+            Else
+                SScrn(Ofs + 0) = BgCol.B
+                SScrn(Ofs + 1) = BgCol.G
+                SScrn(Ofs + 2) = BgCol.R
+                SScrn(Ofs + 3) = &HFF
+            End If
 
             SZOrder(X) = 5 'Backdrop
 
@@ -41,7 +48,7 @@
         Next
 
         'Render Layers on Main/Sub Screen
-        Select Case BgMode And 7
+        Select Case Mode
             Case 0
                 RenderLayer(Line, 3, False)
                 RenderLayer(Line, 2, False)
@@ -133,13 +140,24 @@
     End Sub
 
     Private Sub RenderBuffer(Line As Integer)
-        Dim Base As Integer = (Line - 1) << 10
+        Dim Y0 As Integer = 0
+        Dim Y1 As Integer = 1
+        Dim Base(1) As Integer
+
+        Base(0) = (Line - 1) << 12
+        Base(1) = Base(0) + &H800
+
+        If SetIni And 1 Then
+            Y0 = Stat78 >> 7
+            Y1 = Y0
+        End If
 
         If (IniDisp And &H80) = 0 Then
-            Dim B As Single = (IniDisp And &HF) / &HF
+            Dim Bright As Single = (IniDisp And &HF) / &HF
 
             For X As Integer = 0 To 255
-                Dim O As Integer = X << 2
+                Dim OS As Integer = X << 2
+                Dim OD As Integer = X << 3
 
                 Dim W1Sel As Integer = (WObjSel >> 4) And 3
                 Dim W2Sel As Integer = (WObjSel >> 6) And 3
@@ -167,50 +185,79 @@
                 End Select
 
                 If IsBlack Then
-                    MScrn(O + 0) = 0
-                    MScrn(O + 1) = 0
-                    MScrn(O + 2) = 0
+                    MScrn(OS + 0) = 0
+                    MScrn(OS + 1) = 0
+                    MScrn(OS + 2) = 0
                 End If
 
-                If DoMath And UseMath(X) And (CGAdSub And (1 << MZOrder(X))) Then
+                Dim R0, G0, B0 As Byte
+
+                If DoMath And UseMath(X) And (CGAdSub And (1 << MZOrder(X))) And Not HiRes Then
                     Dim Div2 As Integer = (CGAdSub >> 6) And 1
 
                     If SZOrder(X) = 5 Or IsBlack Then Div2 = 0
 
                     If CGAdSub And &H80 Then
-                        BackBuffer(Base + O + 0) = ClampU8((MScrn(O + 0) - SScrn(O + 0)) >> Div2)
-                        BackBuffer(Base + O + 1) = ClampU8((MScrn(O + 1) - SScrn(O + 1)) >> Div2)
-                        BackBuffer(Base + O + 2) = ClampU8((MScrn(O + 2) - SScrn(O + 2)) >> Div2)
+                        B0 = ClampU8((MScrn(OS + 0) - SScrn(OS + 0)) >> Div2)
+                        G0 = ClampU8((MScrn(OS + 1) - SScrn(OS + 1)) >> Div2)
+                        R0 = ClampU8((MScrn(OS + 2) - SScrn(OS + 2)) >> Div2)
                     Else
-                        BackBuffer(Base + O + 0) = ClampU8((MScrn(O + 0) + SScrn(O + 0)) >> Div2)
-                        BackBuffer(Base + O + 1) = ClampU8((MScrn(O + 1) + SScrn(O + 1)) >> Div2)
-                        BackBuffer(Base + O + 2) = ClampU8((MScrn(O + 2) + SScrn(O + 2)) >> Div2)
+                        B0 = ClampU8((MScrn(OS + 0) + SScrn(OS + 0)) >> Div2)
+                        G0 = ClampU8((MScrn(OS + 1) + SScrn(OS + 1)) >> Div2)
+                        R0 = ClampU8((MScrn(OS + 2) + SScrn(OS + 2)) >> Div2)
                     End If
                 Else
-                    BackBuffer(Base + O + 0) = MScrn(O + 0)
-                    BackBuffer(Base + O + 1) = MScrn(O + 1)
-                    BackBuffer(Base + O + 2) = MScrn(O + 2)
+                    B0 = MScrn(OS + 0)
+                    G0 = MScrn(OS + 1)
+                    R0 = MScrn(OS + 2)
                 End If
 
-                '.NET JIT is too dumb to ignore a multiplication by 1
-                'Therefore doing this check is actually faster than directly multiplying it
-                If B <> 1 Then
-                    BackBuffer(Base + O + 0) = BackBuffer(Base + O + 0) * B
-                    BackBuffer(Base + O + 1) = BackBuffer(Base + O + 1) * B
-                    BackBuffer(Base + O + 2) = BackBuffer(Base + O + 2) * B
+                Dim R1 As Byte = R0
+                Dim G1 As Byte = G0
+                Dim B1 As Byte = B0
+
+                If HiRes Then
+                    B0 = SScrn(OS + 0)
+                    G0 = SScrn(OS + 1)
+                    R0 = SScrn(OS + 2)
                 End If
 
-                BackBuffer(Base + O + 3) = &HFF
+                If Bright <> 1 Then
+                    R0 = R0 * Bright
+                    G0 = G0 * Bright
+                    B0 = B0 * Bright
+
+                    R1 = R1 * Bright
+                    G1 = G1 * Bright
+                    B1 = B1 * Bright
+                End If
+
+                For i As Integer = Y0 To Y1
+                    BackBuffer(Base(i) + OD + 0) = B0
+                    BackBuffer(Base(i) + OD + 1) = G0
+                    BackBuffer(Base(i) + OD + 2) = R0
+                    BackBuffer(Base(i) + OD + 3) = &HFF
+
+                    BackBuffer(Base(i) + OD + 4) = B1
+                    BackBuffer(Base(i) + OD + 5) = G1
+                    BackBuffer(Base(i) + OD + 6) = R1
+                    BackBuffer(Base(i) + OD + 7) = &HFF
+                Next
             Next
         Else
             'Screen is all black
-            For X As Integer = 0 To 255
+            For X As Integer = 0 To 511
                 Dim O As Integer = X << 2
 
-                BackBuffer(Base + O + 0) = 0
-                BackBuffer(Base + O + 1) = 0
-                BackBuffer(Base + O + 2) = 0
-                BackBuffer(Base + O + 3) = &HFF
+                BackBuffer(Base(0) + O + 0) = 0
+                BackBuffer(Base(0) + O + 1) = 0
+                BackBuffer(Base(0) + O + 2) = 0
+                BackBuffer(Base(0) + O + 3) = &HFF
+
+                BackBuffer(Base(1) + O + 0) = 0
+                BackBuffer(Base(1) + O + 1) = 0
+                BackBuffer(Base(1) + O + 2) = 0
+                BackBuffer(Base(1) + O + 3) = &HFF
             Next
         End If
     End Sub

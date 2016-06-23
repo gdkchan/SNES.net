@@ -105,6 +105,12 @@
                     IO.HVBJoy = IO.HVBJoy Or &H80
 
                     PPU.OAMAddr = PPU.OAMReload
+
+                    If PPU.Stat78 And &H80 Then
+                        PPU.Stat78 = PPU.Stat78 And Not &H80
+                    Else
+                        PPU.Stat78 = PPU.Stat78 Or &H80
+                    End If
                 End If
 
                 'H/V IRQ 2 (V=V H=0)

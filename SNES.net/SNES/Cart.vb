@@ -31,6 +31,13 @@ Public Class Cart
         Dim Data() As Byte = File.ReadAllBytes(FileName)
         Dim Bank As Integer
 
+        If (Data.Length Mod &H8000) = &H200 Then
+            'ROM "infected" with crappy SMC header
+            Dim NewData(UBound(Data) - &H200) As Byte
+            Array.Copy(Data, &H200, NewData, 0, NewData.Length)
+            Data = NewData
+        End If
+
         If Data.Length > &H400000 Then 'ExXXROM
             If Data.Length > &H600000 Then 'ExHiROM
                 Bank = &H81
