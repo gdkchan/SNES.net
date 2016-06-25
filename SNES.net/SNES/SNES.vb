@@ -82,12 +82,14 @@
         Execute = True
 
         While Execute
+            Dim OldDot As Integer = 0
             Dim SndBuffLen As Integer = AudioOut.GetBuffLen()
 
             'V-Blank End
             IO.RdNMI = IO.RdNMI And Not &H80
             IO.HVBJoy = IO.HVBJoy And Not &H80
-            If (PPU.IniDisp And &H80) = 0 Then PPU.Stat77 = PPU.Stat77 And &H3F
+
+            If (PPU.IniDisp And &H80) = 0 Then PPU.Stat77 = PPU.Stat77 And Not &HC0
 
             DMA.HDMAReset()
 
@@ -98,6 +100,7 @@
                 'V-Blank Start
                 If ScanLine = 225 Then
                     If IO.NMITimEn And &H80 Then CPU.DoNMI()
+
                     IO.RdNMI = IO.RdNMI Or &H80
                     IO.HVBJoy = IO.HVBJoy Or &H80
 
@@ -115,38 +118,35 @@
 
                 If ScanLine > 0 And ScanLine < 225 Then PPU.Render(ScanLine)
 
-                PPUDot = 0
-
                 While CPU.Cycles < CPUCyclesPerLine
                     CPU.IRQPending = IO.TimeUp And &H80
 
                     If IO.MDMAEn <> 0 Then DMA.DMATransfer() Else CPU.ExecuteStep()
                     APU.Execute((CPU.Cycles / CPUCyclesPerLine) * APUCyclesPerLine)
 
-                    While PPUDot < (CPU.Cycles >> 2)
-                        'H-Blank Start
-                        If PPUDot = 274 Then
-                            If ScanLine < 224 Then DMA.HDMATransfer()
+                    OldDot = PPUDot
+                    PPUDot = CPU.Cycles >> 2
 
-                            IO.HVBJoy = IO.HVBJoy Or &H40
-                        End If
+                    'H-Blank Start
+                    If InRange(OldDot, PPUDot, 274) Then
+                        If ScanLine < 224 Then DMA.HDMATransfer()
 
-                        'H/V IRQ 3 or 1 (V=V H=H or V=* H=H)
-                        If PPUDot = IO.HTime Then
-                            Dim HVIRQ As Boolean = ScanLine = IO.VTime And IO.HVIRQ = 3
+                        IO.HVBJoy = IO.HVBJoy Or &H40
+                    End If
 
-                            If HVIRQ Or IO.HVIRQ = 1 Then IO.TimeUp = IO.TimeUp Or &H80
-                        End If
+                    'H/V IRQ 3 or 1 (V=V H=H or V=* H=H)
+                    If InRange(OldDot, PPUDot, IO.HTime) Then
+                        Dim HVIRQ As Boolean = ScanLine = IO.VTime And IO.HVIRQ = 3
 
-                        'Joypad Busy
-                        If PPUDot = 32 Then
-                            If ScanLine = 225 Then IO.HVBJoy = IO.HVBJoy Or 1
+                        If HVIRQ Or IO.HVIRQ = 1 Then IO.TimeUp = IO.TimeUp Or &H80
+                    End If
 
-                            If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And &HFE
-                        End If
+                    'Joypad Busy
+                    If InRange(OldDot, PPUDot, 32) Then
+                        If ScanLine = 225 Then IO.HVBJoy = IO.HVBJoy Or 1
 
-                        PPUDot = PPUDot + 1
-                    End While
+                        If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
+                    End If
                 End While
 
                 APU.Cycles = APU.Cycles - APUCyclesPerLine
@@ -172,6 +172,14 @@
             Application.DoEvents()
         End While
     End Sub
+
+    Private Function InRange(Min As Integer, Max As Integer, Value As Integer) As Boolean
+        If Min > Max Then
+            InRange = Value > Min Or Value <= Max
+        Else
+            InRange = Min < Value And Max >= Value
+        End If
+    End Function
 
     Public Sub StopEmulation()
         Execute = False

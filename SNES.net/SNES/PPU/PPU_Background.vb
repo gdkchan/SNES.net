@@ -11,8 +11,6 @@
         {8, 8, 0, 0}
     }
 
-    Public dotdbg As Boolean
-
     Public Sub RenderLayer(Line As Integer, Layer As Integer, Optional Fg As Boolean = False)
         If (TM Or TS) And (1 << Layer) Then
             Dim BPP As Integer = BPPLUT(Mode, Layer)
