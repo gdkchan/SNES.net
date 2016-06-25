@@ -418,9 +418,9 @@
     End Sub
 
     Private Sub IRQ()
-        If (P And Flags.IRQ) = 0 Then
-            CheckWAI()
+        CheckWAI()
 
+        If (P And Flags.IRQ) = 0 Then
             If M6502 Then
                 Push16(PC)
                 Push8(P And Not &H10)

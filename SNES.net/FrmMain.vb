@@ -59,6 +59,7 @@ Public Class FrmMain
                 Case Keys.A : SNES.SetKeyDown(SNES.SNESButton.A)
                 Case Keys.Q : SNES.SetKeyDown(SNES.SNESButton.L)
                 Case Keys.W : SNES.SetKeyDown(SNES.SNESButton.R)
+                Case Keys.F8 : SNES.PPU.dotdbg = Not SNES.PPU.dotdbg
             End Select
         End If
     End Sub

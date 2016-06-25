@@ -49,6 +49,8 @@
                 ROverCt = ROverCt + 1
                 TOverCt = TOverCt + TX + 1
 
+                If TOverCt > 34 Or ROverCt > 32 Then Exit For
+
                 If (TM Or TS) And &H10 Then
                     Dim YPos As Integer = Line - Y
                     If VFlip Then YPos = YPos Xor (((TY + 1) << 3) - 1)
@@ -78,7 +80,7 @@
             End If
         Next
 
-        If ROverCt > 32 Then Stat77 = Stat77 Or &H40
         If TOverCt > 34 Then Stat77 = Stat77 Or &H80
+        If ROverCt > 32 Then Stat77 = Stat77 Or &H40
     End Sub
 End Class

@@ -191,45 +191,67 @@
                 End If
 
                 Dim R0, G0, B0 As Byte
+                Dim R1, G1, B1 As Byte
 
-                If DoMath And UseMath(X) And (CGAdSub And (1 << MZOrder(X))) And Not HiRes Then
+                If DoMath And UseMath(X) And (CGAdSub And (1 << MZOrder(X))) Then
                     Dim Div2 As Integer = (CGAdSub >> 6) And 1
+                    Dim UseScrn As Boolean = CGWSel And 2
 
                     If SZOrder(X) = 5 Or IsBlack Then Div2 = 0
 
+                    If HiRes Or (SetIni And 8) Then
+                        Dim SB As Integer = IIf(UseScrn, MScrn(OS + 0), BgCol.B)
+                        Dim SG As Integer = IIf(UseScrn, MScrn(OS + 1), BgCol.G)
+                        Dim SR As Integer = IIf(UseScrn, MScrn(OS + 2), BgCol.R)
+
+                        If CGAdSub And &H80 Then
+                            B1 = ClampU8((SScrn(OS + 0) - SB) >> Div2)
+                            G1 = ClampU8((SScrn(OS + 1) - SG) >> Div2)
+                            R1 = ClampU8((SScrn(OS + 2) - SR) >> Div2)
+                        Else
+                            B1 = ClampU8((SScrn(OS + 0) + SB) >> Div2)
+                            G1 = ClampU8((SScrn(OS + 1) + SG) >> Div2)
+                            R1 = ClampU8((SScrn(OS + 2) + SR) >> Div2)
+                        End If
+                    End If
+
+                    Dim MB As Integer = IIf(UseScrn, SScrn(OS + 0), BgCol.B)
+                    Dim MG As Integer = IIf(UseScrn, SScrn(OS + 1), BgCol.G)
+                    Dim MR As Integer = IIf(UseScrn, SScrn(OS + 2), BgCol.R)
+
                     If CGAdSub And &H80 Then
-                        B0 = ClampU8((MScrn(OS + 0) - SScrn(OS + 0)) >> Div2)
-                        G0 = ClampU8((MScrn(OS + 1) - SScrn(OS + 1)) >> Div2)
-                        R0 = ClampU8((MScrn(OS + 2) - SScrn(OS + 2)) >> Div2)
+                        B0 = ClampU8((MScrn(OS + 0) - MB) >> Div2)
+                        G0 = ClampU8((MScrn(OS + 1) - MG) >> Div2)
+                        R0 = ClampU8((MScrn(OS + 2) - MR) >> Div2)
                     Else
-                        B0 = ClampU8((MScrn(OS + 0) + SScrn(OS + 0)) >> Div2)
-                        G0 = ClampU8((MScrn(OS + 1) + SScrn(OS + 1)) >> Div2)
-                        R0 = ClampU8((MScrn(OS + 2) + SScrn(OS + 2)) >> Div2)
+                        B0 = ClampU8((MScrn(OS + 0) + MB) >> Div2)
+                        G0 = ClampU8((MScrn(OS + 1) + MG) >> Div2)
+                        R0 = ClampU8((MScrn(OS + 2) + MR) >> Div2)
                     End If
                 Else
                     B0 = MScrn(OS + 0)
                     G0 = MScrn(OS + 1)
                     R0 = MScrn(OS + 2)
+
+                    B1 = SScrn(OS + 0)
+                    G1 = SScrn(OS + 1)
+                    R1 = SScrn(OS + 2)
                 End If
 
-                Dim R1 As Byte = R0
-                Dim G1 As Byte = G0
-                Dim B1 As Byte = B0
-
-                If HiRes Then
-                    B0 = SScrn(OS + 0)
-                    G0 = SScrn(OS + 1)
-                    R0 = SScrn(OS + 2)
+                If Not HiRes And (SetIni And 8) = 0 Then
+                    B1 = B0
+                    G1 = G0
+                    R1 = R0
                 End If
 
                 If Bright <> 1 Then
-                    R0 = R0 * Bright
-                    G0 = G0 * Bright
                     B0 = B0 * Bright
+                    G0 = G0 * Bright
+                    R0 = R0 * Bright
 
-                    R1 = R1 * Bright
-                    G1 = G1 * Bright
                     B1 = B1 * Bright
+                    G1 = G1 * Bright
+                    R1 = R1 * Bright
                 End If
 
                 For i As Integer = Y0 To Y1
@@ -249,15 +271,15 @@
             For X As Integer = 0 To 511
                 Dim O As Integer = X << 2
 
-                BackBuffer(Base(0) + O + 0) = 0
-                BackBuffer(Base(0) + O + 1) = 0
-                BackBuffer(Base(0) + O + 2) = 0
-                BackBuffer(Base(0) + O + 3) = &HFF
+                BackBuffer(Base(Y0) + O + 0) = 0
+                BackBuffer(Base(Y0) + O + 1) = 0
+                BackBuffer(Base(Y0) + O + 2) = 0
+                BackBuffer(Base(Y0) + O + 3) = &HFF
 
-                BackBuffer(Base(1) + O + 0) = 0
-                BackBuffer(Base(1) + O + 1) = 0
-                BackBuffer(Base(1) + O + 2) = 0
-                BackBuffer(Base(1) + O + 3) = &HFF
+                BackBuffer(Base(Y1) + O + 0) = 0
+                BackBuffer(Base(Y1) + O + 1) = 0
+                BackBuffer(Base(Y1) + O + 2) = 0
+                BackBuffer(Base(Y1) + O + 3) = &HFF
             Next
         End If
     End Sub

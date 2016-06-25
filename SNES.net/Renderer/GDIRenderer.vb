@@ -9,7 +9,7 @@ Public Class GDIRenderer : Implements IRenderer
         Dim Width As Integer = 256 * Zoom
         Dim Height As Integer = 224 * Zoom
 
-        If Zoom > 1 Then
+        If Zoom <> 2 Then
             ReDim NewBuff(Width * Height * 4 - 1)
 
             Dim Offset As Integer

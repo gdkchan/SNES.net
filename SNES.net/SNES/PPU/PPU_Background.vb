@@ -11,6 +11,8 @@
         {8, 8, 0, 0}
     }
 
+    Public dotdbg As Boolean
+
     Public Sub RenderLayer(Line As Integer, Layer As Integer, Optional Fg As Boolean = False)
         If (TM Or TS) And (1 << Layer) Then
             Dim BPP As Integer = BPPLUT(Mode, Layer)
@@ -288,11 +290,12 @@
             If TMW And (1 << Layer) Then MEn = Not Disable
         End If
 
-        SEn = SEn And (CGWSel And 2)
+        SEn = SEn And (TS And (1 << Layer))
+        MEn = MEn And (TM And (1 << Layer))
 
         If Not HiRes Then
             'Normal rendering with Color Math and Window
-            If SEn And (TS And (1 << Layer)) And Math Then
+            If SEn And Math Then
                 SScrn(Offset + 0) = Color.B
                 SScrn(Offset + 1) = Color.G
                 SScrn(Offset + 2) = Color.R
@@ -300,7 +303,7 @@
                 SZOrder(X) = Layer
             End If
 
-            If (MEn And (TM And (1 << Layer))) Or Not Math Then
+            If MEn Or Not Math Then
                 MScrn(Offset + 0) = Color.B
                 MScrn(Offset + 1) = Color.G
                 MScrn(Offset + 2) = Color.R
@@ -314,20 +317,16 @@
             'Hi-Res mode draws odd dots on Main Screen and even dots on Sub Screen
             If Layer < 4 Then Offset = (X >> 1) << 2
 
-            SEn = TS And (1 << Layer)
-
             If (SEn And (X And 1)) Or Layer = 4 Then
-                MScrn(Offset + 0) = Color.B
-                MScrn(Offset + 1) = Color.G
-                MScrn(Offset + 2) = Color.R
-            End If
-
-            MEn = TM And (1 << Layer)
-
-            If (MEn And (X And 1) = 0) Or Layer = 4 Then
                 SScrn(Offset + 0) = Color.B
                 SScrn(Offset + 1) = Color.G
                 SScrn(Offset + 2) = Color.R
+            End If
+
+            If (MEn And (X And 1) = 0) Or Layer = 4 Then
+                MScrn(Offset + 0) = Color.B
+                MScrn(Offset + 1) = Color.G
+                MScrn(Offset + 2) = Color.R
             End If
 
             UseMath(X >> 1) = Math
