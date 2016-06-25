@@ -6,11 +6,24 @@
         Dim TOverCt As Integer = 0
         Dim ChrBase As Integer = (ObSel And 3) << 14
 
-        For Offset As Integer = &H1FC To 0 Step -4
+        Dim Offset As Integer
+
+        If OAMPri Then
+            Offset = (((OAMAddr >> 2) - 1) And &H7F) << 2
+        Else
+            Offset = &H1FC
+        End If
+
+        For i As Integer = 0 To &H7F
             Dim X As Integer = OAM(Offset)
             Dim Y As Integer = OAM(Offset + 1)
             Dim ChrNum As Integer = OAM(Offset + 2)
             Dim Attrib As Integer = OAM(Offset + 3)
+
+            Dim OAM32Addr As Integer = &H200 + (Offset >> 4)
+            Dim OAM32Bit As Integer = (Offset And &HC) >> 1
+
+            Offset = (Offset - 4) And &H1FF
 
             If Y >= 224 Then Y = Y Or &HFFFFFF00
             If Line < Y Then Continue For
@@ -23,8 +36,6 @@
             Dim VFlip As Boolean = Attrib And &H80
 
             If Priority = Pri Then
-                Dim OAM32Addr As Integer = &H200 + (Offset >> 4)
-                Dim OAM32Bit As Integer = (Offset And &HC) >> 1
                 Dim TSize As Boolean = OAM(OAM32Addr) And (1 << (OAM32Bit + 1))
                 Dim XHigh As Boolean = OAM(OAM32Addr) And (1 << OAM32Bit)
 

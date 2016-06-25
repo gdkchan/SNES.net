@@ -116,6 +116,9 @@
                 'H/V IRQ 2 (V=V H=0)
                 If ScanLine = IO.VTime And IO.HVIRQ = 2 Then IO.TimeUp = IO.TimeUp Or &H80
 
+                If ScanLine = 226 Then IO.HVBJoy = IO.HVBJoy Or 1
+                If ScanLine = 229 Then IO.HVBJoy = IO.HVBJoy And Not 1
+
                 If ScanLine > 0 And ScanLine < 225 Then PPU.Render(ScanLine)
 
                 While CPU.Cycles < CPUCyclesPerLine
@@ -139,13 +142,6 @@
                         Dim HVIRQ As Boolean = ScanLine = IO.VTime And IO.HVIRQ = 3
 
                         If HVIRQ Or IO.HVIRQ = 1 Then IO.TimeUp = IO.TimeUp Or &H80
-                    End If
-
-                    'Joypad Busy
-                    If InRange(OldDot, PPUDot, 32) Then
-                        If ScanLine = 225 Then IO.HVBJoy = IO.HVBJoy Or 1
-
-                        If ScanLine = 228 Then IO.HVBJoy = IO.HVBJoy And Not 1
                     End If
                 End While
 
