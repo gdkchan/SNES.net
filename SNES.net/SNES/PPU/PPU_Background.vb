@@ -293,7 +293,7 @@
 
         If Not HiRes Then
             'Normal rendering with Color Math and Window
-            If SEn And Math Then
+            If SEn Then
                 SScrn(Offset + 0) = Color.B
                 SScrn(Offset + 1) = Color.G
                 SScrn(Offset + 2) = Color.R
@@ -301,7 +301,7 @@
                 SZOrder(X) = Layer
             End If
 
-            If MEn Or Not Math Then
+            If MEn Then
                 MScrn(Offset + 0) = Color.B
                 MScrn(Offset + 1) = Color.G
                 MScrn(Offset + 2) = Color.R
