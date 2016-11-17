@@ -180,9 +180,12 @@
 
     'Decimal Adjust for Addition
     Private Sub DAA()
-        SetFlag((PSW And Flags.Carry) Or A > &H99, Flags.Carry)
-        If (PSW And Flags.HalfCarry) Or (A And &HF) > 9 Then A = A + &H6
-        If PSW And Flags.Carry Then A = A + &H60
+        If (PSW And Flags.Carry) Or A > &H99 Then
+            SetFlag(Flags.Carry)
+            A = A + &H60
+        End If
+
+        If (PSW And Flags.HalfCarry) Or (A And &HF) > 9 Then A = A + 6
 
         A = A And &HFF
 
@@ -191,9 +194,12 @@
 
     'Decimal Adjust for Subtraction
     Private Sub DAS()
-        SetFlag((PSW And Flags.Carry) And A < &H9A, Flags.Carry)
-        If (PSW And Flags.HalfCarry) = 0 Or (A And &HF) > 9 Then A = A - &H6
-        If (PSW And Flags.Carry) = 0 Then A = A - &H60
+        If (PSW And Flags.Carry) = 0 Or A > &H99 Then
+            ClearFlag(Flags.Carry)
+            A = A - &H60
+        End If
+
+        If (PSW And Flags.HalfCarry) = 0 Or (A And &HF) > 9 Then A = A - 6
 
         A = A And &HFF
 

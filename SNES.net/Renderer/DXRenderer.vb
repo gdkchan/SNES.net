@@ -21,7 +21,7 @@ Public Class DXRenderer : Implements IRenderer
             .BackBufferHeight = 224 * Zoom
             .Windowed = True
             .SwapEffect = SwapEffect.Discard
-            .PresentationInterval = PresentInterval.Immediate
+            '.PresentationInterval = PresentInterval.Immediate
         End With
 
         Device = New Device(0, DeviceType.Hardware, Handle, CreateFlags.HardwareVertexProcessing, Present)

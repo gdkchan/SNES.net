@@ -32,8 +32,7 @@
                     Dim Pitch As Integer = .P
 
                     If PMOn And Not NOn And Not 1 And (1 << Ch) Then
-                        Dim PrevOut As Integer = Channel(Ch - 1).OutX
-                        Pitch = Pitch + (((PrevOut >> 5) * .P) >> 10)
+                        Pitch = Pitch + (((Channel(Ch - 1).OutX >> 5) * .P) >> 10)
                     End If
 
                     .InterpIdx = .InterpIdx + Pitch
@@ -41,7 +40,6 @@
                     If .InterpIdx > &H7FFF Then .InterpIdx = &H7FFF
                     If .InterpIdx > &H3FFF Then
                         DecodeBRRSamples(Ch)
-
                         .InterpIdx = .InterpIdx - &H4000
                     End If
 
@@ -185,10 +183,9 @@
                             Dim Rate As Integer = .ADSR0 And &HF
 
                             If Rate <> &HF Then
-                                Rate = (Rate << 1) Or 1
-                                If RateMatches(Rate) Then .Env = ClampU11(.Env + 32)
+                                If RateMatches((Rate << 1) Or 1) Then .Env = .Env + 32
                             Else
-                                .Env = .Env + 1024
+                                If RateMatches(&H1F) Then .Env = .Env + 1024
                             End If
 
                         Case ADSR.Decay, ADSR.Sustain
@@ -200,7 +197,7 @@
                                 Rate = .ADSR1 And &H1F
                             End If
 
-                            If RateMatches(Rate) Then .Env = ClampU11(.Env - ((.Env - 1) >> 8) + 1)
+                            If RateMatches(Rate) Then .Env = .Env - ((.Env - 1) >> 8) + 1
                     End Select
                 Else
                     If .Gain And &H80 Then
@@ -209,10 +206,10 @@
 
                         If RateMatches(Rate) Then
                             Select Case (.Gain >> 5) And 3
-                                Case 0 : .Env = ClampU11(.Env - 32) 'Linear Dec.
-                                Case 1 : .Env = ClampU11(.Env - ((.Env - 1) >> 8) + 1) 'Exp. Dec.
-                                Case 2 : .Env = ClampU11(.Env + 32) 'Linear Inc.
-                                Case 3 : .Env = ClampU11(.Env + IIf(.Env < &H600, 32, 8)) 'Bent Inc.
+                                Case 0 : .Env = .Env - 32 'Linear Dec.
+                                Case 1 : .Env = .Env - ((.Env - 1) >> 8) + 1 'Exp. Dec.
+                                Case 2 : .Env = .Env + 32 'Linear Inc.
+                                Case 3 : .Env = .Env + IIf(.Env < &H600, 32, 8) 'Bent Inc.
                             End Select
                         End If
                     Else
@@ -223,14 +220,13 @@
             Else
                 .Env = .Env - 8
 
-                If .Env <= 0 Then
-                    .Enabled = False
-                    .Env = 0
-                End If
+                If .Env <= 0 Then .Enabled = False
             End If
 
-            If .EnvState = ADSR.Attack And .Env >= &H7FF Then .EnvState = ADSR.Decay
+            If .EnvState = ADSR.Attack And .Env > &H7FF Then .EnvState = ADSR.Decay
             If .EnvState = ADSR.Decay And (.Env >> 8) <= (.ADSR1 >> 5) Then .EnvState = ADSR.Sustain
+
+            .Env = ClampU11(.Env)
         End With
     End Sub
 

@@ -104,7 +104,7 @@
                     IO.RdNMI = IO.RdNMI Or &H80
                     IO.HVBJoy = IO.HVBJoy Or &H80
 
-                    PPU.OAMAddr = PPU.OAMReload
+                    If (PPU.IniDisp And &H80) = 0 Then PPU.OAMAddr = PPU.OAMReload
 
                     If PPU.Stat78 And &H80 Then
                         PPU.Stat78 = PPU.Stat78 And Not &H80

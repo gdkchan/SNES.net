@@ -87,7 +87,12 @@
                 OPVCt = Parent.ScanLine
             Case &H2138
                 Read8 = OAM(OAMAddr)
-                OAMAddr = (OAMAddr + 1) Mod &H220
+
+                If OAMAddr And &H200 Then
+                    OAMAddr = ((OAMAddr + 1) And &H1F) Or &H200
+                Else
+                    OAMAddr = OAMAddr + 1
+                End If
             Case &H2139
                 Read8 = VPreFetch And &HFF
 
@@ -124,28 +129,38 @@
 
     Public Sub Write8(Address As Integer, Value As Integer)
         Select Case Address
-            Case &H2100 : IniDisp = Value
+            Case &H2100
+                If ((IniDisp Xor Value) And &H80) And (Value And &H80) = 0 Then
+                    'Address reload on 2100 1->0 transition
+                    OAMAddr = OAMReload
+                End If
+
+                IniDisp = Value
             Case &H2101 : ObSel = Value
             Case &H2102
-                OAMReload = (Value Or ((OAMReload >> 1) And &H100)) << 1
+                OAMReload = (Value << 1) Or (OAMReload And &H200)
                 OAMAddr = OAMReload
             Case &H2103
-                OAMReload = (((Value And 1) << 8) Or ((OAMReload >> 1) And &HFF)) << 1
+                OAMReload = ((Value And 1) << 9) Or (OAMReload And &H1FE)
                 OAMAddr = OAMReload
                 OAMPri = Value And &H80
             Case &H2104
-                If OAMAddr < &H200 Then
+                If (OAMAddr And &H200) = 0 Then
                     If OAMAddr And 1 Then
                         OAM(OAMAddr - 1) = OAMBuffer
                         OAM(OAMAddr) = Value
-                    Else
-                        OAMBuffer = Value
                     End If
                 Else
                     OAM(OAMAddr) = Value
                 End If
 
-                OAMAddr = (OAMAddr + 1) Mod &H220
+                If (OAMAddr And 1) = 0 Then OAMBuffer = Value
+
+                If OAMAddr And &H200 Then
+                    OAMAddr = ((OAMAddr + 1) And &H1F) Or &H200
+                Else
+                    OAMAddr = OAMAddr + 1
+                End If
             Case &H2105
                 BgMode = Value
                 Mode = Value And 7

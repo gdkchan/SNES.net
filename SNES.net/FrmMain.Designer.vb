@@ -52,6 +52,7 @@ Partial Class FrmMain
         Me.DumpVRAMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AjudaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SobreToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.Debug2ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         CType(Me.PicScreen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MainMenu.SuspendLayout()
         Me.SuspendLayout()
@@ -128,7 +129,7 @@ Partial Class FrmMain
         '
         'OpçõesToolStripMenuItem
         '
-        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuVideo, Me.MenuAudio, Me.MenuOptsSep0, Me.DebugToolStripMenuItem, Me.DumpVRAMToolStripMenuItem})
+        Me.OpçõesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuVideo, Me.MenuAudio, Me.MenuOptsSep0, Me.DebugToolStripMenuItem, Me.Debug2ToolStripMenuItem, Me.DumpVRAMToolStripMenuItem})
         Me.OpçõesToolStripMenuItem.Name = "OpçõesToolStripMenuItem"
         Me.OpçõesToolStripMenuItem.Size = New System.Drawing.Size(59, 20)
         Me.OpçõesToolStripMenuItem.Text = "&Opções"
@@ -137,7 +138,7 @@ Partial Class FrmMain
         '
         Me.MenuVideo.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuZoom, Me.MenuVidSep0, Me.MenuGDI, Me.MenuD3D})
         Me.MenuVideo.Name = "MenuVideo"
-        Me.MenuVideo.Size = New System.Drawing.Size(143, 22)
+        Me.MenuVideo.Size = New System.Drawing.Size(152, 22)
         Me.MenuVideo.Text = "Video"
         '
         'MenuZoom
@@ -192,7 +193,7 @@ Partial Class FrmMain
         '
         Me.MenuAudio.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.MenuNoAudio, Me.MenuDSound})
         Me.MenuAudio.Name = "MenuAudio"
-        Me.MenuAudio.Size = New System.Drawing.Size(143, 22)
+        Me.MenuAudio.Size = New System.Drawing.Size(152, 22)
         Me.MenuAudio.Text = "Áudio"
         '
         'MenuNoAudio
@@ -210,18 +211,18 @@ Partial Class FrmMain
         'MenuOptsSep0
         '
         Me.MenuOptsSep0.Name = "MenuOptsSep0"
-        Me.MenuOptsSep0.Size = New System.Drawing.Size(140, 6)
+        Me.MenuOptsSep0.Size = New System.Drawing.Size(149, 6)
         '
         'DebugToolStripMenuItem
         '
         Me.DebugToolStripMenuItem.Name = "DebugToolStripMenuItem"
-        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
+        Me.DebugToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.DebugToolStripMenuItem.Text = "Debug"
         '
         'DumpVRAMToolStripMenuItem
         '
         Me.DumpVRAMToolStripMenuItem.Name = "DumpVRAMToolStripMenuItem"
-        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(143, 22)
+        Me.DumpVRAMToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.DumpVRAMToolStripMenuItem.Text = "Dump VRAM"
         '
         'AjudaToolStripMenuItem
@@ -236,6 +237,12 @@ Partial Class FrmMain
         Me.SobreToolStripMenuItem.Name = "SobreToolStripMenuItem"
         Me.SobreToolStripMenuItem.Size = New System.Drawing.Size(104, 22)
         Me.SobreToolStripMenuItem.Text = "&Sobre"
+        '
+        'Debug2ToolStripMenuItem
+        '
+        Me.Debug2ToolStripMenuItem.Name = "Debug2ToolStripMenuItem"
+        Me.Debug2ToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.Debug2ToolStripMenuItem.Text = "Debug 2"
         '
         'FrmMain
         '
@@ -287,4 +294,5 @@ Partial Class FrmMain
     Friend WithEvents MenuOptsSep0 As ToolStripSeparator
     Friend WithEvents MenuNoAudio As ToolStripMenuItem
     Friend WithEvents MenuDSound As ToolStripMenuItem
+    Friend WithEvents Debug2ToolStripMenuItem As ToolStripMenuItem
 End Class

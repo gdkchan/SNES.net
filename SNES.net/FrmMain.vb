@@ -82,10 +82,6 @@ Public Class FrmMain
         End If
     End Sub
 
-    Private Sub DebugToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DebugToolStripMenuItem.Click
-
-    End Sub
-
     Private Sub MenuGDI_Click(sender As Object, e As EventArgs) Handles MenuGDI.Click
         SetRenderer(New GDIRenderer())
     End Sub
