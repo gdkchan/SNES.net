@@ -263,6 +263,7 @@
         'Based on Anomie's algorithm
         Dim YVA As Integer = GetYA()
         Dim SLX As Integer = X << 9
+        Dim HC As Boolean = (X And &HF) <= (Y And &HF)
 
         For i As Integer = 0 To 8
             YVA = YVA << 1
@@ -274,6 +275,7 @@
         A = YVA And &HFF
         Y = (YVA >> 9) And &HFF
 
+        SetFlag(HC, Flags.HalfCarry)
         SetFlag(YVA And &H100, Flags.Overflow)
         SetZNFlags8(A)
     End Sub
