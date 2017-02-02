@@ -4,34 +4,53 @@ Public Class GDIRenderer : Implements IRenderer
     Dim Control As PictureBox
     Dim Zoom As Integer = 1
 
-    Public Sub RenderBuffer(Buffer() As Byte) Implements IRenderer.RenderBuffer
-        Dim NewBuff() As Byte
+    Public Sub RenderBuffer(Buffer() As Integer) Implements IRenderer.RenderBuffer
+        Dim NewBuff() As Integer
+
         Dim Width As Integer = 256 * Zoom
         Dim Height As Integer = 224 * Zoom
 
-        If Zoom <> 2 Then
-            ReDim NewBuff(Width * Height * 4 - 1)
+        If Zoom = 1 Then
+            NewBuff = Buffer
+        ElseIf Zoom = 2 Then
+            ReDim NewBuff(Width * Height - 1)
 
-            Dim Offset As Integer
-            For Y As Integer = 0 To Height - 1
-                For X As Integer = 0 To Width - 1
-                    Dim BPos As Integer = (((X << 1) \ Zoom) + (((Y << 1) \ Zoom) << 9)) << 2
+            Dim Offset As Integer = 0
 
-                    NewBuff(Offset + 0) = Buffer(BPos + 0)
-                    NewBuff(Offset + 1) = Buffer(BPos + 1)
-                    NewBuff(Offset + 2) = Buffer(BPos + 2)
-                    NewBuff(Offset + 3) = Buffer(BPos + 3)
+            For Y As Integer = 0 To 223
+                Dim Start As Integer = Y << 8
 
-                    Offset = Offset + 4
+                For X As Integer = Start To Start + 255
+                    NewBuff(Offset + 0) = Buffer(X)
+                    NewBuff(Offset + 1) = Buffer(X)
+
+                    NewBuff(Offset + 512) = Buffer(X)
+                    NewBuff(Offset + 513) = Buffer(X)
+
+                    Offset = Offset + 2
                 Next
+
+                Offset = Offset + 512
             Next
         Else
-            NewBuff = Buffer
+            ReDim NewBuff(Width * Height - 1)
+
+            Dim Offset As Integer = 0
+
+            For Y As Integer = 0 To Height - 1
+                For X As Integer = 0 To Width - 1
+                    Dim BPos As Integer = (X \ Zoom) + (Y \ Zoom) * 256
+
+                    NewBuff(Offset) = Buffer(BPos)
+
+                    Offset = Offset + 1
+                Next
+            Next
         End If
 
         Dim Img As New Bitmap(Width, Height)
         Dim BmpRect As New Rectangle(0, 0, Width, Height)
-        Dim BmpData As BitmapData = Img.LockBits(BmpRect, ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb)
+        Dim BmpData As BitmapData = Img.LockBits(BmpRect, ImageLockMode.WriteOnly, PixelFormat.Format32bppPArgb)
         Runtime.InteropServices.Marshal.Copy(NewBuff, 0, BmpData.Scan0, NewBuff.Length)
         Img.UnlockBits(BmpData)
 

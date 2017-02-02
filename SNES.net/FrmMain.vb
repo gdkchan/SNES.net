@@ -26,7 +26,8 @@ Public Class FrmMain
     End Sub
 
     Private Sub AbrirROMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AbrirROMToolStripMenuItem.Click
-        Dim Open_Dlg As New OpenFileDialog
+        Dim Open_Dlg As New OpenFileDialog()
+
         Open_Dlg.Title = "Abrir ROM de Super Nintendo"
         Open_Dlg.Filter = "Super Famicom ROM|*.sfc;*.smc"
         Open_Dlg.ShowDialog()
@@ -35,6 +36,8 @@ Public Class FrmMain
             SNES = New SNES(AudioOut, Renderer)
             SNES.InsertCart(Open_Dlg.FileName)
         End If
+
+        Open_Dlg.Dispose()
     End Sub
     Private Sub SairToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SairToolStripMenuItem.Click
         End
@@ -148,6 +151,7 @@ Public Class FrmMain
 
     Private Sub FrmMain_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         If SNES IsNot Nothing Then SNES.StopEmulation()
+
         If Renderer IsNot Nothing Then Renderer.Terminate()
         If AudioOut IsNot Nothing Then AudioOut.Terminate()
     End Sub

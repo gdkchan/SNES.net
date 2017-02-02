@@ -58,6 +58,7 @@
 
         If WAIState Or STPState Then
             Cycles = Cycles + 4
+
             Exit Sub
         End If
 

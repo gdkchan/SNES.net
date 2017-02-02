@@ -33,7 +33,7 @@ Public Class Cart
 
         If (Data.Length Mod &H8000) = &H200 Then
             'ROM "infected" with crappy SMC header
-            Dim NewData(UBound(Data) - &H200) As Byte
+            Dim NewData(Data.Length - &H200) As Byte
             Array.Copy(Data, &H200, NewData, 0, NewData.Length)
             Data = NewData
         End If
@@ -42,10 +42,10 @@ Public Class Cart
             If Data.Length > &H600000 Then 'ExHiROM
                 Bank = &H81
             Else 'ExLoROM or ExHiROM
-                Bank = IIf(IsValidHeader(Data, &H40), &H81, 0)
+                Bank = If(IsValidHeader(Data, &H40), &H81, 0)
             End If
         Else 'LoROM or HiROM
-            Bank = IIf(IsValidHeader(Data, 0), 1, 0)
+            Bank = If(IsValidHeader(Data, 0), 1, 0)
         End If
 
         Name = Encoding.ASCII.GetString(Data, (Bank << 15) + &H7FC0, 21)
@@ -95,9 +95,10 @@ Public Class Cart
 
         Dim BAddr As Integer = Bank << 16
 
-        If BAddr + &HFFFF <= UBound(Data) Then
+        If BAddr + &H10000 <= Data.Length Then
             Dim CheckSumB As Integer = Data(BAddr + &HFFDC) Or (Data(BAddr + &HFFDD) * &H100)
             Dim CheckSumC As Integer = Data(BAddr + &HFFDE) Or (Data(BAddr + &HFFDF) * &H100)
+
             IsValidHeader = (CheckSumB + CheckSumC = &HFFFF)
         End If
     End Function

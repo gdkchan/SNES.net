@@ -1,12 +1,6 @@
 ﻿Partial Public Class PPU
-    Private Structure RGB
-        Public R As Byte
-        Public G As Byte
-        Public B As Byte
-    End Structure
-
-    Dim Pal(&HFF) As RGB
-    Dim BgCol As RGB
+    Dim Pal(&HFF) As Integer
+    Dim BgCol As Integer
 
     Public Structure BgStruct
         Public SC As Integer
@@ -258,9 +252,12 @@
                 CGRAM(CGAddr) = Value
 
                 Dim WAddr As Integer = CGAddr And &H1FE
-                Pal(CGAddr >> 1).R = (CGRAM(WAddr And &H1FE) And &H1F) << 3
-                Pal(CGAddr >> 1).G = ((CGRAM(WAddr) And &HE0) >> 2) Or ((CGRAM(WAddr + 1) And 3) << 6)
-                Pal(CGAddr >> 1).B = (CGRAM(WAddr + 1) And &H7C) << 1
+
+                Pal(CGAddr >> 1) = 0
+
+                Pal(CGAddr >> 1) = Pal(CGAddr >> 1) Or (CGRAM(WAddr And &H1FE) And &H1F) << 19
+                Pal(CGAddr >> 1) = Pal(CGAddr >> 1) Or (((CGRAM(WAddr) And &HE0) >> 2) Or ((CGRAM(WAddr + 1) And 3) << 6)) << 8
+                Pal(CGAddr >> 1) = Pal(CGAddr >> 1) Or (CGRAM(WAddr + 1) And &H7C) << 1
 
                 CGAddr = (CGAddr + 1) And &H1FF
             Case &H2123 : W12Sel = Value
@@ -281,9 +278,9 @@
             Case &H2132
                 ColData = Value
 
-                If Value And &H20 Then BgCol.R = (Value And &H1F) << 3
-                If Value And &H40 Then BgCol.G = (Value And &H1F) << 3
-                If Value And &H80 Then BgCol.B = (Value And &H1F) << 3
+                If Value And &H20 Then BgCol = (BgCol And &HFFFF) Or (Value And &H1F) << 19
+                If Value And &H40 Then BgCol = (BgCol And &HFF00FF) Or (Value And &H1F) << 11
+                If Value And &H80 Then BgCol = (BgCol And &HFFFF00) Or (Value And &H1F) << 3
             Case &H2133 : SetIni = Value
         End Select
     End Sub

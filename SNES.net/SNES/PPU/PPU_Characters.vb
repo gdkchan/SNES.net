@@ -11,7 +11,7 @@
         If OAMPri Then
             Offset = (((OAMAddr >> 2) - 1) And &H7F) << 2
         Else
-            Offset = &H1FC
+            Offset = 0
         End If
 
         For i As Integer = 0 To &H7F
@@ -23,7 +23,7 @@
             Dim OAM32Addr As Integer = &H200 + (Offset >> 4)
             Dim OAM32Bit As Integer = (Offset And &HC) >> 1
 
-            Offset = (Offset - 4) And &H1FF
+            Offset = (Offset + 4) And &H1FF
 
             If Y >= 224 Then Y = Y Or &HFFFFFF00
             If Line < Y Then Continue For
@@ -42,6 +42,7 @@
                 If XHigh Then X = X Or &HFFFFFF00
 
                 Dim TX, TY As Integer
+
                 Select Case ObSel >> 5
                     Case 0 : If TSize Then TX = 1 : TY = 1 Else TX = 0 : TY = 0 '8x8/16x16
                     Case 1 : If TSize Then TX = 3 : TY = 3 Else TX = 0 : TY = 0 '8x8/32x32
@@ -55,6 +56,7 @@
 
                 Dim XOffScrn As Boolean = X >= 256 Or X + ((TX + 1) << 3) < 0
                 Dim YOffLine As Boolean = Line >= Y + ((TY + 1) << 3)
+
                 If XOffScrn Or YOffLine Then Continue For
 
                 ROverCt = ROverCt + 1
@@ -75,14 +77,20 @@
                         Dim ChrAddr As Integer = ChrBase + (YOfs << 1) + ((ChrNum + (TileY << 4) + TileX) << 5)
 
                         For XOfs As Integer = 0 To 7
-                            Dim XBit As Integer = XOfs
                             Dim PosX As Integer = X + XOfs
+
+                            If PosX < 0 Then Continue For
+                            If PosX > 255 Then Exit For
+
+                            Dim XBit As Integer = XOfs
+
                             If HFlip Then XBit = XBit Xor 7
-                            If PosX < 0 Or PosX > 255 Then Exit For
 
                             Dim Color As Byte = ReadChr(ChrAddr, 4, XBit)
 
-                            If Color <> 0 Then DrawPixel(4, PosX << 2, Pal(&H80 Or (PalNum << 4) Or Color), PalNum > 3)
+                            If Color <> 0 Then
+                                DrawPixel(4, PosX, Pal(&H80 Or (PalNum << 4) Or Color), PalNum > 3)
+                            End If
                         Next
 
                         If HFlip Then X = X - 8 Else X = X + 8

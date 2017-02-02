@@ -504,8 +504,9 @@
         DSPCycles = DSPCycles + SpentCycles
 
         If DSPCycles >= CyclesToSample Then
-            DSP.ProcessSample()
             DSPCycles = DSPCycles - CyclesToSample
+
+            DSP.ProcessSample()
         End If
 
         TickTimers(SpentCycles)

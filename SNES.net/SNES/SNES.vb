@@ -82,7 +82,6 @@
         Execute = True
 
         While Execute
-            Dim OldDot As Integer = 0
             Dim SndBuffLen As Integer = AudioOut.GetBuffLen()
 
             'V-Blank End
@@ -127,18 +126,17 @@
                     If IO.MDMAEn <> 0 Then DMA.DMATransfer() Else CPU.ExecuteStep()
                     APU.Execute((CPU.Cycles / CPUCyclesPerLine) * APUCyclesPerLine)
 
-                    OldDot = PPUDot
                     PPUDot = CPU.Cycles >> 2
 
                     'H-Blank Start
-                    If InRange(OldDot, PPUDot, 274) Then
+                    If (IO.HVBJoy And &H40) = 0 And PPUDot >= 274 Then
                         If ScanLine < 224 Then DMA.HDMATransfer()
 
                         IO.HVBJoy = IO.HVBJoy Or &H40
                     End If
 
                     'H/V IRQ 3 or 1 (V=V H=H or V=* H=H)
-                    If InRange(OldDot, PPUDot, IO.HTime) Then
+                    If (IO.TimeUp Or &H80) = 0 And PPUDot >= IO.HTime Then
                         Dim HVIRQ As Boolean = ScanLine = IO.VTime And IO.HVIRQ = 3
 
                         If HVIRQ Or IO.HVIRQ = 1 Then IO.TimeUp = IO.TimeUp Or &H80
@@ -168,14 +166,6 @@
             Application.DoEvents()
         End While
     End Sub
-
-    Private Function InRange(Min As Integer, Max As Integer, Value As Integer) As Boolean
-        If Min > Max Then
-            InRange = Value > Min Or Value <= Max
-        Else
-            InRange = Min < Value And Max >= Value
-        End If
-    End Function
 
     Public Sub StopEmulation()
         Execute = False

@@ -45,13 +45,13 @@ Public Class DXRenderer : Implements IRenderer
         VtxBuffer.SetData(Verts, 0, LockFlags.None)
     End Sub
 
-    Public Sub RenderBuffer(Buffer() As Byte) Implements IRenderer.RenderBuffer
+    Public Sub RenderBuffer(Buffer() As Integer) Implements IRenderer.RenderBuffer
         Device.Clear(ClearFlags.Target, Color.Black, 0, 0)
         Device.BeginScene()
 
-        Texture = New Texture(Device, 512, 512, 1, Usage.None, Format.A8R8G8B8, Pool.Managed)
+        Texture = New Texture(Device, 256, 256, 1, Usage.None, Format.A8R8G8B8, Pool.Managed)
         DataStream = Texture.LockRectangle(0, LockFlags.None)
-        DataStream.Write(Buffer, 0, Buffer.Length)
+        DataStream.Write(Buffer)
         Texture.UnlockRectangle(0)
         Device.SetTexture(0, Texture)
 

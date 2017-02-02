@@ -209,7 +209,7 @@
                                 Case 0 : .Env = .Env - 32 'Linear Dec.
                                 Case 1 : .Env = .Env - ((.Env - 1) >> 8) + 1 'Exp. Dec.
                                 Case 2 : .Env = .Env + 32 'Linear Inc.
-                                Case 3 : .Env = .Env + IIf(.Env < &H600, 32, 8) 'Bent Inc.
+                                Case 3 : .Env = .Env + If(.Env < &H600, 32, 8) 'Bent Inc.
                             End Select
                         End If
                     Else
