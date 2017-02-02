@@ -133,12 +133,6 @@
         If (IniDisp And &H80) = 0 Then
             Dim Bright As Integer = IniDisp And &HF
 
-            'If TS = 0 And Bright = &HF Then
-            'Buffer.BlockCopy(MScrn, 0, BackBuffer, Base, 256)
-
-            ' Return
-            'End If
-
             For X As Integer = 0 To 255
                 Dim W1Sel As Integer = (WObjSel >> 4) And 3
                 Dim W2Sel As Integer = (WObjSel >> 6) And 3

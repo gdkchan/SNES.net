@@ -136,7 +136,7 @@
                     End If
 
                     'H/V IRQ 3 or 1 (V=V H=H or V=* H=H)
-                    If (IO.TimeUp Or &H80) = 0 And PPUDot >= IO.HTime Then
+                    If (IO.TimeUp And &H80) = 0 And PPUDot >= IO.HTime Then
                         Dim HVIRQ As Boolean = ScanLine = IO.VTime And IO.HVIRQ = 3
 
                         If HVIRQ Or IO.HVIRQ = 1 Then IO.TimeUp = IO.TimeUp Or &H80

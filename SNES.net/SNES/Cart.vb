@@ -33,7 +33,7 @@ Public Class Cart
 
         If (Data.Length Mod &H8000) = &H200 Then
             'ROM "infected" with crappy SMC header
-            Dim NewData(Data.Length - &H200) As Byte
+            Dim NewData(Data.Length - &H200 - 1) As Byte
             Array.Copy(Data, &H200, NewData, 0, NewData.Length)
             Data = NewData
         End If
